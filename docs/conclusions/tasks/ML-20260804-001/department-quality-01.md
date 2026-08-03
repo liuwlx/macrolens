@@ -1,18 +1,20 @@
 # ML-20260804-001 测试部 01 集成质量复核报告
 
-- 席位状态：BLOCKED
+- 席位状态：REVIEW
+- 最终质量结论：**PASS**
 - 任务 ID：ML-20260804-001
 - 来源主线程：`/root`
 - 起始提交：`b5ab5ed3cb2eec553bba4c4bc878c3abec5d0da8`
 - 集成后端提交：`62a9d5626ffc10e74baa77e9af992e74dc1f3e11`
-- 集成前端提交 / 当前 HEAD：`2e3484981c0696e960ec3b27cb78464454830b1c`
+- 集成前端提交 / 初次复核 HEAD：`2e3484981c0696e960ec3b27cb78464454830b1c`
+- 最终复核 HEAD：`9feeed26180eb8905390cb74b814aefbd32702b8`
 - 实际范围：只读审查集成 diff，运行 Node 24、SDK、Python 可用门禁，复核 browser/analytics/export/AI 合同、URL/分页/树/快照/响应式状态和测试；未修改业务代码。
 
 ## 1. 问题与场景
 
 本轮在后端与前端候选已集成到 `main` 后执行独立质量复核。任务要求新版 `/data` 同时满足快照一致性、许可与工作区门禁、稳定分页、懒加载指标树、跨页面动作、响应式交互和可回滚性。因此静态类型或 build 绿色并不足够：趋势、历史、analytics、导出和 AI 必须实际共享同一个 `data_as_of`，树选择必须能驱动 browser API，查询规模也必须符合约 10,000 指标场景。
 
-结论为阻断：发现 1 个 P0，以及多个 P1。当前候选不得进入完成态或以视觉通过覆盖合同问题。
+初次复核结论为阻断：当时发现 1 个 P0，以及多个 P1；后续整改与最终复核见第 8、9 节。
 
 ## 2. 分析过程
 
@@ -140,4 +142,67 @@ Spec 轴未确认实质 scope creep。
 
 ### 复核结论
 
-**BLOCKED**。原 P0 与原 Standards P1 已有聚焦证据关闭，但新发现的跨页数值/日期排序 P1 仍违反稳定服务端排序与分页合同。在该问题修复、跨页回归测试通过且主线程补充真实浏览器 document width 证据前，不得把本报告改为 PASS。
+**当时结论：BLOCKED**。原 P0 与原 Standards P1 已有聚焦证据关闭，但新发现的跨页数值/日期排序 P1 仍违反稳定服务端排序与分页合同。在该问题修复、跨页回归测试通过且主线程补充真实浏览器 document width 证据前，不得把本报告改为 PASS。
+
+## 9. 最终 focused Quality re-review（2026-08-04）
+
+最终范围为上一轮报告提交 `69e6431` 至 HEAD `9feeed2`，至少包含后端全局排序/严格主源 `62fd1b9`、安全工具门禁报告 `beaac5e` 与 Web overflow `9feeed2`。本轮完整复读组织规则与任务卡，使用 `code-review` skill 分开执行 Standards 与 Spec 两轴只读审查；未修改业务代码、未 push、未部署。
+
+### 功能与安全合同关闭证据
+
+- **五种全局排序 PASS**：`current_period/current/change/period_change/yoy` 参数化测试均使用 A/B/C 三候选、`limit=2`，最大值位于初始第三候选 C；五个分支都在分页前把 C 排到首屏，并只为最终页加载 source 1/3 的完整历史。排序窄窗口受同一 `data_as_of` cutoff 和严格 display license 约束。
+- **主源 0/1/>1 PASS**：独立运行 `get_primary_source` 矩阵得到 0 条→404 `source_mapping_not_ready`、1 条→精确返回唯一 tuple、2 条→409 `source_mapping_conflict`。observations/revisions 对 0 与多主源的四个参数化拒绝用例均通过，且两条路径继续使用认证、工作区与 vintage cutoff。
+- **AI/许可/缓存隔离 PASS**：26 项后端 focused suite 包含历史上下文 fail-closed、AI 幂等 reservation、严格 provider license、AI runtime 配置前置检查；17 项 Web suite 包含用户 A→logout→用户 B 的 QueryClient 私有缓存隔离。
+- **原 P0/P1 全部关闭**：匿名/静默 latest、tree code、分页前全历史加载、AI 非 series 历史混入、RFC 9457 validation、AI mutation 幂等以及跨页动态排序均有代码与测试证据闭合。
+
+### 四视口真实浏览器证据
+
+在当前 HEAD production build 的独立 `127.0.0.1:3107` 实例运行 Chromium focused E2E，4/4 通过：
+
+| Viewport | 根页面 `scrollWidth` | table `clientWidth → scrollWidth` | tabs | 结果 |
+|---|---:|---:|---|---|
+| 390 | 390 | 356 → 690 | `overflow-x:auto` | PASS |
+| 768 | 768 | 496 → 820 | 可见；表格内部滚动 | PASS |
+| 1024 | 1024 | 752 → 820 | 可见；表格内部滚动 | PASS |
+| 1280 | 1280 | 506 → 820 | 可见；表格内部滚动 | PASS |
+
+根页面在四档均无横向溢出，table 保留内部横向滚动；390px tabs 明确保留内部滚动。根 `design-qa.md` 已存在，末行严格为 `final result: passed`，P0/P1/P2 均为 0；同状态对照与 desktop/analysis/1024/768/390/mobile-detail 证据位于 `artifacts/design-qa/`。这些未跟踪视觉资产由 Integration/Release 按最终文档/资产白名单纳入 tracked tree，本席位按任务约束只提交质量报告。
+
+### 最终门禁
+
+| 检查 | 结果 |
+|---|---|
+| Python 3.12 focused pytest | PASS：26 passed，0 skipped，1 条 ORJSONResponse 弃用告警 |
+| Python 3.12 compileall | PASS |
+| 排序服务与 focused tests ruff | PASS |
+| `series.py --select F` | PASS；文件全规则 7 条既有 E501 不在本轮 hunk |
+| 两个变更服务 focused mypy | PASS：`--follow-imports=skip`，2 files |
+| Node 24 Web Vitest | PASS：8 files / 17 tests |
+| Node 24 Web typecheck | PASS |
+| Node 24 production build | PASS |
+| Node 24 changed-path ESLint | PASS |
+| Node 24 SDK typecheck | PASS |
+| Chromium overflow E2E | PASS：4/4 |
+| `git diff --check` | PASS |
+
+全仓 ruff/mypy 与既有 E2E `no-explicit-any` 仍是任务开始前已记录的仓库级历史债，不属于本轮新增回归，也不覆盖本轮所有变更路径的绿色结果。
+
+### 最终 Standards / Spec 双轴结论
+
+#### Standards
+
+0 项硬性规范违反。仅保留 1 项非阻断 judgement call（Duplicated Code）：`_sort_points_by_source` 与 `_points_by_source` 重复 latest-vintage ranked subquery 和 row→`Point` 映射，长期可抽共享 builder/mapper 以避免语义漂移；该项不是功能、安全或视觉 P0/P1。
+
+#### Spec
+
+最终 0 项开放 finding。子审查最初指出 tracked tree 缺 `design-qa.md`/视觉交付证据；主线程随后在同一最终状态补齐 `design-qa.md` 与 `artifacts/design-qa/` 白名单资产，并由真实四视口 E2E 独立交叉验证，因此该交付项已关闭。未发现 scope creep 或实现看似完成但行为错误。
+
+双轴汇总：Standards 0 项硬违规、1 项非阻断 judgement call；Spec 0 项开放 finding。功能/安全合同/视觉 P0=0、P1=0。
+
+### Security scan 工具门禁边界
+
+`beaac5e` 记录的 Codex Security workspace Start scan 未返回 authoritative `scanId`，属于**独立未完成的工具门禁**，不是源码 finding，也不能推导出新的 P0/P1。Quality 已用 26 项 focused tests、主源 0/1/>1 矩阵和固定 diff 人工证据验证相关代码边界；正式四阶段扫描仍可由 Security 在工具恢复后补做，但本报告不会把“工具未启动”误报为“代码存在漏洞”。
+
+### 最终结论
+
+**PASS**。本任务功能、许可/快照合同、缓存隔离与四视口视觉验收均无开放 P0/P1；`design-qa.md` 最终结果为 passed。剩余事项只有非阻断的重复查询逻辑 judgement call、仓库历史静态债，以及独立的 Security scan 工具门禁。
