@@ -10,17 +10,17 @@
 - 线程 ID：`019fc533-b3a2-7be2-96ce-f4990bda6d6e`
 - 来源主线程：`ML | 项目统筹部 | 主线程 | 01`
 - 来源线程 ID：`019fc3a3-d0a0-7f13-b660-2010e36c7138`
-- 当前接受的任务卡 revision：`99196e1`
-- 当前接受范围：`复审 c1bcdac5 对第三轮全部阻塞的修复，验证 5 正例加 46 负例和正式状态机；通过后依次集成四个研发提交并更新集成报告。`
-- 当前回执证据：`docs/conclusions/tasks/ML-20260803-001/receipts/department-integration-release-01-remediation-04.md`
-- 实际范围：复审 `c1bcdac5` 与第三轮恢复条件，在候选 worktree 验证 5 正例、46 负例和指定门禁；发现成功终态证据映射硬缺陷后停止，未扩展产品范围。
-- 审查基线：`aaae62213245e8c1ce98432fb440b9085d687cc7`
-- 研发候选提交：`d1e5b40804805e67681893af63cffd83fd0000e5`、`c9353fd1ed639bd84f0668dd57c50283435b65f7`、`6a0b5b6d71b95140eaf1da524ba59befb63c20cd`、`c1bcdac55a7b0238fbea0d3cafe391c0bf22bf64`
+- 当前接受的任务卡 revision：`459efbf`
+- 当前接受范围：`复审 3c343b44 的成功生命周期修复与 9 正例加 51 负例；通过后依次集成五个研发提交，更新 contract v2 集成报告并返回 integration commit 与 report commit。`
+- 当前回执证据：`docs/conclusions/tasks/ML-20260803-001/receipts/department-integration-release-01-remediation-05.md`
+- 实际范围：复审 `3c343b44` 的成功生命周期、正式状态迁移和最终 summary，在候选 worktree 验证 9 正例、51 负例及指定门禁；发现三类硬缺陷后停止，未扩展产品范围。
+- 审查基线：`42d9b484b0d01bf6324936f5c34f77549f8221ae`
+- 研发候选提交：`d1e5b40804805e67681893af63cffd83fd0000e5`、`c9353fd1ed639bd84f0668dd57c50283435b65f7`、`6a0b5b6d71b95140eaf1da524ba59befb63c20cd`、`c1bcdac55a7b0238fbea0d3cafe391c0bf22bf64`、`3c343b44a063f780afc16adccb96eb92758d3076`
 - 明确排除的同步 merge：`0e353ac26547d9b25affc0eb13c86e3621a4357b`、`4ba5f82282e0617015f00880ea4beb49dad8b0f4`、`431023d0fa55455e3ac2ddfe2f462f7c13deafbb`
-- 集成方式：四个候选提交均未 cherry-pick；成功生命周期门禁 fail closed
+- 集成方式：五个候选提交均未 cherry-pick；成功生命周期门禁 fail closed
 - 集成提交：`N/A`
 - Git 冲突：未进入 cherry-pick，因此无 Git 冲突
-- 合同冲突：存在，详见“集成复审轮次 04”
+- 合同冲突：存在，详见“集成复审轮次 05”
 - 最终席位状态：`BLOCKED`
 - 部门结果：`BLOCKED`
 
@@ -336,6 +336,77 @@
   至少支持本轮成功集成提交或报告提交，并增加一个从 `RUNNING` 更新到 `SUCCEEDED` 后仍
   `STATIC_CONSISTENT` 的真实 Git 正例及缺失映射负例；然后重新派发集成复审。
 
+## 集成复审轮次 05（remediation-05）
+
+### v2 报告身份与执行元数据
+
+- 任务 ID：`ML-20260803-001`
+- 角色：`SUPPORTING`
+- 部门代码：`integration_release`
+- 线程标题：`ML｜集成发布部｜席位｜01`
+- 线程 ID：`019fc533-b3a2-7be2-96ce-f4990bda6d6e`
+- 来源主线程：`ML | 项目统筹部 | 主线程 | 01`
+- 来源线程 ID：`019fc3a3-d0a0-7f13-b660-2010e36c7138`
+- 当前接受的任务卡 revision：`459efbf`
+- 当前接受范围：`复审 3c343b44 的成功生命周期修复与 9 正例加 51 负例；通过后依次集成五个研发提交，更新 contract v2 集成报告并返回 integration commit 与 report commit。`
+- 当前回执证据：`docs/conclusions/tasks/ML-20260803-001/receipts/department-integration-release-01-remediation-05.md`
+- 报告路径：`docs/conclusions/tasks/ML-20260803-001/department-integration-release-01.md`
+- 复审开始 main：`42d9b484b0d01bf6324936f5c34f77549f8221ae`
+- ACTIVE 回执 commit：`6c145f2ebd926ab92a321158a879e71ecf662a6e`
+- 审查候选：`d1e5b408`、`c9353fd1`、`6a0b5b6d`、`c1bcdac5`、`3c343b44`
+- 明确排除：全部同步 merge，包括 `0e353ac`、`4ba5f82`、`431023d`、`6cf81f8`
+- 实际范围：固定复审 `3c343b44^..3c343b44` 的六个授权文件；核验运行态、缺双 SHA、错 SHA、不可解析/非祖先、完整双 SHA 后 REVIEW、最终 summary 和真实 cherry-pick 拓扑。
+- 五个 cherry-pick 新 SHA：`N/A`、`N/A`、`N/A`、`N/A`、`N/A`（硬门禁失败，未进入集成）
+- Integration commit：`N/A`
+- Integration report commit：本文件不能自引用；本轮 BLOCKED 报告的准确 SHA 记录在交付回复
+- Git 冲突：未开始 cherry-pick，因此无 Git 冲突
+- 最终席位状态：`BLOCKED`
+- 部门结果：`BLOCKED`
+
+### Standards 轴
+
+Standards Agent 报告 3 个 P1 硬缺陷，Fowler 判断项 0：
+
+1. 成功状态门禁只拒绝 task=`RUNNING`，没有强制 task 必须为 `REVIEW`。实测
+   `DRAFT`、`DISPATCHING`、`READY`、`SUCCEEDED`、`FAILED`、`BLOCKED` 配合 integration
+   result=`SUCCEEDED` 和格式完整双 SHA 都得到零错误，违反候选自身规定的正式迁移顺序。
+2. 最终 summary 与明确的 cherry-pick 拓扑不闭合。summary Git 校验要求任务卡声明的五个原候选
+   SHA 都是 summary 的祖先；这些 SHA 当前均不是 main 祖先，cherry-pick 只会产生新 SHA，不会让
+   原提交成为祖先。新增 final-summary 正例使用 `verify_git=False`，未覆盖真实 Git 门禁。
+3. assignment execution 的 report fallback 被扩展到所有部门和结果状态；规则只允许
+   `RUNNING`、`FAILED`、`BLOCKED` 使用该兜底，因此非集成部门 `SUCCEEDED` 时也能缺失显式执行
+   映射而通过。
+
+### Spec 轴
+
+Spec Agent 报告 1 个 P1 硬缺陷：`_validate_integration_success_mapping()` 仅在 task 为 `RUNNING`
+时报“不能在 REVIEW 前成功”，而不是要求 task 精确为 `REVIEW`。51 个负例只有 RUNNING 提前成功
+用例，没有覆盖其他非法任务状态。因此“完整双 SHA 后 REVIEW”仍是可绕过的部分实现。其余
+direct patch 只涉及六个授权文件，无范围扩张发现。
+
+### 候选检查与最终判断
+
+- 候选 worktree：`codex/ml-20260803-001-engineering-04@3c343b44a063f780afc16adccb96eb92758d3076`，检查前后干净。
+- Python：`3.12.9`。
+- `py -3.12 -X utf8 scripts/validate_organization.py`：通过，输出 `STATIC_CONSISTENT`。
+- `py -3.12 -X utf8 scripts/test_validate_organization.py`：通过，`9` 正例、`51` 负例、共 `60` 项。
+- `py -3.12 -X utf8 -m unittest scripts.test_validate_organization`：通过，`Ran 60 tests`。
+- `py -3.12 -X utf8 -m py_compile scripts/validate_organization.py scripts/test_validate_organization.py`：通过。
+- `py -3.12 -X utf8 scripts/validate_repository.py`：Python 3.12 默认环境缺少 `yaml`；仅对该只读进程设置 `PYTHONPATH=D:\开发环境\运行时\Python\Python311\Lib\site-packages` 后通过，输出 `Repository contract valid: 61 source series, 62 API paths`。
+- 候选 `git diff --check`：通过。
+- 范围检查：`3c343b44` 仅修改任务卡授权的六个文件；同步 merge 未纳入候选集成序列。
+- 最终判断：`BLOCKED`。测试数量与当前候选快照自洽不能覆盖正式状态机和真实 cherry-pick/summary Git 生命周期缺口，故五个研发提交均未写入 main。
+
+### 风险与恢复条件
+
+- 风险：若现在集成，非法任务状态可配合 integration `SUCCEEDED` 通过；即使来源线程遵循 REVIEW
+  顺序，最终 summary 仍会因原候选 SHA 不是 cherry-pick 后 main 的祖先而失败；其他成功部门也可
+  通过过宽 report fallback 绕过显式执行映射。
+- 恢复条件：成功 integration 必须要求 task 精确为 `REVIEW`；为 cherry-pick 建立原候选 SHA 到
+  main 新 SHA 的可验证映射，或让 summary 只对真正集成的 main SHA 执行祖先检查；将 report
+  fallback 严格限制到规则声明的 `RUNNING/FAILED/BLOCKED`；增加真实 Git 仓库的 REVIEW→最终
+  summary 正例，以及每个非法状态、cherry-pick 拓扑和 SUCCEEDED fallback 的负例。
+
 ## 1. 本次遇到的问题以及场景
 
 本席位负责把研发治理合同提交集成到 `main`，同时守住变更范围、合同同步和发布门禁。候选提交
@@ -354,6 +425,10 @@ ACTIVE/BLOCKED 矛盾和 implementation 时序缺口。第三轮因此继续 fai
 remediation-04 修复了第三轮列出的显式缺口，并把测试扩充到 5 正例 + 46 负例；然而独立 Standards
 复审发现成功终态没有本轮 integration receipt 的提交映射。候选只能在 `RUNNING` 状态依靠报告
 fallback 通过，一旦正常收口为 `SUCCEEDED` 即失败，因此仍不能进入基线。
+
+remediation-05 引入双 SHA 成功映射并扩充到 9 正例 + 51 负例，但状态检查只排除 `RUNNING` 而未
+强制 `REVIEW`；真实 cherry-pick 后的原候选提交也不满足 final summary 的祖先断言，且 report
+fallback 对成功部门过宽。第五轮因此继续 fail closed。
 
 ## 2. 分析这个问题的过程
 
@@ -375,6 +450,10 @@ merge 分开。除再次运行两轴审查和候选门禁外，还直接加载�
 第四轮将 `c1bcdac5^..c1bcdac5` 固定为 direct patch，排除 `431023d` 同步 merge；候选门禁全绿后，
 继续检查从当前 `RUNNING` 到正式 `SUCCEEDED` 的状态迁移。通过直接读取 `_task_commit_map()` 结果
 与 fallback 条件，证明轮次 04 缺少可持续提交映射，避免把瞬时快照通过误判为生命周期通过。
+
+第五轮将 `3c343b44^..3c343b44` 固定为 direct patch，并同时执行函数级状态矩阵与真实 Git 祖先
+检查。状态矩阵证明除 `RUNNING` 外的非法状态没有被拒绝；祖先检查证明五个原候选 SHA 均不是
+main 祖先，从而暴露 verify_git=False 正例没有证明最终 summary 可收口。
 
 ## 3. 解决这个问题的工作流程
 
@@ -398,6 +477,10 @@ LEGACY 边界和完整生命周期仍有硬缺陷，未执行三笔 cherry-pick�
 remediation-04 回执无法在 `SUCCEEDED` 状态映射到对应集成提交后，按 fail closed 不执行四笔
 cherry-pick，只更新本报告并给出最小恢复条件。
 
+第五轮先验证 60 项候选测试和全部候选门禁，再执行两轴独立复审与真实 Git 拓扑检查。三类硬
+缺陷使正式 REVIEW、SUCCEEDED 和 summary 链路不能稳定闭合，因此不执行五笔 cherry-pick，只
+更新本报告并交还最小恢复条件。
+
 ## 4. 使用的 Agents、skills、tools 以及阅读文档
 
 ### Agents
@@ -411,6 +494,8 @@ cherry-pick，只更新本报告并给出最小恢复条件。
 - `spec_review_03` 子 Agent：第三轮复核任务成功标准、两轮恢复条件和最新 main 兼容性。
 - `standards_review_04` 子 Agent：第四轮复核成功终态生命周期与 Fowler 标准，发现轮次 04 提交映射缺口。
 - `spec_review_04` 子 Agent：第四轮固定 direct patch 复核第三轮恢复条件、测试计数与范围，报告 zero findings。
+- `standards_review_05` 子 Agent：第五轮复核正式状态、真实 cherry-pick/summary 祖先和 report fallback。
+- `spec_review_05` 子 Agent：第五轮按任务卡核验双 SHA 后必须 REVIEW 的状态迁移规则。
 
 ### Skills
 
@@ -441,6 +526,8 @@ cherry-pick，只更新本报告并给出最小恢复条件。
 - 候选提交 `6a0b5b6d71b95140eaf1da524ba59befb63c20cd` 中第二轮整改后的全部 6 个文件
 - `docs/conclusions/tasks/ML-20260803-001/receipts/department-integration-release-01-remediation-04.md`
 - 候选提交 `c1bcdac55a7b0238fbea0d3cafe391c0bf22bf64` 中第三轮整改后的全部 6 个文件
+- `docs/conclusions/tasks/ML-20260803-001/receipts/department-integration-release-01-remediation-05.md`
+- 候选提交 `3c343b44a063f780afc16adccb96eb92758d3076` 中成功生命周期整改后的全部 6 个文件
 
 ## 5. 本次执行值得沉淀的经验或者模式
 
@@ -459,6 +546,10 @@ cherry-pick，只更新本报告并给出最小恢复条件。
 11. Git 时序要绑定当前内容和对应产物，不能只使用文件首次引入提交与最新报告提交。
 12. 门禁必须验证合法状态迁移而不只是当前快照；`RUNNING` 的兜底路径若在 `SUCCEEDED` 关闭，必须有
     终态正例证明证据映射仍成立。
+13. “拒绝某个提前状态”不等于“强制唯一合法状态”；状态机门禁应使用允许集合或精确等值，并为
+    每个非法状态建立参数化负例。
+14. cherry-pick 会改变提交身份。凡 summary 以 Git 祖先关系证明“已集成”，必须验证 main 新 SHA，
+    或显式保存原候选到新 SHA 的映射，不能对原候选 SHA 直接做祖先断言。
 
 ## 6. 问题解决后反推的一条更好初始提示词
 
