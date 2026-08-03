@@ -13,6 +13,7 @@
 - Remediation-04 commit: `3c343b44a063f780afc16adccb96eb92758d3076`
 - Remediation-05 commit: `12766ea0f6bb1ae967b0c98525025bef4dace60a`
 - Remediation-06 commit: `bac5d0883d59d8ff7244e34a89631a3b05d7478a`
+- Remediation-07 commit: `b05bfac2344d0816ecb2a85dfa38976e3096a0a6`
 - Blocked integration report commit: `1c0c19412bd5c6b07b25f49f3e3a960da215a040`
 - Blocked reintegration report commit: `7bdf1e6bc971774c96fd120a07801b5756698823`
 - Blocked reintegration-03 report commit: `6e4f38d6d8acce4352c31504c3c6403dad7c2d67`
@@ -50,7 +51,7 @@ Update MacroLens task-execution governance so every substantive task is assigned
 | SUPPORTING | `ML | 知识管理部 | 01` | `019fc533-c4bb-71a3-b963-d39218141521` | Review task-card/report schemas and evidence completeness | `department-knowledge-01.md` | RESERVED | SUCCEEDED |
 | SUPPORTING | `ML｜研发部｜席位｜04` | `019fc533-0419-7103-a9e4-173a356b0b67` | Implement approved rules and validator in an isolated worktree | `department-engineering-04.md` | RESERVED | RUNNING |
 | SUPPORTING | `ML | 测试部 | 01` | `019fc533-101f-7111-8ad3-1ac090a62da2` | Independently verify contract and regression checks | `department-quality-01.md` | PENDING | PENDING |
-| SUPPORTING | `ML｜集成发布部｜席位｜01` | `019fc533-b3a2-7be2-96ce-f4990bda6d6e` | Integrate the engineering commit and verify baseline consistency | `department-integration-release-01.md` | RESERVED | BLOCKED |
+| SUPPORTING | `ML｜集成发布部｜席位｜01` | `019fc533-b3a2-7be2-96ce-f4990bda6d6e` | Integrate the engineering commit and verify baseline consistency | `department-integration-release-01.md` | PENDING | PENDING |
 
 ## Dependencies and order
 
