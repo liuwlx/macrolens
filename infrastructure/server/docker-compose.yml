@@ -1,0 +1,126 @@
+name: macrolens
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  minio:
+    image: minio/minio:latest
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${S3_ACCESS_KEY_ID}
+      MINIO_ROOT_PASSWORD: ${S3_SECRET_ACCESS_KEY}
+    volumes:
+      - minio_data:/data
+    ports:
+      - "127.0.0.1:9000:9000"
+
+  minio-init:
+    image: minio/mc:latest
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      until /usr/bin/mc alias set local http://minio:9000 ${S3_ACCESS_KEY_ID} ${S3_SECRET_ACCESS_KEY}; do sleep 2; done;
+      /usr/bin/mc mb --ignore-existing local/${S3_BUCKET};
+      exit 0;
+      "
+    restart: "no"
+
+  mailpit:
+    image: axllent/mailpit:latest
+    restart: unless-stopped
+
+  migrate:
+    image: macrolens-backend:${RELEASE_SHA}
+    env_file: .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: ["alembic", "upgrade", "head"]
+    restart: "no"
+
+  seed:
+    image: macrolens-backend:${RELEASE_SHA}
+    env_file: .env
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    command: ["python", "-m", "macrolens_api.cli", "seed"]
+    restart: "no"
+
+  api:
+    image: macrolens-backend:${RELEASE_SHA}
+    restart: unless-stopped
+    env_file: .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+      seed:
+        condition: service_completed_successfully
+    command: ["uvicorn", "macrolens_api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+    ports:
+      - "127.0.0.1:8000:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/ready')"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  worker:
+    image: macrolens-backend:${RELEASE_SHA}
+    restart: unless-stopped
+    env_file: .env
+    depends_on:
+      seed:
+        condition: service_completed_successfully
+      minio-init:
+        condition: service_completed_successfully
+    command: ["python", "-m", "macrolens_worker.main", "run"]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  scheduler:
+    image: macrolens-backend:${RELEASE_SHA}
+    restart: unless-stopped
+    env_file: .env
+    depends_on:
+      seed:
+        condition: service_completed_successfully
+    command: ["python", "-m", "macrolens_worker.main", "schedule"]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  web:
+    image: macrolens-web:${RELEASE_SHA}
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:3000:3000"
+
+volumes:
+  postgres_data:
+  minio_data:
