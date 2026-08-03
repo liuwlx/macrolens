@@ -5,8 +5,9 @@
 - Source main task: `ML | 项目统筹部 | 主线程 | 01`
 - Source thread ID: `019fc3a3-d0a0-7f13-b660-2010e36c7138`
 - Task type: organization governance / agent instructions / documentation / validation
-- Status: `REMEDIATION_RESERVED`
+- Status: `REINTEGRATION_DISPATCHING`
 - Implementation commit: `d1e5b40804805e67681893af63cffd83fd0000e5`
+- Remediation commit: `c9353fd1ed639bd84f0668dd57c50283435b65f7`
 - Blocked integration report commit: `1c0c19412bd5c6b07b25f49f3e3a960da215a040`
 - Created: 2026-08-03 (Asia/Shanghai)
 
@@ -37,9 +38,9 @@ Update MacroLens task-execution governance so every substantive task is assigned
 | --- | --- | --- | --- | --- | --- | --- |
 | PRIMARY | `ML | 架构部 | 01` | `019fc531-f5a2-7c91-ba58-7bfb4ca8ceeb` | Design governance rules and exact cross-file contract | `department-architecture-01.md` | RESERVED | SUCCEEDED |
 | SUPPORTING | `ML | 知识管理部 | 01` | `019fc533-c4bb-71a3-b963-d39218141521` | Review task-card/report schemas and evidence completeness | `department-knowledge-01.md` | RESERVED | SUCCEEDED |
-| SUPPORTING | `ML｜研发部｜席位｜04` | `019fc533-0419-7103-a9e4-173a356b0b67` | Implement approved rules and validator in an isolated worktree | `department-engineering-04.md` | RESERVED | REMEDIATION_RESERVED |
+| SUPPORTING | `ML｜研发部｜席位｜04` | `019fc533-0419-7103-a9e4-173a356b0b67` | Implement approved rules and validator in an isolated worktree | `department-engineering-04.md` | RESERVED | SUCCEEDED |
 | SUPPORTING | `ML | 测试部 | 01` | `019fc533-101f-7111-8ad3-1ac090a62da2` | Independently verify contract and regression checks | `department-quality-01.md` | PENDING | PENDING |
-| SUPPORTING | `ML｜集成发布部｜席位｜01` | `019fc533-b3a2-7be2-96ce-f4990bda6d6e` | Integrate the engineering commit and verify baseline consistency | `department-integration-release-01.md` | RESERVED | BLOCKED |
+| SUPPORTING | `ML｜集成发布部｜席位｜01` | `019fc533-b3a2-7be2-96ce-f4990bda6d6e` | Integrate the engineering commit and verify baseline consistency | `department-integration-release-01.md` | RESERVED | RETRY_REQUIRED |
 
 ## Dependencies and order
 
