@@ -9,7 +9,7 @@
 - 服务器上已有多套 `tuntun-*` Docker 应用和多份 Nginx 配置，不能误停 SSH、Docker、Nginx、网络、防火墙等基础设施，也不能直接删除旧应用的数据、镜像和卷。
 - 当前项目包含 Web、API、Worker、Scheduler、PostgreSQL/pgvector、MinIO 和 Mailpit 等多个进程，需要完成数据库迁移、种子数据、反向代理、TLS 和公网端到端验收。
 - 服务器公网 `443` 不可用，但 `8443` 已开放；已有 Let's Encrypt IP 证书可以覆盖 `111.229.152.122`。
-- 部分官方数据源需要 FRED、BLS、EIA API Key，而本次部署没有获得这些外部凭据。
+- 部分官方数据源需要 FRED、BLS、EIA API Key，AI 生成功能需要 OpenAI API Key，而本次部署没有获得这些外部凭据。
 
 ## 2. 分析过程
 
@@ -21,30 +21,31 @@
 6. 首次登录验收发现种子管理员邮箱 `admin@macrolens.local` 不符合生产登录接口的严格邮箱校验；事务性调整为 `admin@macrolens.example.com`，并重新创建 API、Worker、Scheduler。
 7. 运行日志检查发现 FRED、BLS、EIA 因缺少 API Key 产生后台失败任务。检查调度器代码后确认 `source.provider.active` 是正式启停开关，因此在种子初始化完成后暂停这三个数据源，并跨一个调度周期确认没有新增失败。
 8. 证书续期复核发现系统包 Certbot 2.9 与签发 IP 证书的 Snap Certbot 5.7 并存，旧版定时器无法解析 IP 证书续期参数。停用旧版定时器，保留并验证 Snap 定时器，生产证书模拟续期成功，既有部署钩子会在续期后检查并 reload Nginx。
+9. 历史任务复核又发现 FOMC 跨月日期（例如 `Apr/May 30-1`）无法解析，以及已暂停的 BLS Provider 仍会被无条件排入发布日历任务。增加跨月/跨年解析和 Provider 活动状态门控测试，修复后滚动替换后端；生产全量 FOMC 任务最终解析 57 场会议、新增 320 份官方文档，所有 326 个有效任务成功。
 
 ## 3. 解决流程与结果
 
 ### 代码与部署配置
 
-- 部署代码版本：`8092075dc8cdf5d0e8a8a6ea9a202feec15949ad`（`deploy: prepare server release candidate`）。
+- 最终部署代码版本：`5fb47641e84917aa8e6aed356948553986653f2e`（`fix: gate calendar jobs and parse cross-month meetings`）；初始发布候选为 `8092075dc8cdf5d0e8a8a6ea9a202feec15949ad`。
 - 新增服务器部署 Compose、生产环境变量示例和 Nginx 配置。
 - 修复报告页生产构建类型错误。
 - 修复 ECharts 6 的 React peer dependency 兼容性。
 - 生产镜像：
-  - Backend：`sha256:77a9f4fd22bb8147a18fa47051cff0ee44fdd56f231a76f4d2e2a0362697352a`
+  - Backend：`sha256:fd8aab8a1b553d03a8af52fd2b931888d0296709a643dd569a4865a3011f18ac`
   - Web：`sha256:59b7eea6445dffd4da406b9ea0e3e18201d7ea67d4daee798af5484a7a897510`
 
 ### 服务器变更
 
 - 使用账号：`ubuntu`，通过免密 `sudo` 执行受控运维命令。
 - 停止并设置为不自动重启的旧应用容器共 10 个：`tuntun-agents-*`、`tuntun-platform-data-*`、`tuntun-order-*`、`tuntun-admin-*`。旧容器、镜像、卷和目录均未删除。
-- 部署目录：`/opt/macrolens/releases/8092075dc8cdf5d0e8a8a6ea9a202feec15949ad`。
+- 最终部署目录：`/opt/macrolens/releases/5fb47641e84917aa8e6aed356948553986653f2e`；初始候选 release 保留用于回滚。
 - 当前版本指针：`/opt/macrolens/current`。
 - 真实生产环境变量：`/opt/macrolens/shared/.env`，权限为 `600`，未写入仓库或报告。
 - 旧 Nginx 和 Docker 状态备份：`/opt/backups/macrolens-predeploy-20260803T1035Z`。
 - 旧 Nginx 站点移动到：`/etc/nginx/disabled-macrolens-20260803T1117Z`。
 - 部署初始数据库备份：`/opt/backups/macrolens-initial-8092075dc8cdf5d0e8a8a6ea9a202feec15949ad.sql.gz`。
-- 部署最终数据库备份：`/opt/backups/macrolens-final-8092075dc8cdf5d0e8a8a6ea9a202feec15949ad.sql.gz`，SHA-256 为 `609fd1ee309ba2420a102d0b8004e385ee28fba6e87e7e732896ab036afc95d1`。
+- 部署最终数据库备份：`/opt/backups/macrolens-final-5fb47641e84917aa8e6aed356948553986653f2e.sql.gz`，SHA-256 为 `87f7dde8ee42aa5797ba23838471211f662bad7470d115fa0eacb3605b2415bd`。
 - 构建阶段临时代理已停止，端口 `17890` 不再监听。
 
 ### 运行状态和验收
@@ -59,7 +60,9 @@
 - 登录、`/auth/me`、安全 Cookie、关闭公开注册、跨域 CSRF 拦截、退出登录均通过。
 - MinIO 上传、预签名公网下载和内容一致性验证通过。
 - 11 个关键 API 读取路径通过，包括分类树、序列、发布日历、FOMC、文档、AI、项目、收藏、提醒、报告和管理任务。
-- FRED、BLS、EIA 三个需要外部 Key 的可选采集源暂时标记为非活动；Treasury、FOMC 等无需该三项凭据的链路保持运行。
+- FOMC 实际全量采集通过：57 场会议、320 份文档、336 个原始对象；下载、对象存储、数据库提交和文档解析链路均成功。
+- FRED、BLS、EIA 三个需要外部 Key 的可选采集源暂时标记为非活动，相关历史失败任务保留原因后标记为已取消；Treasury、FOMC 等无需该三项凭据的链路保持运行。
+- AI 页面和读取 API 可用，但真正调用外部模型生成内容仍需用户提供 `OPENAI_API_KEY`；未伪造或复用其他环境的密钥。
 
 ### 回滚方式
 
@@ -112,6 +115,7 @@
 6. IP HTTPS 可以作为短期验收方案，但正式长期环境更适合使用受控域名、标准 443 端口和监控告警。
 7. 本次完整仓库检查还暴露了既有的 lint 报错和 Vitest ESM 兼容问题；它们不阻断已通过的生产构建和运行验收，但应单独建立治理任务。
 8. 同机安装多个 Certbot 时，续期定时器必须与签发证书的版本一致；只检查证书当前有效还不够，必须验证实际 timer、执行文件、模拟续期和 deploy hook。
+9. 后台任务验收应查询所有终态及 `last_error`，不能只扫描最近日志；本次正是通过历史失败任务发现了跨月日期解析和无条件日历入队缺陷。
 
 ## 6. 更好的初始提示词
 
@@ -123,4 +127,4 @@
 
 一次解决这些长期问题的更优提示词如下：
 
-> 请把当前 MacroLens 部署为可长期维护的生产环境。目标服务器是 `ubuntu@111.229.152.122`；我会提供一个已解析到该 IP 的正式域名以及 FRED、BLS、EIA API Key。请先备份并可逆地停用旧业务应用，再修复所有阻断生产的构建和测试问题；构建带 Git SHA 的 Web/API 镜像并推送到私有镜像仓库，第三方镜像全部固定 digest。用幂等部署脚本或 CI 在 `/opt/macrolens/releases/<git-sha>` 发布，标准 443 提供 HTTPS，密钥只进入服务器 secret 文件。调度器必须在入队前检查 Provider 凭据，未就绪的数据源不产生失败任务。部署后执行数据库迁移、种子、备份与恢复演练，并从公网完成页面、认证安全、业务 API、对象存储、数据采集和跨调度周期的端到端验收；最后交付链接、版本、镜像 digest、监控状态、备份与一键回滚命令。
+> 请把当前 MacroLens 部署为可长期维护的生产环境。目标服务器是 `ubuntu@111.229.152.122`；我会提供一个已解析到该 IP 的正式域名，以及 FRED、BLS、EIA 和 OpenAI API Key。请先备份并可逆地停用旧业务应用，再修复所有阻断生产的构建和测试问题；构建带 Git SHA 的 Web/API 镜像并推送到私有镜像仓库，第三方镜像全部固定 digest。用幂等部署脚本或 CI 在 `/opt/macrolens/releases/<git-sha>` 发布，标准 443 提供 HTTPS，密钥只进入服务器 secret 文件。调度器必须在入队前检查 Provider 凭据，未就绪的数据源不产生失败任务。部署后执行数据库迁移、种子、备份与恢复演练，并从公网完成页面、认证安全、业务 API、对象存储、数据采集、AI 实际生成和跨调度周期的端到端验收；最后交付链接、版本、镜像 digest、监控状态、备份与一键回滚命令。
