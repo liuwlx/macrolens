@@ -51,7 +51,7 @@ Update MacroLens task-execution governance so every substantive task is assigned
 | SUPPORTING | `ML | 知识管理部 | 01` | `019fc533-c4bb-71a3-b963-d39218141521` | Review task-card/report schemas and evidence completeness | `department-knowledge-01.md` | RESERVED | SUCCEEDED |
 | SUPPORTING | `ML｜研发部｜席位｜04` | `019fc533-0419-7103-a9e4-173a356b0b67` | Implement approved rules and validator in an isolated worktree | `department-engineering-04.md` | RESERVED | RUNNING |
 | SUPPORTING | `ML | 测试部 | 01` | `019fc533-101f-7111-8ad3-1ac090a62da2` | Independently verify contract and regression checks | `department-quality-01.md` | PENDING | PENDING |
-| SUPPORTING | `ML｜集成发布部｜席位｜01` | `019fc533-b3a2-7be2-96ce-f4990bda6d6e` | Integrate the engineering commit and verify baseline consistency | `department-integration-release-01.md` | PENDING | PENDING |
+| SUPPORTING | `ML｜集成发布部｜席位｜01` | `019fc533-b3a2-7be2-96ce-f4990bda6d6e` | Integrate the engineering commit and verify baseline consistency | `department-integration-release-01.md` | RESERVED | PENDING |
 
 ## Dependencies and order
 
