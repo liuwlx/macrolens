@@ -5,7 +5,7 @@
 - Source main task: `ML | 项目统筹部 | 主线程 | 01`
 - Source thread ID: `019fc3a3-d0a0-7f13-b660-2010e36c7138`
 - Task type: organization governance / agent instructions / documentation / validation
-- Status: `RUNNING`
+- Status: `DISPATCHING`
 - Implementation commit: `d1e5b40804805e67681893af63cffd83fd0000e5`
 - Remediation commit: `c9353fd1ed639bd84f0668dd57c50283435b65f7`
 - Remediation-02 commit: `6a0b5b6d71b95140eaf1da524ba59befb63c20cd`
@@ -17,6 +17,7 @@
 - Blocked reintegration-03 report commit: `6e4f38d6d8acce4352c31504c3c6403dad7c2d67`
 - Blocked reintegration-04 report commit: `dea54263eb20d790363ad1996bb1d84d9d91ad9d`
 - Blocked reintegration-05 report commit: `7879ca714d8e88e89eea35216c0c0e3c18da1335`
+- Blocked reintegration-06 report commit: `611c3eaeed72ebc01b6ca45b7b478ba3254a23a2`
 - Created: 2026-08-03 (Asia/Shanghai)
 
 ## Goal
@@ -46,9 +47,9 @@ Update MacroLens task-execution governance so every substantive task is assigned
 | --- | --- | --- | --- | --- | --- | --- |
 | PRIMARY | `ML | 架构部 | 01` | `019fc531-f5a2-7c91-ba58-7bfb4ca8ceeb` | Design governance rules and exact cross-file contract | `department-architecture-01.md` | RESERVED | SUCCEEDED |
 | SUPPORTING | `ML | 知识管理部 | 01` | `019fc533-c4bb-71a3-b963-d39218141521` | Review task-card/report schemas and evidence completeness | `department-knowledge-01.md` | RESERVED | SUCCEEDED |
-| SUPPORTING | `ML｜研发部｜席位｜04` | `019fc533-0419-7103-a9e4-173a356b0b67` | Implement approved rules and validator in an isolated worktree | `department-engineering-04.md` | RESERVED | SUCCEEDED |
+| SUPPORTING | `ML｜研发部｜席位｜04` | `019fc533-0419-7103-a9e4-173a356b0b67` | Implement approved rules and validator in an isolated worktree | `department-engineering-04.md` | PENDING | PENDING |
 | SUPPORTING | `ML | 测试部 | 01` | `019fc533-101f-7111-8ad3-1ac090a62da2` | Independently verify contract and regression checks | `department-quality-01.md` | PENDING | PENDING |
-| SUPPORTING | `ML｜集成发布部｜席位｜01` | `019fc533-b3a2-7be2-96ce-f4990bda6d6e` | Integrate the engineering commit and verify baseline consistency | `department-integration-release-01.md` | RESERVED | RUNNING |
+| SUPPORTING | `ML｜集成发布部｜席位｜01` | `019fc533-b3a2-7be2-96ce-f4990bda6d6e` | Integrate the engineering commit and verify baseline consistency | `department-integration-release-01.md` | RESERVED | BLOCKED |
 
 ## Dependencies and order
 
@@ -73,6 +74,8 @@ Reintegration review `6e4f38d6` confirmed direct execution and 36 negative tests
 Reintegration review `dea54263` found one remaining lifecycle defect after 5 positive and 46 negative tests passed: an integration assignment could validate while `RUNNING` using its report commit, but no task-card field and validator path allowed the source main task to record the real integration commit before changing that department result to `SUCCEEDED`. The next remediation must make this transition explicit and fail closed when either the integration commit or integration report commit is absent.
 
 Reintegration review `7879ca71` found three final-close defects after 9 positive and 51 negative tests passed: integration success did not force the task into `REVIEW` before final summary; final-summary Git checks incorrectly required original worktree candidate SHAs to be ancestors even though the approved workflow cherry-picks them to new main SHAs; and report fallback was broad enough to let some already-`SUCCEEDED` non-integration departments bypass explicit execution mappings. The next remediation must use real cherry-pick topology tests and distinguish source candidate SHAs from integrated main SHAs.
+
+Reintegration review `611c3eae` showed that the source main task had prematurely marked Engineering `SUCCEEDED` before source-to-integrated mappings existed; until integration completes, that assignment must remain `RUNNING` and use the allowed report fallback. It also found that the validator did not enforce the reverse rule that source candidate commits must not be final-summary ancestors, and that the synthetic tests removed the real multi-department task directory instead of exercising the current topology.
 
 ## Required checks
 
