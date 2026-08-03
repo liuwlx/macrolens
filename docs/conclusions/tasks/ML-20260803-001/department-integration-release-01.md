@@ -10,17 +10,17 @@
 - 线程 ID：`019fc533-b3a2-7be2-96ce-f4990bda6d6e`
 - 来源主线程：`ML | 项目统筹部 | 主线程 | 01`
 - 来源线程 ID：`019fc3a3-d0a0-7f13-b660-2010e36c7138`
-- 当前接受的任务卡 revision：`9d5d4f0`
-- 当前接受范围：`复审 b05bfac2、真实八轮多部门拓扑、LOCAL_REPORT assignment 隔离和 13 正例加 83 负例；通过后依次集成八个研发提交并更新 contract v2 报告。`
-- 当前回执证据：`docs/conclusions/tasks/ML-20260803-001/receipts/department-integration-release-01-remediation-07.md`
-- 实际范围：复审 `bac5d088`、`b05bfac2` 和研发自审，验证真实八轮 cherry-pick、LOCAL_REPORT assignment 隔离、非法/空/重复声明与 source 祖先规则；候选 96 项门禁出现 1 个正例失败后停止。
-- 审查基线：`1f7469b0badb339956b9fcc2fed5c143df7b44bf`
-- 研发候选提交：`d1e5b40804805e67681893af63cffd83fd0000e5`、`c9353fd1ed639bd84f0668dd57c50283435b65f7`、`6a0b5b6d71b95140eaf1da524ba59befb63c20cd`、`c1bcdac55a7b0238fbea0d3cafe391c0bf22bf64`、`3c343b44a063f780afc16adccb96eb92758d3076`、`12766ea0f6bb1ae967b0c98525025bef4dace60a`、`bac5d0883d59d8ff7244e34a89631a3b05d7478a`、`b05bfac2344d0816ecb2a85dfa38976e3096a0a6`
+- 当前接受的任务卡 revision：`4d77158`
+- 当前接受范围：`复审 direct candidate 363354ee 的幂等 RUNNING fixture、动态活动证据集合和 13 正例加 83 负例；通过后依次集成九个研发 direct commit 并更新 contract v2 集成报告。`
+- 当前回执证据：`docs/conclusions/tasks/ML-20260803-001/receipts/department-integration-release-01-remediation-08.md`
+- 实际范围：复审 `363354ee` direct patch、BLOCKED/PENDING/RUNNING 幂等 fixture、动态 ACTIVE/LEGACY 集合、九轮 patch-id 与报告后重跑语义；发现报告后阶段相关 P1 后停止。
+- 审查基线：`8c88fb7376060d17cee4a2ad87d29fbe4944ab68`
+- 研发候选提交：`d1e5b40804805e67681893af63cffd83fd0000e5`、`c9353fd1ed639bd84f0668dd57c50283435b65f7`、`6a0b5b6d71b95140eaf1da524ba59befb63c20cd`、`c1bcdac55a7b0238fbea0d3cafe391c0bf22bf64`、`3c343b44a063f780afc16adccb96eb92758d3076`、`12766ea0f6bb1ae967b0c98525025bef4dace60a`、`bac5d0883d59d8ff7244e34a89631a3b05d7478a`、`b05bfac2344d0816ecb2a85dfa38976e3096a0a6`、`363354ee84e307594746d4093572ebcdbf784fd6`
 - 明确排除的同步 merge：`0e353ac26547d9b25affc0eb13c86e3621a4357b`、`4ba5f82282e0617015f00880ea4beb49dad8b0f4`、`431023d0fa55455e3ac2ddfe2f462f7c13deafbb`
-- 集成方式：八个候选提交均未 cherry-pick；96 项测试门禁 fail closed
+- 集成方式：九个候选提交均未 cherry-pick；报告后测试生命周期门禁 fail closed
 - 集成提交：`N/A`
 - Git 冲突：未进入 cherry-pick，因此无 Git 冲突
-- 合同冲突：存在，详见“集成复审轮次 07”
+- 合同冲突：存在，详见“集成复审轮次 08”
 - 最终席位状态：`BLOCKED`
 - 部门结果：`BLOCKED`
 
@@ -561,6 +561,73 @@ Spec Agent 同样复现候选 direct test 与 unittest 的 96 项套件各有 1 
   Integration=`RUNNING`，然后在正式最新 main 拓扑上让 direct test 与 unittest 均 96/96 通过。
   重新派发前保留 LOCAL_REPORT、非法/空/重复声明及 source 非祖先负例。
 
+## 集成复审轮次 08（remediation-08）
+
+### v2 报告身份与执行元数据
+
+- 任务 ID：`ML-20260803-001`
+- 角色：`SUPPORTING`
+- 部门代码：`integration_release`
+- 线程标题：`ML｜集成发布部｜席位｜01`
+- 线程 ID：`019fc533-b3a2-7be2-96ce-f4990bda6d6e`
+- 来源主线程：`ML | 项目统筹部 | 主线程 | 01`
+- 来源线程 ID：`019fc3a3-d0a0-7f13-b660-2010e36c7138`
+- 当前接受的任务卡 revision：`4d77158`
+- 当前接受范围：`复审 direct candidate 363354ee 的幂等 RUNNING fixture、动态活动证据集合和 13 正例加 83 负例；通过后依次集成九个研发 direct commit 并更新 contract v2 集成报告。`
+- 当前回执证据：`docs/conclusions/tasks/ML-20260803-001/receipts/department-integration-release-01-remediation-08.md`
+- 报告路径：`docs/conclusions/tasks/ML-20260803-001/department-integration-release-01.md`
+- 复审开始 main：`8c88fb7376060d17cee4a2ad87d29fbe4944ab68`
+- ACTIVE 回执 commit：`772cb94`（回执文件当前内容提交）
+- 审查候选：九个 direct commits，最后一笔 `363354ee`
+- 明确排除：全部同步 merge，包括 `fa486e02`、`0e353ac`、`4ba5f82`、`431023d`、`6cf81f8`、`d4217dc`、`04507a5`、`ed180be6`
+- 实际范围：固定复审 `363354ee^..363354ee`，其 direct patch 仅修改测试脚本与研发报告；验证候选前及预期报告后的门禁语义。
+- 九个 cherry-pick 新 SHA：全部 `N/A`（存在 P1，未进入集成）
+- Integration commit candidate：`N/A`
+- Integration report commit candidate：`N/A`；本轮 BLOCKED 报告准确 SHA 记录在交付回复
+- Git 冲突：未开始 cherry-pick，因此无 Git 冲突
+- 最终席位状态：`BLOCKED`
+- 部门结果：`BLOCKED`
+
+### Standards 轴
+
+Standards Agent 报告 `P1=1, P2=0, P3=1`：
+
+- P1：真实生命周期 fixture 只接受 task-card 原生 order 0..7，再以当前 HEAD 人工补 order 8。
+  候选阶段可通过；九次 cherry-pick 和报告提交后，main task-card 已原生声明 order 8=`363354ee`，
+  该精确断言必失败。即使删除断言，复制授权文件无差异会让第九个 source 退化为当前
+  main/report HEAD，无法作为独立 source 再 cherry-pick。
+- P3（Duplicated Code）：动态收集 ACTIVE/LEGACY receipt 的同形测试逻辑出现两次，可后续抽取
+  helper；不影响本轮阻断判断。
+
+### Spec 轴
+
+Spec Agent 报告 `P1=1, P2=0, P3=0`：`scripts/test_validate_organization.py` 的真实生命周期
+正例只在 candidate worktree 可通过。派单要求九笔集成及报告提交后从 main 原样再跑 96 项；届时
+clone 初始 HEAD 已是 main/report commit，测试会错误重写第九个 source 并再次 cherry-pick 0..8，
+产生空提交或冲突。幂等状态 helper 和动态证据枚举本身未发现其他缺口。
+
+### 候选检查与最终判断
+
+- 候选 worktree：`codex/ml-20260803-001-engineering-04@363354ee84e307594746d4093572ebcdbf784fd6`，检查前后干净。
+- Python：`3.12.9`。
+- `py -3.12 -X utf8 scripts/validate_organization.py`：通过，输出 `STATIC_CONSISTENT`。
+- `py -3.12 -X utf8 scripts/test_validate_organization.py`：通过，`Ran 96 tests`，`13` 正例、`83` 负例。
+- `py -3.12 -X utf8 -m unittest scripts.test_validate_organization`：通过，`Ran 96 tests`。
+- `py -3.12 -m py_compile scripts/validate_organization.py scripts/test_validate_organization.py`：通过。
+- `py -3.12 -X utf8 scripts/validate_repository.py`：Python 3.12 默认环境缺少 `yaml`；仅对该只读进程设置 `PYTHONPATH=D:\开发环境\运行时\Python\Python311\Lib\site-packages` 后通过，输出 `Repository contract valid: 61 source series, 62 API paths`。
+- 候选 `git diff --check`：通过。
+- 范围检查：`363354ee` 只修改研发报告与测试脚本；同步 merge 未纳入候选集成序列。
+- 最终判断：`BLOCKED`。候选前门禁全绿，但报告后同一门禁确定性失败，违反派单第 5 项，故九个研发提交均未写入 main。
+
+### 风险与恢复条件
+
+- 风险：若现在集成，会在报告提交后才发现真实生命周期正例无法重入，留下已写入 main 但不能通过
+  强制门禁的状态。
+- 恢复条件：fixture 必须固定 source candidate 集合，不从运行时 ROOT/HEAD 推导最后一个 source；
+  在 baseline 已包含九个 integrated commits 和报告时，不得再次 cherry-pick，而应验证已有
+  source→integrated patch-id/祖先证据。增加 post-integration main 运行的显式正例，并保证候选前与
+  报告后两个阶段均 96/96 通过。
+
 ## 1. 本次遇到的问题以及场景
 
 本席位负责把研发治理合同提交集成到 `main`，同时守住变更范围、合同同步和发布门禁。候选提交
@@ -591,6 +658,10 @@ commits 又不修改 task-card；因此集成后 RUNNING 过渡态仍会确定�
 remediation-07 将 Engineering 恢复为 RUNNING，引入 source 隔离与 LOCAL_REPORT 路径，并声明
 13 正例 + 83 负例；但真实八轮多部门正例仍假定 Integration 旧状态为 BLOCKED。最新任务卡已是
 RUNNING，导致 direct 与 unittest 都出现 1 个 failure，第七轮按硬门禁停止。
+
+remediation-08 修复了 RUNNING fixture 对 BLOCKED 字符串的依赖，候选前 96 项全绿；但测试仍从
+当前 ROOT/HEAD 推导第九个 source 并重复 cherry-pick。报告提交后的 main 已含九笔集成，此时同一
+测试不能重入，因此第八轮继续 fail closed。
 
 ## 2. 分析这个问题的过程
 
@@ -625,6 +696,10 @@ main 祖先，从而暴露 verify_git=False 正例没有证明最终 summary 可
 两个测试入口都在同一真实多部门正例的 fixture 准备阶段失败，说明测试没有执行到八轮 patch-id、
 LOCAL_REPORT 和 summary 的端到端断言，不能以计数行代替 suite 成功。
 
+第八轮固定 `363354ee^..363354ee` direct patch，分别等待 direct 与 unittest 超过 30 秒完成，确认
+候选前 96/96 通过。随后按派单要求反推报告后再次运行的输入状态，发现测试会把 main/report HEAD
+当 source 并重复集成，从而识别阶段相关假阳性。
+
 ## 3. 解决这个问题的工作流程
 
 1. 固定基线 `8c52c63` 和候选 `d1e5b40`，验证工作区与提交关系。
@@ -658,6 +733,9 @@ cherry-pick，只更新本报告并给出最小恢复条件。
 第七轮在任何 cherry-pick 前运行 96 项候选门禁和双轴复审；direct 与 unittest 均失败，两个轴各
 报告 1 个 P1。按派单立即停止，不执行八笔 cherry-pick，只提交本部门 BLOCKED 报告。
 
+第八轮候选前门禁通过后继续完成双轴复审；两个轴独立确认报告后重跑必失败的 P1。为避免先污染
+main 再发现失败，不执行九笔 cherry-pick，只提交本部门 BLOCKED 报告。
+
 ## 4. 使用的 Agents、skills、tools 以及阅读文档
 
 ### Agents
@@ -677,6 +755,8 @@ cherry-pick，只更新本报告并给出最小恢复条件。
 - `spec_review_06` 子 Agent：第六轮核验派单要求的 RUNNING 过渡态及真实多部门任务拓扑。
 - `standards_review_07` 子 Agent：第七轮复核 96 项门禁、八轮拓扑和测试稳定性。
 - `spec_review_07` 子 Agent：第七轮核验 remediation-07 RUNNING 任务卡与指定验收条件。
+- `standards_review_08` 子 Agent：第八轮复核候选前与报告后测试重入性及 Fowler smells。
+- `spec_review_08` 子 Agent：第八轮核验派单要求的 post-integration 96 项门禁和九轮 source 身份。
 
 ### Skills
 
@@ -714,6 +794,8 @@ cherry-pick，只更新本报告并给出最小恢复条件。
 - 研发报告中的 remediation-05 双轴自审、真实 Git 测试与交接声明
 - `docs/conclusions/tasks/ML-20260803-001/receipts/department-integration-release-01-remediation-07.md`
 - 候选提交 `bac5d0883d59d8ff7244e34a89631a3b05d7478a` 与 `b05bfac2344d0816ecb2a85dfa38976e3096a0a6` 的全部 direct patch
+- `docs/conclusions/tasks/ML-20260803-001/receipts/department-integration-release-01-remediation-08.md`
+- 候选提交 `363354ee84e307594746d4093572ebcdbf784fd6` 的测试与研发报告 direct patch
 
 ## 5. 本次执行值得沉淀的经验或者模式
 
@@ -743,6 +825,10 @@ cherry-pick，只更新本报告并给出最小恢复条件。
 17. 测试计数是清单证据，不是通过证据；即使打印 13/83/96，只要 suite 有 failure 就必须阻断。
 18. 克隆真实仓库的测试仍需控制输入状态。fixture 不应通过替换某个历史状态字符串来构造目标状态，
     应显式解析 assignment 并幂等设置，或使用固定 revision，避免浮动 main 形成 Mystery Guest。
+19. 集成门禁测试必须同时证明 pre-integration 与 post-integration 两阶段；从当前 HEAD 推导 source
+    identity 会在阶段切换后失真，source 集合应由固定任务卡字段或显式参数提供。
+20. 测试“可重复运行”不仅是状态归一化幂等，还包括 Git 操作幂等；baseline 已含目标 patch 时不能
+    再 cherry-pick，应切换为验证既有 patch-id 和祖先关系。
 
 ## 6. 问题解决后反推的一条更好初始提示词
 
