@@ -148,6 +148,117 @@
   的路径与基础 role/轮次元数据语义；使用户指定的直接测试命令可运行；补足至少 17 个负例。
 - 修正后应重新基于最新 main 证据同步候选分支，再派发下一轮集成复审。
 
+## 集成复审轮次 03（remediation-03）
+
+### v2 报告身份与执行元数据
+
+- Contract version 目标：`2`（候选未通过集成门禁，main 当前合同仍为 v1）
+- 任务 ID：`ML-20260803-001`
+- 角色：`SUPPORTING`
+- 部门代码：`integration_release`
+- 线程标题：`ML｜集成发布部｜席位｜01`
+- 线程 ID：`019fc533-b3a2-7be2-96ce-f4990bda6d6e`
+- 来源主线程：`ML | 项目统筹部 | 主线程 | 01`
+- 来源线程 ID：`019fc3a3-d0a0-7f13-b660-2010e36c7138`
+- 当前接受的任务卡 revision：`aa0d6d7`
+- 当前接受范围：`复审完整研发分支与前两次阻塞整改，验证 2 正例加 36 负例、完整证据生命周期和直接测试命令；通过后由集成发布部合入 main 并更新报告。`
+- 当前回执证据：`docs/conclusions/tasks/ML-20260803-001/receipts/department-integration-release-01-remediation-03.md`
+- 报告路径：`docs/conclusions/tasks/ML-20260803-001/department-integration-release-01.md`
+- 复审开始 main：`bb6df3ba7fe00f000c17618ee42cf8263acf7596`
+- 审查候选：`d1e5b408`、`c9353fd1`、`6a0b5b6d`
+- 明确排除：同步 merge `0e353ac`、`4ba5f82`
+- 实际范围：完整审查六个治理文件、验证两轮恢复条件、在候选 worktree 重跑门禁；未修改候选或产品范围
+- 产物/commits：本报告更新；三个候选提交均未 cherry-pick
+- 集成 commit：`N/A`
+- 报告更新 commit：本文件无法自引用最终 SHA，准确值记录在本席位交付回复
+- Git 冲突：未开始 cherry-pick，因此无 Git 冲突
+- 最终席位状态：`BLOCKED`
+- 部门结果：`BLOCKED`
+
+### Standards 轴
+
+只读 Standards Agent 报告 5 个硬缺陷：
+
+1. main 任务卡使用 `REINTEGRATION_03_RESERVED` 和 `REVIEW_RUNNING`；候选 validator/TOML 均不
+   允许，按三笔提交 cherry-pick 后组织校验必失败。
+2. 合法显式 `ACTIVE/BLOCKED` 回执无法通过：严格字段集禁止成功字段，但后续公共 identity 逻辑
+   又强制 `source_thread_id/task_card_path/task_card_revision`。
+3. 任意新回执只要省略 `Evidence status` 就会降级为 active `LEGACY`，绕过 v2 完整字段；实现
+   没有按提交时间、合同版本或白名单限定“v2 前历史回执”。
+4. Git 时序只使用回执文件首次引入提交并校验到最新报告，未绑定当前回执内容提交，也未验证
+   receipt 早于对应 implementation/remediation commit。
+5. 完整报告身份只在报告自称 Contract version 2 时执行；删除该字段即可降级绕过 title、source、
+   revision、scope、receipt 和 department code 等 v2 门禁。
+
+判断项：1371 行 validator 同时承担 TOML Schema、Markdown、Git 生命周期与 report/summary
+校验，存在可能的 Divergent Change；其余 Fowler smell 无需报告。
+
+### Spec 轴
+
+只读 Spec Agent 独立报告 4 项阻塞：
+
+1. 最新 main 的任务/部门结果状态与候选封闭枚举不兼容，集成后无法通过必需检查。
+2. `LEGACY` 自动降级允许新证据绕过完整 status-specific 字段，不满足任务卡成功标准 2、6 与
+   `7bdf1e6` 恢复条件。
+3. AGENTS 要求 receipt 先于 implementation 和 report；实现只有 revision→receipt→report，缺少
+   receipt→implementation/remediation 的验证与负例。
+4. 报告可通过删除 Contract version 降级；summary 虽检查七章和若干关键词，但未验证回执、
+   commits、集成证据与部门结果明细，未落实完整 identity/证据合同。
+
+两轴汇总：Standards 5 个硬缺陷，最严重为最新 main 状态导致集成后必失败；Spec 4 个阻塞，
+最严重为同一状态不兼容与 LEGACY 降级绕过。两轴均结论 `BLOCKED`，无范围扩张发现。
+
+### 7bdf1e6 恢复条件逐项核验
+
+| 恢复条件 | 状态 | 证据 |
+| --- | --- | --- |
+| status-specific 成功字段 | **部分通过** | 显式 ACTIVE/RESERVED 使用十字段严格集合，十个缺字段负例存在；但新回执可省略 Evidence status 降级 LEGACY。 |
+| status-specific 失败字段 | **未通过** | 单元级严格集合正确，但完整 ACTIVE/BLOCKED 流程随后又强制三个成功 identity 字段，形成不可满足合同。 |
+| ACTIVE/LEGACY/INVALIDATED/SUPERSEDED | **部分通过** | INVALIDATED/SUPERSEDED 审计语义和当前失效回执可解析；LEGACY 缺少“仅 v2 前历史”的不可绕过边界。 |
+| revision 实体 | **通过** | revision 必须解析为 commit，且该 commit 的任务卡路径与 task ID 必须匹配。 |
+| 祖先时序 | **未通过** | revision→receipt 和 receipt→latest report 已实现；current receipt content commit 与 receipt→implementation/remediation 未实现。 |
+| 完整 report identity | **未通过** | v2 报告字段检查存在，但可删除 Contract version 降级；department code 仍可缺失。 |
+| 完整 summary/终态 | **部分通过** | 七章、来源身份、报告引用、成功标准/checks/evidence/risks 关键词和终态已检查；回执、commits、集成证据及部门结果明细未检查。 |
+| direct test | **通过** | 原样直接脚本入口通过。 |
+| 2 正例 + 36 负例 | **数量通过、覆盖未通过** | 输出计数准确，但 36 个负例未覆盖最新状态兼容、LEGACY 新证据降级、完整 BLOCKED 流程、receipt→implementation、报告删除 Contract version 等绕过。 |
+
+### 候选 worktree 检查
+
+- 候选 `HEAD`：`6a0b5b6d71b95140eaf1da524ba59befb63c20cd`；检查前后
+  `git status --short` 无输出。
+- `py -3.12 --version`：`Python 3.12.9`。
+- `py -3.12 -X utf8 scripts/validate_organization.py`：通过，输出
+  `STATIC_CONSISTENT: MacroLens organization contract v2`；该 worktree 仅同步至 `b469202`，
+  不包含 main 的 remediation-03 状态和回执。
+- `py -3.12 -X utf8 scripts/test_validate_organization.py`：通过，`Ran 38 tests`，输出
+  `TEST_COUNTS: positives=2 negatives=36 total=38`。
+- `py -3.12 -X utf8 -m py_compile scripts/validate_organization.py scripts/test_validate_organization.py`：
+  通过，字节码定向到系统临时目录。
+- `py -3.12 -X utf8 scripts/validate_repository.py`：使用只读临时 `PYTHONPATH` 指向现有 Python
+  3.11 PyYAML site-packages 后通过，输出 `Repository contract valid: 61 source series, 62 API paths`；
+  未安装或修改全局依赖。
+- 候选 `git diff --check`：通过。
+
+### 最新 main 兼容预检
+
+直接加载候选 validator，对 `main@bb6df3b` 的当前任务目录执行只读 task-evidence 校验，得到
+4 个错误。其中两个会在 cherry-pick 后仍然存在：
+
+- `unknown task status 'REINTEGRATION_03_RESERVED'`
+- `unknown department result status 'REVIEW_RUNNING'`
+
+另外两个预检错误（候选研发报告尚未出现在 main、remediation-03 回执尚未早于本报告最新提交）
+本可分别由 cherry-pick 和报告提交消除，但不能消除上述状态合同冲突。因此未开始 cherry-pick。
+
+### 风险、阻塞与恢复条件
+
+- 直接集成会使 main 必需组织门禁失败，并留下 LEGACY 与 Contract version 两条降级绕过路径。
+- 恢复条件：候选必须与最新 main 使用同一机器状态枚举，或由来源主线程在新 revision 中改为既有
+  合法状态；ACTIVE/BLOCKED 完整流程必须可满足；LEGACY 必须由不可伪造的历史边界限定；时序必须
+  验证当前 receipt commit 早于对应 implementation/remediation；v2 报告不得通过删版本降级；
+  summary 必须校验回执、commits、集成证据和部门结果明细，并增加对应负例。
+- 修正后重新同步最新 main 证据，再派发下一轮集成。不得靠集成部门改写 task-card 或回执规避。
+
 ## 1. 本次遇到的问题以及场景
 
 本席位负责把研发治理合同提交集成到 `main`，同时守住变更范围、合同同步和发布门禁。候选提交
@@ -158,6 +269,10 @@
 复审轮次 02 面对的是同一候选经 `c9353fd` 整改后的重新集成。虽然 slug、任务目录遍历和单一
 PRIMARY 已修复，但完整回执、Git 时序、报告/summary 合同和负例仍不完整；最新 main 的复审回执
 也不在候选支持的证据生命周期中。因此本轮再次停止集成。
+
+remediation-03 已让直接入口、2 正例 + 36 负例、revision 实体、INVALIDATED 审计和部分完整
+identity 校验落地，但候选没有与最新 main 状态同步，且仍有 LEGACY/Contract version 降级、
+ACTIVE/BLOCKED 矛盾和 implementation 时序缺口。第三轮因此继续 fail closed。
 
 ## 2. 分析这个问题的过程
 
@@ -171,6 +286,10 @@ PRIMARY 已修复，但完整回执、Git 时序、报告/summary 合同和负�
 阅读整改后的 1095 行 validator、301 行测试、TOML、三份规则 diff 和研发报告。随后用候选正则
 验证最新 main 回执的路径兼容性，并分别运行用户指定的直接脚本命令和研发使用的 unittest 模块
 命令，确认两者结果不同。
+
+第三轮以 `512179f...6a0b5b6` 的六个授权文件为完整审查面，并把三笔直接研发提交与两个同步
+merge 分开。除再次运行两轴审查和候选门禁外，还直接加载候选 validator 对 `main@bb6df3b`
+任务证据预检，从而在不修改 main 的情况下证明 cherry-pick 后的确定性失败。
 
 ## 3. 解决这个问题的工作流程
 
@@ -186,6 +305,10 @@ PRIMARY 已修复，但完整回执、Git 时序、报告/summary 合同和负�
 证据文件的 merge 后兼容性、原样运行用户指定的 Python 3.12 命令。任一硬缺陷存在即不进入
 merge，保留 `81e4287` 之后仅增加本部门报告提交。
 
+第三轮先验证候选自洽和测试计数，再验证候选对最新 main 的兼容性。由于 task/result 状态、
+LEGACY 边界和完整生命周期仍有硬缺陷，未执行三笔 cherry-pick；只更新本报告并将恢复条件交还
+来源主线程。
+
 ## 4. 使用的 Agents、skills、tools 以及阅读文档
 
 ### Agents
@@ -195,6 +318,8 @@ merge，保留 `81e4287` 之后仅增加本部门报告提交。
 - `spec_review` 子 Agent：只读核对任务卡成功标准与架构/知识设计。
 - `standards_re_review` 子 Agent：复审整改后的规范符合性和首次阻塞回归。
 - `spec_re_review` 子 Agent：复审任务规格、最新 main 证据兼容性与负例要求。
+- `standards_review_03` 子 Agent：第三轮复核机器状态、完整 BLOCKED 流程、LEGACY、时序与报告降级。
+- `spec_review_03` 子 Agent：第三轮复核任务成功标准、两轮恢复条件和最新 main 兼容性。
 
 ### Skills
 
@@ -221,6 +346,8 @@ merge，保留 `81e4287` 之后仅增加本部门报告提交。
 - 候选提交中全部 6 个变更文件及完整 diff
 - `docs/conclusions/tasks/ML-20260803-001/receipts/department-integration-release-01-review-02.md`
 - 候选提交 `c9353fd1ed639bd84f0668dd57c50283435b65f7` 中整改后的全部 6 个文件
+- `docs/conclusions/tasks/ML-20260803-001/receipts/department-integration-release-01-remediation-03.md`
+- 候选提交 `6a0b5b6d71b95140eaf1da524ba59befb63c20cd` 中第二轮整改后的全部 6 个文件
 
 ## 5. 本次执行值得沉淀的经验或者模式
 
@@ -234,6 +361,9 @@ merge，保留 `81e4287` 之后仅增加本部门报告提交。
 6. 多轮任务应把基础角色和轮次类型拆成不同字段；把轮次文字拼入 role 会破坏枚举合同。
 7. 负例数量和测试总数不能混用；门禁要求 17 个负例时，2 正 + 15 负不等于达标。
 8. CLI 入口本身是合同。模块命令通过不能替代用户指定的直接脚本命令通过。
+9. 候选自洽不等于可集成；必须使用最新 main 的真实证据执行 merge 前兼容预检。
+10. “缺字段即 legacy”本身是降级接口，必须以不可伪造的提交边界或显式白名单约束。
+11. Git 时序要绑定当前内容和对应产物，不能只使用文件首次引入提交与最新报告提交。
 
 ## 6. 问题解决后反推的一条更好初始提示词
 
