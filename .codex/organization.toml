@@ -5,7 +5,8 @@ operating_model = "independent_main_threads_with_shared_department_pool"
 initial_goal = "local_full_stack_ready"
 main_thread_count = 4
 department_seat_count = 26
-isolation = "git_worktree"
+idle_thread_environment = "local"
+coding_task_environment = "git_worktree_on_demand"
 integration_owner = "integration_release"
 
 [coordination]

@@ -8,8 +8,10 @@
   containing a task ID, source main thread, scope, success criteria, dependencies and checks.
 - Main threads are peers. Each main thread owns only the user task assigned to it and must not
   take over or reprioritize another main thread's work.
-- Code changes run in isolated Git worktrees. Department threads commit their changes; only the
-  Integration and Release department integrates completed work into the baseline branch.
+- Persistent main and department threads stay attached to the local project while idle. Only when
+  a concrete task enters code implementation is the assigned department thread handed off to an
+  isolated Git worktree. Department threads commit their changes; only the Integration and Release
+  department integrates completed work into the baseline branch.
 - Initialization-only turns that merely load the organization rules and remain idle do not need a
   separate conclusion report. Every substantive task still follows the report requirements above.
 
