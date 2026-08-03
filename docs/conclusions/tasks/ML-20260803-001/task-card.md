@@ -22,6 +22,7 @@
 - Blocked reintegration-05 report commit: `7879ca714d8e88e89eea35216c0c0e3c18da1335`
 - Blocked reintegration-06 report commit: `611c3eaeed72ebc01b6ca45b7b478ba3254a23a2`
 - Blocked reintegration-07 report commit: `67be39069b71141798117ee3acb01644994769cf`
+- Blocked reintegration-08 report commit: `dfece33e25be49f32f6fc0389b15c9a218b32764`
 - Created: 2026-08-03 (Asia/Shanghai)
 
 ## Goal
@@ -51,9 +52,9 @@ Update MacroLens task-execution governance so every substantive task is assigned
 | --- | --- | --- | --- | --- | --- | --- |
 | PRIMARY | `ML | 架构部 | 01` | `019fc531-f5a2-7c91-ba58-7bfb4ca8ceeb` | Design governance rules and exact cross-file contract | `department-architecture-01.md` | RESERVED | SUCCEEDED |
 | SUPPORTING | `ML | 知识管理部 | 01` | `019fc533-c4bb-71a3-b963-d39218141521` | Review task-card/report schemas and evidence completeness | `department-knowledge-01.md` | RESERVED | SUCCEEDED |
-| SUPPORTING | `ML｜研发部｜席位｜04` | `019fc533-0419-7103-a9e4-173a356b0b67` | Implement approved rules and validator in an isolated worktree | `department-engineering-04.md` | RESERVED | RUNNING |
+| SUPPORTING | `ML｜研发部｜席位｜04` | `019fc533-0419-7103-a9e4-173a356b0b67` | Implement approved rules and validator in an isolated worktree | `department-engineering-04.md` | PENDING | PENDING |
 | SUPPORTING | `ML | 测试部 | 01` | `019fc533-101f-7111-8ad3-1ac090a62da2` | Independently verify contract and regression checks | `department-quality-01.md` | PENDING | PENDING |
-| SUPPORTING | `ML｜集成发布部｜席位｜01` | `019fc533-b3a2-7be2-96ce-f4990bda6d6e` | Integrate the engineering commit and verify baseline consistency | `department-integration-release-01.md` | RESERVED | RUNNING |
+| SUPPORTING | `ML｜集成发布部｜席位｜01` | `019fc533-b3a2-7be2-96ce-f4990bda6d6e` | Integrate the engineering commit and verify baseline consistency | `department-integration-release-01.md` | RESERVED | BLOCKED |
 
 ## Dependencies and order
 
@@ -84,6 +85,8 @@ Reintegration review `611c3eae` showed that the source main task had prematurely
 Before redispatching integration, a source-main preflight of the next required Quality assignment found a close-path gap: a new v2 local, report-only department cannot legitimately supply a non-main source candidate commit. The contract therefore needs a narrowly scoped `LOCAL_REPORT` success path whose active receipt strictly precedes the report commit on main, while Engineering, Integration and any assignment that declares code commits continue to require source-to-integrated mapping.
 
 Reintegration review `67be3906` found one remaining test-fixture defect after the candidate declared 13 positive and 83 negative tests: the real multi-department topology positive test mutates a floating clone by searching for `Integration=BLOCKED`, so it fails before validator execution when the target main correctly contains `Integration=RUNNING`. The remediation must make fixture state construction explicit and idempotent, then prove the full 96-test suite passes against the current RUNNING topology.
+
+Reintegration review `dfece33e` confirmed all 96 tests pass before integration but found the lifecycle fixture is not reentrant after integration: once main already contains the nine integrated patches and report, the test treats the current main/report HEAD as another source candidate and repeats cherry-picks, causing an empty pick or conflict. The next remediation must build its source baseline from explicit task-card source commits, not from the floating root HEAD, and must prove both pre-integration and simulated post-integration execution.
 
 ## Required checks
 
