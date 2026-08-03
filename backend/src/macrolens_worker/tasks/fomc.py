@@ -18,7 +18,7 @@ from macrolens_api.services.storage import ObjectStorage
 
 settings = get_settings()
 MONTHS = {
-    name.lower(): index
+    alias: index
     for index, name in enumerate(
         [
             "January",
@@ -36,19 +36,27 @@ MONTHS = {
         ],
         start=1,
     )
+    for alias in (name.lower(), name[:3].lower())
 }
 
 
 def _meeting_dates(year: int, month_text: str, date_text: str) -> tuple[date, date] | None:
-    month = MONTHS.get(month_text.strip().lower())
-    if not month:
+    month_names = [value.strip().lower() for value in month_text.split("/") if value.strip()]
+    months = [MONTHS.get(value) for value in month_names]
+    if not months or any(month is None for month in months):
         return None
     numbers = [int(value) for value in re.findall(r"\d{1,2}", date_text)]
     if not numbers:
         return None
+    start_month = int(months[0])
+    end_month = int(months[1]) if len(months) > 1 else start_month
     start_day = numbers[0]
     end_day = numbers[1] if len(numbers) > 1 else numbers[0]
-    return date(year, month, start_day), date(year, month, end_day)
+    end_year = year + 1 if end_month < start_month else year
+    try:
+        return date(year, start_month, start_day), date(end_year, end_month, end_day)
+    except ValueError:
+        return None
 
 
 def _parse_calendar_rows(document: html.HtmlElement) -> list[tuple[html.HtmlElement, date, date]]:
