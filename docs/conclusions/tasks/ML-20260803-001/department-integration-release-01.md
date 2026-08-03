@@ -322,6 +322,10 @@
   `Repository contract valid: 61 source series, 62 API paths`，未安装或修改依赖。
 - 候选 `git diff --check`：通过。
 - 范围检查：四个 direct commit 各自仅修改任务卡授权的六个文件；三个同步 merge 均未纳入候选集成序列。
+- 首次报告提交 `2def2c6588c1247bbe0d7dfb1f12221c31989d5a` 后在实际 main 原样运行组织校验、
+  直接测试和 `py_compile`：三项均因候选未集成、对应两个脚本在 main 不存在而退出 `1`；这不是
+  候选测试失败，也不能表述为 main 已达到 `STATIC_CONSISTENT`。同一 main 上
+  `validate_repository.py` 使用上述只读 `PYTHONPATH` 后通过，`git diff --check` 通过。
 - 最终判断：`BLOCKED`。不把“当前 RUNNING 快照可绿”误当作“SUCCEEDED 生命周期可收口”，因此四个研发提交均未写入 main。
 
 ### 风险与恢复条件
