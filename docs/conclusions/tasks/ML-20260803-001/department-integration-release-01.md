@@ -395,6 +395,10 @@ direct patch 只涉及六个授权文件，无范围扩张发现。
 - `py -3.12 -X utf8 scripts/validate_repository.py`：Python 3.12 默认环境缺少 `yaml`；仅对该只读进程设置 `PYTHONPATH=D:\开发环境\运行时\Python\Python311\Lib\site-packages` 后通过，输出 `Repository contract valid: 61 source series, 62 API paths`。
 - 候选 `git diff --check`：通过。
 - 范围检查：`3c343b44` 仅修改任务卡授权的六个文件；同步 merge 未纳入候选集成序列。
+- BLOCKED 报告提交 `db0bca05ca912199c440480ad662087e4683a03c` 后在实际 main 原样运行 organization
+  validator、direct tests、unittest 和 compile：因 fail-closed 未集成候选、两个脚本在 main 不存在，
+  四项均退出 `1`，不能声明 main `STATIC_CONSISTENT`。同一 main 上 repository validator 使用上述
+  只读 `PYTHONPATH` 后通过，`git diff --check` 通过，工作区干净。
 - 最终判断：`BLOCKED`。测试数量与当前候选快照自洽不能覆盖正式状态机和真实 cherry-pick/summary Git 生命周期缺口，故五个研发提交均未写入 main。
 
 ### 风险与恢复条件
