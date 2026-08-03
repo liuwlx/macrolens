@@ -104,3 +104,40 @@ Spec 轴未确认实质 scope creep。
 4. 修复 AI 非 series cutoff、RFC9457 validation 和 AI run 幂等性。
 5. 补齐 targeted PostgreSQL tests、组件测试、E2E、视觉矩阵、性能与 `design-qa.md`。
 6. 在 Python 3.12、Node 24 环境运行任务卡全部门禁，安全测试不得 skipped；将历史全仓 lint 与新增回归分别记录。
+
+## 8. Remediation focused re-review（2026-08-04）
+
+复核提交：后端 `d53c115`、桌面布局 `36f535b`、移动端/缓存隔离 `2acf33a`。本轮不修改业务代码，只复核原阻断的关闭证据并运行聚焦门禁。
+
+### 原阻断关闭状态
+
+- **原 P0 已关闭**：observations/revisions Router 现在同时要求 `CurrentUser`、`CurrentWorkspace` 并接收 `data_as_of`；服务层按 `ObservationVintage.vintage_at <= data_as_of` 读取，focused test 验证 cutoff 被原样传入 vintage 查询。
+- **tree code P1 已关闭**：browser/export Router 与 TypeScript SDK 均统一默认 `macro-default`，focused contract test 通过。
+- **AI 历史上下文 P1 已关闭**：显式历史 cutoff 下，不能证明版本边界的非 series 上下文返回 `historical_context_unavailable`，不再混入当前状态。
+- **RFC 9457 validation P1 已关闭**：`RequestValidationError` 已注册 problem-details handler，focused test 验证 422 的 type/code/errors/location。
+- **AI run 幂等 P1 已关闭**：`Idempotency-Key` 成为必填请求头；reservation key 同时包含 workspace、user 与散列后的客户端 key，同一 key/同一 payload 重放，异 payload 返回 409。
+- **全量历史加载 P1 的性能部分已关闭**：数据点与许可只对 `matched[offset:offset+limit]` 页加载，focused test 证明 5 个候选、limit=2、offset=1 时只读取 source 2/3。
+- **390px containment / 缓存隔离已验证**：静态 CSS containment test 与 AuthProvider 账号切换缓存清理 test 均包含在本轮 17 项 Web 测试中并通过。真实浏览器 document width 证据仍由主线程验收，不以静态测试替代。
+
+### 新发现的阻断
+
+- **P1，服务端数值/日期排序跨页错误**：`data_browser.py:701-732` 在 `current/change/period_change/yoy` 排序时，先按 search rank/UUID 切页，再只在当前页内 `_sort_items`，因此真正全局 top-N 可能落在后续页；`current_period` 虽在 `_sort_items` 映射中存在，却未包含在调用条件里，连页内排序也不执行。当前测试仅以 `sort="taxonomy"` 证明按页加载，未覆盖这一合同退化。必须在分页前得到全局稳定排序键（优先下推 SQL/物化读模型），并补跨页 top-N 回归测试，才能转为 PASS。
+
+### 门禁结果
+
+| 检查 | 结果 | 证据 |
+|---|---|---|
+| Python 3.12 focused pytest | PASS | `backend/tests/test_data_browser.py`: 16 passed，1 条 ORJSONResponse 弃用告警 |
+| Python 3.12 compileall | PASS | `backend/src`、`backend/tests` |
+| Node 24 Web Vitest | PASS | 8 files / 17 tests；含 390 containment 与跨账号缓存隔离 |
+| Node 24 Web typecheck | PASS | 退出码 0 |
+| Node 24 Web production build | PASS | `/data` 静态生成，退出码 0 |
+| Node 24 SDK typecheck | PASS | 退出码 0 |
+| 整改 Web 路径 ESLint | PASS / 历史例外 | 新增/整改组件路径通过；既有 `critical-path.spec.ts` 仍有历史 43 个 `no-explicit-any` |
+| 全仓 ruff | 历史基线 FAIL | 386 项；整改核心新文件/新增代码未出现新的业务级 lint 回归，仓库既有格式债仍未清零 |
+| 全仓 mypy | 历史基线 FAIL | 37 项 / 16 files；输出未指向本轮核心整改实现 |
+| remediation diff check | PASS | `git diff --check 2e34849..HEAD` 无输出 |
+
+### 复核结论
+
+**BLOCKED**。原 P0 与原 Standards P1 已有聚焦证据关闭，但新发现的跨页数值/日期排序 P1 仍违反稳定服务端排序与分页合同。在该问题修复、跨页回归测试通过且主线程补充真实浏览器 document width 证据前，不得把本报告改为 PASS。
