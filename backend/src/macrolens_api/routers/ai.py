@@ -9,13 +9,36 @@ from sqlalchemy import select
 from ..config import get_settings
 from ..dependencies import CurrentUser, CurrentWorkspace, SessionDep
 from ..errors import AppError
-from ..models import AICitation, AIContext, AIRun, Project
-from ..schemas import AICitationPublic, AIRunCreate, AIRunPublic
-from ..services.ai_context import data_as_of_from_snapshots, persist_contexts
+from ..models import AICitation, AIRun, Project
+from ..schemas import AICapabilityResponse, AICitationPublic, AIRunCreate, AIRunPublic
+from ..services.ai_context import persist_contexts
+from ..services.data_browser import ai_capability, normalize_data_as_of
 from ..services.jobs import enqueue_job
 
 router = APIRouter(prefix="/ai", tags=["AI"])
 settings = get_settings()
+
+
+@router.get("/capabilities", response_model=AICapabilityResponse)
+async def get_ai_capability(
+    series_id: UUID,
+    session: SessionDep,
+    _user: CurrentUser,
+    _workspace: CurrentWorkspace,
+    data_as_of: datetime | None = None,
+) -> AICapabilityResponse:
+    if data_as_of is not None and normalize_data_as_of(data_as_of) > datetime.now(UTC):
+        raise AppError(
+            422,
+            "快照时间无效",
+            "data_as_of 不能晚于请求开始时间。",
+            "invalid_data_as_of",
+        )
+    return await ai_capability(
+        session,
+        series_id=series_id,
+        configured=bool(settings.openai_api_key),
+    )
 
 
 @router.post("/runs", response_model=AIRunPublic, status_code=202)
@@ -25,6 +48,15 @@ async def create_ai_run(
     user: CurrentUser,
     workspace: CurrentWorkspace,
 ) -> AIRunPublic:
+    request_started_at = datetime.now(UTC)
+    cutoff = normalize_data_as_of(payload.data_as_of)
+    if cutoff > request_started_at:
+        raise AppError(
+            422,
+            "快照时间无效",
+            "data_as_of 不能晚于请求开始时间。",
+            "invalid_data_as_of",
+        )
     if payload.project_id is not None:
         project = await session.scalar(
             select(Project.id).where(
@@ -48,7 +80,7 @@ async def create_ai_run(
             else settings.openai_model
         ),
         prompt_version="v1",
-        data_as_of=datetime.now(UTC),
+        data_as_of=cutoff,
         status="queued",
     )
     session.add(run)
@@ -60,13 +92,8 @@ async def create_ai_run(
         query=payload.prompt,
         workspace_id=workspace.id,
         user_id=user.id,
+        data_as_of=cutoff,
     )
-    snapshots = list(
-        (
-            await session.scalars(select(AIContext.snapshot).where(AIContext.ai_run_id == run.id))
-        ).all()
-    )
-    run.data_as_of = data_as_of_from_snapshots(snapshots)
     await enqueue_job(
         session,
         job_type="run_ai_analysis",

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime
 import json
+from datetime import UTC, datetime
 from typing import Any
 from uuid import UUID
 
@@ -19,10 +19,9 @@ from ..models import (
     Project,
     ReleaseEvent,
     SavedView,
-    Series,
 )
+from .data_browser import _license_map, _load_candidates, _points_by_source, normalize_data_as_of
 from .licenses import get_license_for_provider
-from .series import get_observations
 
 
 async def _document_chunks(
@@ -62,33 +61,103 @@ async def snapshot_context(
     query: str | None = None,
     workspace_id: UUID | None = None,
     user_id: UUID | None = None,
+    data_as_of: datetime | None = None,
 ) -> dict[str, Any]:
     if context_type == "series":
-        series = await session.get(Series, context_id)
-        if series is None:
-            raise AppError(404, "指标不存在", "AI 上下文中的指标不存在。", "context_series_not_found")
-        observations = await get_observations(
-            session,
-            series_id=series.id,
-            start=None,
-            end=None,
-            transform=series.default_transform,
-            vintage="latest",
-        )
-        if observations.meta.license and not observations.meta.license.ai_context_allowed:
-            raise AppError(403, "数据许可限制", "该数据源不允许用于 AI 上下文。", "ai_license_forbidden")
-        recent = observations.data[-36:]
+        if workspace_id is None or user_id is None:
+            raise AppError(
+                403,
+                "上下文权限不足",
+                "指标 AI 上下文需要用户工作区范围。",
+                "context_scope_required",
+            )
+        candidates = await _load_candidates(session, series_id=context_id)
+        if not candidates:
+            raise AppError(
+                404,
+                "指标不存在",
+                "AI 上下文中的指标不存在。",
+                "context_series_not_found",
+            )
+        candidate = candidates[0]
+        if candidate.binding is None:
+            code = (
+                "source_mapping_not_ready"
+                if candidate.source_status == "missing"
+                else "source_mapping_conflict"
+            )
+            raise AppError(
+                409,
+                "指标数据源不可用",
+                "指标必须且只能有一个已验证主数据源，才能进入 AI 上下文。",
+                code,
+            )
+        binding = candidate.binding
+        license_info = (await _license_map(session, [binding]))[binding.source.id]
+        # Capabilities are only a UI hint. Re-evaluate both display and AI permissions in the
+        # mutating request, before persisting any snapshot.
+        if not license_info.display_allowed or not license_info.ai_context_allowed:
+            raise AppError(
+                403,
+                "数据许可限制",
+                "该数据源不允许用于 AI 上下文。",
+                "ai_license_forbidden",
+            )
+        cutoff = normalize_data_as_of(data_as_of)
+        recent = (
+            await _points_by_source(
+                session,
+                {binding.source.id},
+                data_as_of=cutoff,
+                max_points=36,
+            )
+        ).get(binding.source.id, [])
+        if not recent:
+            raise AppError(
+                409,
+                "快照不可用",
+                "指定 data_as_of 无法复现该指标的观测。",
+                "snapshot_unavailable",
+                {"data_as_of": cutoff.isoformat()},
+            )
+        series = candidate.series
         return {
             "type": "series",
             "id": str(series.id),
             "name": series.name_zh,
             "canonical_code": series.canonical_code,
-            "data_as_of": observations.meta.data_as_of.isoformat(),
+            "data_as_of": cutoff.isoformat(),
             "transform": series.default_transform,
-            "unit": observations.meta.unit,
-            "observations": [point.model_dump(mode="json") for point in recent],
-            "lineage": observations.meta.lineage.model_dump(mode="json") if observations.meta.lineage else None,
-            "license": observations.meta.license.model_dump(mode="json") if observations.meta.license else None,
+            "unit": series.unit_label_zh,
+            "observations": [
+                {
+                    "period_start": point.period_start.isoformat(),
+                    "period_end": point.period_end.isoformat(),
+                    "value": str(point.value) if point.value is not None else None,
+                    "value_text": point.value_text,
+                    "status": point.status,
+                    "published_at": (
+                        point.published_at.isoformat()
+                        if isinstance(point.published_at, datetime)
+                        else None
+                    ),
+                    "vintage_at": (
+                        point.vintage_at.isoformat()
+                        if isinstance(point.vintage_at, datetime)
+                        else None
+                    ),
+                }
+                for point in recent
+            ],
+            "lineage": {
+                "provider": binding.provider.code,
+                "dataset": binding.dataset.code,
+                "provider_series_id": binding.source.provider_series_id,
+                "source_series_id": binding.source.id,
+                "source_locator": binding.source.source_locator,
+            },
+            "license": license_info.model_dump(mode="json"),
+            "workspace_id": str(workspace_id),
         }
     if context_type == "document":
         document = await session.get(Document, context_id)
@@ -209,6 +278,7 @@ async def persist_contexts(
     query: str | None = None,
     workspace_id: UUID | None = None,
     user_id: UUID | None = None,
+    data_as_of: datetime | None = None,
 ) -> None:
     total_chars = 0
     for context_type, context_id in contexts:
@@ -219,6 +289,7 @@ async def persist_contexts(
             query=query,
             workspace_id=workspace_id,
             user_id=user_id,
+            data_as_of=data_as_of,
         )
         total_chars += len(json.dumps(snapshot, ensure_ascii=False, default=str))
         if total_chars > 180_000:

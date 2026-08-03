@@ -105,6 +105,163 @@ class SeriesDetail(SeriesSummary):
     license: LicenseInfo | None = None
 
 
+class TaxonomyChildNode(BaseModel):
+    id: UUID
+    code: str
+    name_zh: str
+    name_en: str | None
+    node_type: str
+    icon_key: str | None
+    has_children: bool
+    direct_series_count: int
+    descendant_series_count: int
+
+
+class TaxonomyChildrenResponse(BaseModel):
+    tree_code: str
+    parent_id: UUID | None
+    nodes: list[TaxonomyChildNode]
+    series: list[SeriesSummary]
+
+
+class BrowserObservation(BaseModel):
+    period_start: date
+    period_end: date
+    value: Decimal | None
+    published_at: datetime | None = None
+    vintage_at: datetime
+
+
+class BrowserMetric(BaseModel):
+    value: Decimal | None
+    unit: str
+    status: Literal["available", "unavailable"]
+    basis: str | None = None
+    reason_code: str | None = None
+    reason: str | None = None
+
+
+class BrowserFacetValue(BaseModel):
+    value: str
+    label: str
+    count: int
+
+
+class BrowserFacets(BaseModel):
+    provider: list[BrowserFacetValue] = Field(default_factory=list)
+    theme: list[BrowserFacetValue] = Field(default_factory=list)
+    frequency: list[BrowserFacetValue] = Field(default_factory=list)
+    unit: list[BrowserFacetValue] = Field(default_factory=list)
+    seasonal_adjustment: list[BrowserFacetValue] = Field(default_factory=list)
+
+
+class BrowserPagination(BaseModel):
+    total: int
+    limit: int
+    offset: int
+
+
+class SeriesBrowserItem(BaseModel):
+    series: SeriesSummary
+    current: BrowserObservation | None
+    previous: BrowserObservation | None
+    change: BrowserMetric
+    period_change: BrowserMetric
+    yoy: BrowserMetric
+    license: LicenseInfo | None
+    display_denied: bool = False
+    source_status: Literal["ready", "missing", "conflict"] = "ready"
+    unavailable_reason_code: str | None = None
+    taxonomy_order: int = 0
+
+
+class SeriesBrowserResponse(BaseModel):
+    items: list[SeriesBrowserItem]
+    facets: BrowserFacets
+    pagination: BrowserPagination
+    data_as_of: datetime
+
+
+class CapabilityStatus(BaseModel):
+    allowed: bool
+    reason_code: str | None = None
+    reason: str | None = None
+
+
+class SeriesCapabilities(BaseModel):
+    display: CapabilityStatus
+    download: CapabilityStatus
+    ai: CapabilityStatus
+    trend: CapabilityStatus
+    history: CapabilityStatus
+    revisions: CapabilityStatus
+    documents: CapabilityStatus
+    contributions: CapabilityStatus
+
+
+class SeriesStatistics(BaseModel):
+    count: int
+    mean: Decimal | None
+    median: Decimal | None
+    min: Decimal | None
+    max: Decimal | None
+    stddev: Decimal | None
+    current_percentile: Decimal | None
+
+
+class NextRelease(BaseModel):
+    id: UUID
+    title_zh: str
+    title_en: str | None
+    scheduled_at: datetime
+    source_timezone: str
+    status: str
+    role: str
+
+
+class ContributionComponent(BaseModel):
+    series_id: UUID | None
+    name_zh: str
+    value: Decimal
+    unit: str
+    grouped: bool = False
+
+
+class ContributionPeriod(BaseModel):
+    period_start: date
+    target_value: Decimal
+    contribution_total: Decimal
+    difference: Decimal
+    components: list[ContributionComponent]
+
+
+class ContributionResult(BaseModel):
+    available: bool
+    reason_code: str | None = None
+    reason: str | None = None
+    target_unit: str | None = None
+    periods: list[ContributionPeriod] = Field(default_factory=list)
+    components: list[ContributionComponent] = Field(default_factory=list)
+    reconciliation: dict[str, Decimal | str | bool] = Field(default_factory=dict)
+
+
+class SeriesAnalyticsResponse(BaseModel):
+    series: SeriesSummary
+    statistics: SeriesStatistics
+    next_release: NextRelease | None
+    contributions: ContributionResult
+    capabilities: SeriesCapabilities
+    data_as_of: datetime
+
+
+class AICapabilityResponse(BaseModel):
+    series_id: UUID
+    configured: bool
+    allowed: bool
+    reason_code: str | None = None
+    reason: str | None = None
+
+
 class ObservationPoint(BaseModel):
     period_start: date
     period_end: date
@@ -438,6 +595,7 @@ class AIRunCreate(BaseModel):
     prompt: str = Field(min_length=5, max_length=20000)
     mode: Literal["quick", "deep_research", "scenario"] = "quick"
     project_id: UUID | None = None
+    data_as_of: datetime | None = None
     contexts: list[AIContextInput] = Field(min_length=1, max_length=12)
 
     @model_validator(mode="after")
