@@ -174,7 +174,7 @@ a { color: inherit; text-decoration: none; }
 .data-browser-card-header h2 { margin: 0; font-size: 13px; font-weight: 750; }
 .data-browser-card-header p { margin: 2px 0 0; color: var(--muted); font-size: 10px; }
 .data-browser-tree-card { grid-area: tree; display: flex; min-height: 752px; flex-direction: column; }
-.data-browser-table-card { grid-area: table; display: flex; min-height: 0; flex-direction: column; }
+.data-browser-table-card { grid-area: table; display: flex; min-width: 0; width: 100%; max-width: 100%; min-height: 0; overflow: hidden; flex-direction: column; }
 .data-browser-detail-card { grid-area: detail; min-height: 0; }
 .data-browser-analysis-card { grid-area: analysis; min-height: 300px; }
 
@@ -195,7 +195,7 @@ a { color: inherit; text-decoration: none; }
 
 .data-browser-toolbar { display: flex; align-items: center; gap: 6px; }
 .data-browser-toolbar .btn { min-height: 30px; height: 30px; border-radius: 6px; padding: 0 9px; font-size: 10px; }
-.data-browser-table-wrap { min-height: 0; flex: 1; overflow: auto; }
+.data-browser-table-wrap { min-width: 0; width: 100%; max-width: 100%; min-height: 0; flex: 1; overflow: auto; }
 .data-browser-table { min-width: 820px; width: 100%; border-collapse: separate; border-spacing: 0; font-size: 10px; }
 .data-browser-table thead { position: sticky; top: 0; z-index: 4; }
 .data-browser-table th { height: 42px; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); background: #f8fafc; color: #58667d; text-align: left; font-weight: 650; }

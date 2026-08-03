@@ -1,6 +1,7 @@
 "use client";
 
-import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 
 import { ApiError, apiFetch } from "@/lib/api";
 import type { User } from "@/lib/types";
@@ -17,24 +18,36 @@ type AuthContextValue = {
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const queryClient = useQueryClient();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const currentUser = useRef<User | null>(null);
+
+  const exposeUser = useCallback((nextUser: User | null) => {
+    const previousUser = currentUser.current;
+    const identityChanged = previousUser?.id !== nextUser?.id || previousUser?.role !== nextUser?.role;
+    if (identityChanged) queryClient.clear();
+    currentUser.current = nextUser;
+    setUser(nextUser);
+  }, [queryClient]);
 
   const refresh = useCallback(async () => {
     try {
       const next = await apiFetch<User>("/auth/me");
-      setUser(next);
+      exposeUser(next);
     } catch (error) {
       if (!(error instanceof ApiError) || error.status !== 401) {
         console.error(error);
       }
-      setUser(null);
+      exposeUser(null);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [exposeUser]);
 
   useEffect(() => {
+    // Initial session discovery is an external API synchronization that must update auth state.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void refresh();
   }, [refresh]);
 
@@ -47,22 +60,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           method: "POST",
           body: JSON.stringify({ email, password }),
         });
-        setUser(result.user);
+        exposeUser(result.user);
       },
       async register(email, displayName, password) {
         const result = await apiFetch<{ user: User }>("/auth/register", {
           method: "POST",
           body: JSON.stringify({ email, display_name: displayName, password }),
         });
-        setUser(result.user);
+        exposeUser(result.user);
       },
       async logout() {
         await apiFetch<void>("/auth/logout", { method: "POST" });
-        setUser(null);
+        exposeUser(null);
       },
       refresh,
     }),
-    [user, loading, refresh],
+    [user, loading, refresh, exposeUser],
   );
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

@@ -17,6 +17,8 @@ function AiContent() {
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const userIdentity = user?.id ?? "anonymous";
+  const aiRunsKey = ["ai-runs", userIdentity] as const;
   const attachedSeriesId = searchParams.get("series") ?? "";
   const attachedDataAsOf = searchParams.get("data_as_of") ?? "";
   const [prompt, setPrompt] = useState(attachedSeriesId ? "" : "请结合最新通胀、就业和FOMC材料，分析未来两次会议的政策路径，并区分事实、推断与风险情景。");
@@ -33,22 +35,22 @@ function AiContent() {
   const [contextOpen, setContextOpen] = useState(false);
   const [contextSearch, setContextSearch] = useState("");
 
-  const runsQuery = useQuery({ queryKey: ["ai-runs"], queryFn: () => apiFetch<AIRun[]>("/ai/runs?limit=50"), refetchInterval: (query) => query.state.data?.some((item)=>["queued","running"].includes(item.status)) ? 2500 : false });
+  const runsQuery = useQuery({ queryKey: aiRunsKey, queryFn: () => apiFetch<AIRun[]>("/ai/runs?limit=50"), refetchInterval: (query) => query.state.data?.some((item)=>["queued","running"].includes(item.status)) ? 2500 : false });
   const effectiveRunId = searchParams.get("run") ?? (selectedRunId || runsQuery.data?.[0]?.id || "");
   const selectedRun = runsQuery.data?.find((item)=>item.id===effectiveRunId);
-  const citationsQuery = useQuery({ queryKey:["ai-citations",effectiveRunId], queryFn:()=>apiFetch<AICitation[]>(`/ai/runs/${effectiveRunId}/citations`), enabled:Boolean(effectiveRunId)&&selectedRun?.status==="completed" });
+  const citationsQuery = useQuery({ queryKey:["ai-citations",userIdentity,effectiveRunId], queryFn:()=>apiFetch<AICitation[]>(`/ai/runs/${effectiveRunId}/citations`), enabled:Boolean(effectiveRunId)&&selectedRun?.status==="completed" });
   const seriesQuery = useQuery({ queryKey:["series","ai-context",contextSearch],queryFn:()=>apiFetch<{items:SeriesSummary[]}>(`/series?q=${encodeURIComponent(contextSearch)}&limit=30`),enabled:contextOpen });
   const documentsQuery = useQuery({ queryKey:["documents","ai-context",contextSearch],queryFn:()=>apiFetch<{items:DocumentSummary[]}>(`/documents?q=${encodeURIComponent(contextSearch)}&limit=20`),enabled:contextOpen });
-  const savedViewsQuery = useQuery({ queryKey:["saved-views","ai-context"],queryFn:()=>apiFetch<SavedView[]>("/me/saved-views"),enabled:contextOpen });
-  const notesQuery = useQuery({ queryKey:["notes","ai-context"],queryFn:()=>apiFetch<Note[]>("/me/notes?limit=100"),enabled:contextOpen });
+  const savedViewsQuery = useQuery({ queryKey:["saved-views","ai-context",userIdentity],queryFn:()=>apiFetch<SavedView[]>("/me/saved-views"),enabled:contextOpen });
+  const notesQuery = useQuery({ queryKey:["notes","ai-context",userIdentity],queryFn:()=>apiFetch<Note[]>("/me/notes?limit=100"),enabled:contextOpen });
   const attachedSeriesQuery = useQuery({ queryKey:["series-detail","ai-attached",user?.id,attachedSeriesId],queryFn:({signal})=>apiFetch<SeriesSummary>(`/series/${attachedSeriesId}`,{signal}),enabled:Boolean(attachedSeriesId),staleTime:5*60_000,retry:false });
   const attachedCapabilityQuery = useQuery({ queryKey:["ai-capability","attached",user?.id,attachedSeriesId,attachedDataAsOf],queryFn:({signal})=>apiFetch<AICapabilitiesResponse>(`/ai/capabilities?series_id=${encodeURIComponent(attachedSeriesId)}${attachedDataAsOf?`&data_as_of=${encodeURIComponent(attachedDataAsOf)}`:""}`,{signal}),enabled:Boolean(attachedSeriesId),staleTime:5*60_000,retry:false });
 
   const createRun = useMutation({
     mutationFn:()=>apiFetch<AIRun>("/ai/runs",{method:"POST",headers:{"Idempotency-Key":crypto.randomUUID()},body:JSON.stringify({prompt,mode,data_as_of:attachedDataAsOf||null,contexts:contexts.map(({context_type,context_id})=>({context_type,context_id}))})}),
-    onSuccess:(run)=>{setSelectedRunId(run.id);void queryClient.invalidateQueries({queryKey:["ai-runs"]});},
+    onSuccess:(run)=>{setSelectedRunId(run.id);void queryClient.invalidateQueries({queryKey:aiRunsKey});},
   });
-  const cancelRun = useMutation({ mutationFn:(id:string)=>apiFetch(`/ai/runs/${id}`,{method:"DELETE"}),onSuccess:()=>void queryClient.invalidateQueries({queryKey:["ai-runs"]}) });
+  const cancelRun = useMutation({ mutationFn:(id:string)=>apiFetch(`/ai/runs/${id}`,{method:"DELETE"}),onSuccess:()=>void queryClient.invalidateQueries({queryKey:aiRunsKey}) });
 
   const contextCandidates = useMemo(()=>[
     ...(seriesQuery.data?.items??[]).map((item)=>({context_type:"series" as const,context_id:item.id,label:item.name_zh,sub:item.canonical_code})),
