@@ -5,7 +5,7 @@
 - Source main task: `ML | 项目统筹部 | 主线程 | 01`
 - Source thread ID: `019fc3a3-d0a0-7f13-b660-2010e36c7138`
 - Task type: organization governance / agent instructions / documentation / validation
-- Status: `RUNNING`
+- Status: `BLOCKED`
 - Implementation commit: `d1e5b40804805e67681893af63cffd83fd0000e5`
 - Remediation commit: `c9353fd1ed639bd84f0668dd57c50283435b65f7`
 - Remediation-02 commit: `6a0b5b6d71b95140eaf1da524ba59befb63c20cd`
@@ -57,7 +57,7 @@ Update MacroLens task-execution governance so every substantive task is assigned
 | SUPPORTING | `ML | 知识管理部 | 01` | `019fc533-c4bb-71a3-b963-d39218141521` | Review task-card/report schemas and evidence completeness | `department-knowledge-01.md` | RESERVED | SUCCEEDED |
 | SUPPORTING | `ML｜研发部｜席位｜04` | `019fc533-0419-7103-a9e4-173a356b0b67` | Implement approved rules and validator in an isolated worktree | `department-engineering-04.md` | RESERVED | RUNNING |
 | SUPPORTING | `ML | 测试部 | 01` | `019fc533-101f-7111-8ad3-1ac090a62da2` | Independently verify contract and regression checks | `department-quality-01.md` | PENDING | PENDING |
-| SUPPORTING | `ML｜集成发布部｜席位｜01` | `019fc533-b3a2-7be2-96ce-f4990bda6d6e` | Integrate the engineering commit and verify baseline consistency | `department-integration-release-01.md` | PENDING | PENDING |
+| SUPPORTING | `ML｜集成发布部｜席位｜01` | `019fc533-b3a2-7be2-96ce-f4990bda6d6e` | Integrate the engineering commit and verify baseline consistency | `department-integration-release-01.md` | BLOCKED | BLOCKED |
 
 ## Dependencies and order
 
@@ -92,6 +92,8 @@ Reintegration review `67be3906` found one remaining test-fixture defect after th
 Reintegration review `dfece33e` confirmed all 96 tests pass before integration but found the lifecycle fixture is not reentrant after integration: once main already contains the nine integrated patches and report, the test treats the current main/report HEAD as another source candidate and repeats cherry-picks, causing an empty pick or conflict. The next remediation must build its source baseline from explicit task-card source commits, not from the floating root HEAD, and must prove both pre-integration and simulated post-integration execution.
 
 Reintegration review `86ab385d` found the two-stage topology itself works in the candidate context, but the fixture still asserts a fixed 0–8 baseline before declaring order 9. After the source main legitimately records remediation-09, the same test fails before topology validation. The next remediation must accept the task card's complete contiguous source map as input and derive the current order dynamically, with no hard-coded previous-round cardinality.
+
+Remediation-10 source candidate `036c8d7e` completed that dynamic fix with 96/96 tests and zero P1/P2 on both review axes. Final integration could not be assigned because Integration seat 01, a newly created local replacement seat 02, and a same-directory replacement fork all entered Codex `systemError` before producing a receipt. No receipt was fabricated and the source main did not take over integration. Resume from remediation-10 integration receipt and review when the thread service is available.
 
 ## Required checks
 
