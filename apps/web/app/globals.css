@@ -1,0 +1,114 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f5f7fb;
+  --surface: #ffffff;
+  --surface-muted: #f8fafc;
+  --border: #e5eaf2;
+  --text: #162033;
+  --muted: #6d7788;
+  --primary: #1c4ed8;
+  --primary-dark: #173ca4;
+  --primary-soft: #edf3ff;
+  --positive: #0f9f6e;
+  --negative: #dc4652;
+  --warning: #d98d17;
+}
+
+* { box-sizing: border-box; }
+html, body { min-height: 100%; }
+body {
+  margin: 0;
+  background: var(--background);
+  color: var(--text);
+  font-family: "Noto Sans SC", "Microsoft YaHei", Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+button, input, select, textarea { font: inherit; }
+button { cursor: pointer; }
+a { color: inherit; text-decoration: none; }
+
+.card {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  border-radius: 14px;
+  box-shadow: 0 2px 8px rgb(23 43 77 / 3%);
+}
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--border);
+}
+.card-body { padding: 20px; }
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 38px;
+  border-radius: 9px;
+  border: 1px solid var(--border);
+  padding: 0 14px;
+  background: white;
+  color: var(--text);
+  font-weight: 600;
+  transition: .16s ease;
+}
+.btn:hover { border-color: #b7c5de; background: #f8faff; }
+.btn-primary { background: var(--primary); border-color: var(--primary); color: white; }
+.btn-primary:hover { background: var(--primary-dark); border-color: var(--primary-dark); }
+.btn-ghost { border-color: transparent; background: transparent; }
+.btn-danger { color: var(--negative); }
+.input, .select, .textarea {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: white;
+  color: var(--text);
+  outline: none;
+  transition: .15s ease;
+}
+.input, .select { min-height: 40px; padding: 0 12px; }
+.textarea { padding: 12px; resize: vertical; }
+.input:focus, .select:focus, .textarea:focus { border-color: #85a5ee; box-shadow: 0 0 0 3px #edf3ff; }
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border-radius: 999px;
+  padding: 4px 9px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #42506a;
+  background: #f1f4f8;
+}
+.badge-blue { color: #2453be; background: #edf3ff; }
+.badge-green { color: #087552; background: #e9f9f3; }
+.badge-red { color: #b52e3a; background: #feeff1; }
+.badge-yellow { color: #93600e; background: #fff6dd; }
+.muted { color: var(--muted); }
+.positive { color: var(--positive); }
+.negative { color: var(--negative); }
+.section-title { font-size: 16px; font-weight: 750; margin: 0; }
+.page-title { margin: 0; font-size: clamp(24px, 2.3vw, 32px); letter-spacing: -.02em; }
+.page-description { margin: 6px 0 0; color: var(--muted); font-size: 14px; }
+.grid-auto { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; }
+.table-wrap { overflow: auto; }
+.data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.data-table th { position: sticky; top: 0; z-index: 1; background: #f8fafc; color: #69758a; font-weight: 650; text-align: left; }
+.data-table th, .data-table td { padding: 12px 14px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+.data-table tr:hover td { background: #fafcff; }
+.skeleton { border-radius: 8px; background: linear-gradient(90deg,#eef1f6 25%,#f7f8fb 37%,#eef1f6 63%); background-size: 400% 100%; animation: shimmer 1.4s ease infinite; }
+@keyframes shimmer { 0%{background-position:100% 0}100%{background-position:-100% 0} }
+.prose-macro h2 { font-size: 18px; margin: 24px 0 10px; }
+.prose-macro h3 { font-size: 16px; margin: 18px 0 8px; }
+.prose-macro p, .prose-macro li { line-height: 1.75; color: #37445a; }
+.prose-macro ul { padding-left: 22px; }
+
+@media (max-width: 900px) {
+  .desktop-only { display: none !important; }
+  .mobile-stack { grid-template-columns: 1fr !important; }
+}

@@ -1,0 +1,104 @@
+name: Live ingestion audit
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: Audit scope
+        required: true
+        default: incremental
+        type: choice
+        options: [incremental, backfill, vintage_backfill]
+  schedule:
+    # Weekly non-publishing incremental smoke audit.
+    - cron: "17 7 * * 1"
+    # Monthly non-publishing full-history audit. It is deliberately separated from
+    # production sync so a provider regression can never activate partial data.
+    - cron: "43 6 1 * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: live-ingestion-audit
+  cancel-in-progress: false
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_DB: macrolens_audit
+          POSTGRES_USER: macrolens
+          POSTGRES_PASSWORD: audit-password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U macrolens -d macrolens_audit"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      ENVIRONMENT: test
+      DATABASE_URL: postgresql+asyncpg://macrolens:audit-password@127.0.0.1:5432/macrolens_audit
+      DATABASE_URL_SYNC: postgresql+psycopg://macrolens:audit-password@127.0.0.1:5432/macrolens_audit
+      JWT_SECRET: live-audit-secret-that-is-at-least-thirty-two-characters
+      BOOTSTRAP_ADMIN_PASSWORD: live-audit-admin-password
+      FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+      BLS_API_KEY: ${{ secrets.BLS_API_KEY }}
+      EIA_API_KEY: ${{ secrets.EIA_API_KEY }}
+      BEA_API_KEY: ${{ secrets.BEA_API_KEY }}
+      CENSUS_API_KEY: ${{ secrets.CENSUS_API_KEY }}
+      DOL_CLAIMS_URL: ${{ secrets.DOL_CLAIMS_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements-dev.txt
+      - run: pip install -r backend/requirements-dev.txt
+      - name: Require official provider credentials
+        run: |
+          test -n "$FRED_API_KEY" || { echo 'FRED_API_KEY secret is required'; exit 2; }
+          test -n "$BLS_API_KEY" || { echo 'BLS_API_KEY secret is required'; exit 2; }
+          test -n "$EIA_API_KEY" || { echo 'EIA_API_KEY secret is required'; exit 2; }
+      - run: cd backend && alembic upgrade head
+      - run: PYTHONPATH=backend/src python -m macrolens_api.cli seed
+      - run: PYTHONPATH=backend/src python -m macrolens_worker.main audit-data --structural --output DATA_INGESTION_READINESS.json
+      - name: Resolve audit mode
+        id: mode
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "schedule" ] && [ "${{ github.event.schedule }}" = "43 6 1 * *" ]; then
+            echo "value=backfill" >> "$GITHUB_OUTPUT"
+          elif [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "value=${{ inputs.mode }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "value=incremental" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Fetch every enabled provider without publishing
+        env:
+          AUDIT_MODE: ${{ steps.mode.outputs.value }}
+        run: |
+          PYTHONPATH=backend/src python -m macrolens_worker.main audit-live \
+            --mode "$AUDIT_MODE" \
+            --provider FRED_API \
+            --provider BLS_API_V2 \
+            --provider BEA_API \
+            --provider CENSUS_EITS_API \
+            --provider DOL_OPEN_DATA_API \
+            --provider NYFED_MARKETS_API \
+            --provider US_TREASURY_XML \
+            --provider EIA_API_V2 \
+            --output LIVE_INGESTION_AUDIT.json
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: live-ingestion-audit-${{ github.run_id }}
+          path: |
+            DATA_INGESTION_READINESS.json
+            LIVE_INGESTION_AUDIT.json

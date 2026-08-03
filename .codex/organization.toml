@@ -1,0 +1,110 @@
+version = 1
+project = "MacroLens"
+title_prefix = "ML"
+operating_model = "independent_main_threads_with_shared_department_pool"
+initial_goal = "local_full_stack_ready"
+main_thread_count = 4
+department_seat_count = 26
+isolation = "git_worktree"
+integration_owner = "integration_release"
+
+[coordination]
+task_id_format = "ML-YYYYMMDD-NNN"
+seat_states = ["IDLE", "RESERVED", "RUNNING", "REVIEW", "BLOCKED"]
+one_active_task_per_seat = true
+main_threads_are_peers = true
+main_threads_may_implement = false
+department_small_task_autonomy = true
+
+[[main_threads]]
+title = "ML｜项目统筹部｜主线程｜01"
+[[main_threads]]
+title = "ML｜项目统筹部｜主线程｜02"
+[[main_threads]]
+title = "ML｜项目统筹部｜主线程｜03"
+[[main_threads]]
+title = "ML｜项目统筹部｜主线程｜04"
+
+[[departments]]
+code = "product"
+name = "产品部"
+seats = 2
+mission = "用户问题、产品流程、优先级和产品验收标准"
+anchors = ["数据研究体验", "工作区、报告和管理后台"]
+
+[[departments]]
+code = "architecture"
+name = "架构部"
+seats = 2
+mission = "模块边界、公共接口、Schema、数据流和技术决策"
+anchors = ["后端与数据架构", "Web、集成与性能架构"]
+
+[[departments]]
+code = "data_sources"
+name = "数据源部"
+seats = 3
+mission = "官方 Provider、来源映射、解析、回填和官方口径"
+anchors = ["FRED、BEA、BLS", "Census、DOL、EIA", "NY Fed、Treasury、FOMC"]
+
+[[departments]]
+code = "data_platform"
+name = "数据平台部"
+seats = 2
+mission = "vintage、质量门禁、发布批次、派生指标、数据库、任务、存储和搜索"
+anchors = ["vintage、质量和发布", "数据库、任务、存储和搜索"]
+
+[[departments]]
+code = "macro_research"
+name = "宏观研究部"
+seats = 2
+mission = "指标定义、经济发布、FOMC、预测口径和研究结果业务验收"
+anchors = ["指标与经济发布", "FOMC、预测与政策研究"]
+
+[[departments]]
+code = "ai_documents"
+name = "AI与文档部"
+seats = 2
+mission = "文档采集解析、检索、RAG、上下文快照、引用、Prompt 和 AI 评测"
+anchors = ["文档流水线与检索", "AI 上下文、引用与评测"]
+
+[[departments]]
+code = "engineering"
+name = "研发部"
+seats = 4
+mission = "Web、API、Worker、数据库、SDK 和跨栈功能实现"
+anchors = ["Web", "API", "Worker 与 Provider", "数据库、SDK 与跨栈机动"]
+
+[[departments]]
+code = "quality"
+name = "测试部"
+seats = 2
+mission = "后端契约、前端与 E2E、全栈验收、回归和数据审计"
+anchors = ["后端单元与契约", "前端、E2E、全栈验收与数据审计"]
+
+[[departments]]
+code = "security_compliance"
+name = "安全合规部"
+seats = 2
+mission = "认证授权、租户隔离、Web 安全、许可、密钥、依赖和云安全"
+anchors = ["认证授权与应用安全", "许可、秘密、供应链与云安全"]
+
+[[departments]]
+code = "operations"
+name = "运维部"
+seats = 2
+mission = "开发环境、容器、可观测性、云部署、备份恢复和故障处置"
+anchors = ["本地环境、容器与可观测性", "云部署、备份与事件响应"]
+
+[[departments]]
+code = "integration_release"
+name = "集成发布部"
+seats = 2
+mission = "变更审查、冲突处理、契约同步、合并、发布门禁和回滚"
+anchors = ["代码集成与契约同步", "发布验收、变更记录与回滚"]
+
+[[departments]]
+code = "knowledge"
+name = "知识管理部"
+seats = 1
+mission = "ADR、开发文档、结论报告、任务索引和上下文沉淀"
+anchors = ["项目知识库"]

@@ -1,0 +1,2016 @@
+{
+  "generated_at": "2026-08-02T05:21:31.945775Z",
+  "source_prototype": "macro_indicator_prototype_full_suite.html",
+  "indicator_count": 61,
+  "license_classes": {
+    "US_GOV_PUBLIC": "美国政府公开数据；仍需按机构要求标注来源",
+    "US_GOV_PUBLIC_ATTRIBUTION": "美国政府公开数据，必须展示来源/项目名称",
+    "PUBLIC_WITH_TERMS": "公开接口，但应遵守接口条款、署名及速率限制",
+    "PUBLIC_WITH_ATTRIBUTION": "公开数据，可按指定方式重制并引用",
+    "THIRD_PARTY_RESTRICTED": "第三方数据；自动抓取、再发布或商业化前需法务确认",
+    "COMMERCIAL": "需要商业许可或分发授权"
+  },
+  "indicators": [
+    {
+      "id": "ind-pce-headline",
+      "canonical_code": "US.PCE.HEADLINE",
+      "name_zh": "总PCE价格指数",
+      "name_en": "PCE Price Index",
+      "prototype_code": "BEA.PCEPI",
+      "frequency": "月度",
+      "unit": "指数",
+      "kind": "index",
+      "seasonal_adjustment": null,
+      "recommended_source": "BEA_API",
+      "dataset": "NIUnderlyingDetail",
+      "provider_series_id": null,
+      "locator": {
+        "table_name": "U20404",
+        "frequency": "M",
+        "year": "ALL",
+        "resolve_by": [
+          "SeriesCode",
+          "LineNumber",
+          "LineDescription"
+        ],
+        "target_description_zh": "总PCE价格指数",
+        "max_staleness_days": 90,
+        "min_observations_incremental": 24,
+        "min_observations_backfill": 60,
+        "require_contiguous": true,
+        "target_description_en": "PCE Price Index",
+        "allow_contains_match": false
+      },
+      "mapping_type": "DIRECT",
+      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "license_class": "US_GOV_PUBLIC",
+      "fallback": "FRED for headline/core only; do not use FRED IDs as BEA IDs",
+      "notes": [
+        "通过 BEA 元数据锁定 SeriesCode/LineNumber，不能把原型中的 BEA.PCE.* 当作官方序列号。"
+      ]
+    },
+    {
+      "id": "ind-pce-core",
+      "canonical_code": "US.PCE.CORE",
+      "name_zh": "核心PCE价格指数（剔除食品和能源）",
+      "name_en": "Core PCE Price Index",
+      "prototype_code": "BEA.PCEPILFE",
+      "frequency": "月度",
+      "unit": "指数",
+      "kind": "index",
+      "seasonal_adjustment": null,
+      "recommended_source": "BEA_API",
+      "dataset": "NIUnderlyingDetail",
+      "provider_series_id": null,
+      "locator": {
+        "table_name": "U20404",
+        "frequency": "M",
+        "year": "ALL",
+        "resolve_by": [
+          "SeriesCode",
+          "LineNumber",
+          "LineDescription"
+        ],
+        "target_description_zh": "核心PCE价格指数（剔除食品和能源）",
+        "max_staleness_days": 90,
+        "min_observations_incremental": 24,
+        "min_observations_backfill": 60,
+        "require_contiguous": true,
+        "target_description_en": "Core PCE Price Index",
+        "allow_contains_match": false
+      },
+      "mapping_type": "DIRECT",
+      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "license_class": "US_GOV_PUBLIC",
+      "fallback": "FRED for headline/core only; do not use FRED IDs as BEA IDs",
+      "notes": [
+        "通过 BEA 元数据锁定 SeriesCode/LineNumber，不能把原型中的 BEA.PCE.* 当作官方序列号。"
+      ]
+    },
+    {
+      "id": "ind-pce-core-goods",
+      "canonical_code": "US.PCE.CORE.GOODS",
+      "name_zh": "核心商品",
+      "name_en": "Core Goods",
+      "prototype_code": "BEA.PCE.CORE.GOODS",
+      "frequency": "月度",
+      "unit": "指数",
+      "kind": "index",
+      "seasonal_adjustment": null,
+      "recommended_source": "BEA_API",
+      "dataset": "NIUnderlyingDetail",
+      "provider_series_id": null,
+      "locator": {
+        "table_name": "U20404",
+        "frequency": "M",
+        "year": "ALL",
+        "resolve_by": [
+          "SeriesCode",
+          "LineNumber",
+          "LineDescription"
+        ],
+        "target_description_zh": "核心商品",
+        "max_staleness_days": 90,
+        "min_observations_incremental": 24,
+        "min_observations_backfill": 60,
+        "require_contiguous": true,
+        "target_description_en": "Core Goods",
+        "allow_contains_match": false
+      },
+      "mapping_type": "DERIVED_AGGREGATE",
+      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "license_class": "US_GOV_PUBLIC",
+      "fallback": "FRED for headline/core only; do not use FRED IDs as BEA IDs",
+      "notes": [
+        "先在 U20404 元数据中寻找官方聚合行；若不存在，按明确组件权重/指数方法派生并版本化公式。"
+      ]
+    },
+    {
+      "id": "ind-pce-core-services",
+      "canonical_code": "US.PCE.CORE.SERVICES",
+      "name_zh": "核心服务",
+      "name_en": "Core Services",
+      "prototype_code": "BEA.PCE.CORE.SERVICES",
+      "frequency": "月度",
+      "unit": "指数",
+      "kind": "index",
+      "seasonal_adjustment": null,
+      "recommended_source": "BEA_API",
+      "dataset": "NIUnderlyingDetail",
+      "provider_series_id": null,
+      "locator": {
+        "table_name": "U20404",
+        "frequency": "M",
+        "year": "ALL",
+        "resolve_by": [
+          "SeriesCode",
+          "LineNumber",
+          "LineDescription"
+        ],
+        "target_description_zh": "核心服务",
+        "max_staleness_days": 90,
+        "min_observations_incremental": 24,
+        "min_observations_backfill": 60,
+        "require_contiguous": true,
+        "target_description_en": "Core Services",
+        "allow_contains_match": false
+      },
+      "mapping_type": "DERIVED_AGGREGATE",
+      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "license_class": "US_GOV_PUBLIC",
+      "fallback": "FRED for headline/core only; do not use FRED IDs as BEA IDs",
+      "notes": [
+        "先在 U20404 元数据中寻找官方聚合行；若不存在，按明确组件权重/指数方法派生并版本化公式。"
+      ]
+    },
+    {
+      "id": "ind-pce-housing",
+      "canonical_code": "US.PCE.HOUSING",
+      "name_zh": "住房服务",
+      "name_en": "Housing Services",
+      "prototype_code": "BEA.PCE.HOUSING",
+      "frequency": "月度",
+      "unit": "指数",
+      "kind": "index",
+      "seasonal_adjustment": null,
+      "recommended_source": "BEA_API",
+      "dataset": "NIUnderlyingDetail",
+      "provider_series_id": null,
+      "locator": {
+        "table_name": "U20404",
+        "frequency": "M",
+        "year": "ALL",
+        "resolve_by": [
+          "SeriesCode",
+          "LineNumber",
+          "LineDescription"
+        ],
+        "target_description_zh": "住房服务",
+        "max_staleness_days": 90,
+        "min_observations_incremental": 24,
+        "min_observations_backfill": 60,
+        "require_contiguous": true,
+        "target_description_en": "Housing Services",
+        "allow_contains_match": false
+      },
+      "mapping_type": "DIRECT",
+      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "license_class": "US_GOV_PUBLIC",
+      "fallback": "FRED for headline/core only; do not use FRED IDs as BEA IDs",
+      "notes": [
+        "通过 BEA 元数据锁定 SeriesCode/LineNumber，不能把原型中的 BEA.PCE.* 当作官方序列号。"
+      ]
+    },
+    {
+      "id": "ind-pce-nonhousing",
+      "canonical_code": "US.PCE.NONHOUSING",
+      "name_zh": "非住房核心服务",
+      "name_en": "Core Services Excluding Housing",
+      "prototype_code": "BEA.PCE.NHCS",
+      "frequency": "月度",
+      "unit": "指数",
+      "kind": "index",
+      "seasonal_adjustment": null,
+      "recommended_source": "BEA_API",
+      "dataset": "NIUnderlyingDetail",
+      "provider_series_id": null,
+      "locator": {
+        "table_name": "U20404",
+        "frequency": "M",
+        "year": "ALL",
+        "resolve_by": [
+          "SeriesCode",
+          "LineNumber",
+          "LineDescription"
+        ],
+        "target_description_zh": "非住房核心服务",
+        "max_staleness_days": 90,
+        "min_observations_incremental": 24,
+        "min_observations_backfill": 60,
+        "require_contiguous": true,
+        "target_description_en": "Core Services Excluding Housing",
+        "allow_contains_match": false
+      },
+      "mapping_type": "DERIVED_AGGREGATE",
+      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "license_class": "US_GOV_PUBLIC",
+      "fallback": "FRED for headline/core only; do not use FRED IDs as BEA IDs",
+      "notes": [
+        "先在 U20404 元数据中寻找官方聚合行；若不存在，按明确组件权重/指数方法派生并版本化公式。"
+      ]
+    },
+    {
+      "id": "ind-pce-medical",
+      "canonical_code": "US.PCE.MEDICAL",
+      "name_zh": "医疗服务",
+      "name_en": "Health Care Services",
+      "prototype_code": "BEA.PCE.CRSVMD",
+      "frequency": "月度",
+      "unit": "指数",
+      "kind": "index",
+      "seasonal_adjustment": null,
+      "recommended_source": "BEA_API",
+      "dataset": "NIUnderlyingDetail",
+      "provider_series_id": null,
+      "locator": {
+        "table_name": "U20404",
+        "frequency": "M",
+        "year": "ALL",
+        "resolve_by": [
+          "SeriesCode",
+          "LineNumber",
+          "LineDescription"
+        ],
+        "target_description_zh": "医疗服务",
+        "max_staleness_days": 90,
+        "min_observations_incremental": 24,
+        "min_observations_backfill": 60,
+        "require_contiguous": true,
+        "target_description_en": "Health Care Services",
+        "allow_contains_match": false
+      },
+      "mapping_type": "DIRECT",
+      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "license_class": "US_GOV_PUBLIC",
+      "fallback": "FRED for headline/core only; do not use FRED IDs as BEA IDs",
+      "notes": [
+        "通过 BEA 元数据锁定 SeriesCode/LineNumber，不能把原型中的 BEA.PCE.* 当作官方序列号。"
+      ]
+    },
+    {
+      "id": "ind-pce-hospital",
+      "canonical_code": "US.PCE.HOSPITAL",
+      "name_zh": "医院服务",
+      "name_en": "Hospital Services",
+      "prototype_code": "BEA.PCE.HOSPITAL",
+      "frequency": "月度",
+      "unit": "指数",
+      "kind": "index",
+      "seasonal_adjustment": null,
+      "recommended_source": "BEA_API",
+      "dataset": "NIUnderlyingDetail",
+      "provider_series_id": null,
+      "locator": {
+        "table_name": "U20404",
+        "frequency": "M",
+        "year": "ALL",
+        "resolve_by": [
+          "SeriesCode",
+          "LineNumber",
+          "LineDescription"
+        ],
+        "target_description_zh": "医院服务",
+        "max_staleness_days": 90,
+        "min_observations_incremental": 24,
+        "min_observations_backfill": 60,
+        "require_contiguous": true,
+        "target_description_en": "Hospital Services",
+        "allow_contains_match": false
+      },
+      "mapping_type": "DIRECT",
+      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "license_class": "US_GOV_PUBLIC",
+      "fallback": "FRED for headline/core only; do not use FRED IDs as BEA IDs",
+      "notes": [
+        "通过 BEA 元数据锁定 SeriesCode/LineNumber，不能把原型中的 BEA.PCE.* 当作官方序列号。"
+      ]
+    },
+    {
+      "id": "ind-pce-physician",
+      "canonical_code": "US.PCE.PHYSICIAN",
+      "name_zh": "医生和诊疗服务",
+      "name_en": "Physician & Clinical Services",
+      "prototype_code": "BEA.PCE.PHYSICIAN",
+      "frequency": "月度",
+      "unit": "指数",
+      "kind": "index",
+      "seasonal_adjustment": null,
+      "recommended_source": "BEA_API",
+      "dataset": "NIUnderlyingDetail",
+      "provider_series_id": null,
+      "locator": {
+        "table_name": "U20404",
+        "frequency": "M",
+        "year": "ALL",
+        "resolve_by": [
+          "SeriesCode",
+          "LineNumber",
+          "LineDescription"
+        ],
+        "target_description_zh": "医生和诊疗服务",
+        "max_staleness_days": 90,
+        "min_observations_incremental": 24,
+        "min_observations_backfill": 60,
+        "require_contiguous": true,
+        "target_description_en": "Physician & Clinical Services",
+        "allow_contains_match": false
+      },
+      "mapping_type": "DIRECT",
+      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "license_class": "US_GOV_PUBLIC",
+      "fallback": "FRED for headline/core only; do not use FRED IDs as BEA IDs",
+      "notes": [
+        "通过 BEA 元数据锁定 SeriesCode/LineNumber，不能把原型中的 BEA.PCE.* 当作官方序列号。"
+      ]
+    },
+    {
+      "id": "ind-pce-other-professional",
+      "canonical_code": "US.PCE.OTHER.PROFESSIONAL",
+      "name_zh": "其他医疗专业服务",
+      "name_en": "Other Medical Professional Services",
+      "prototype_code": "BEA.PCE.OTHERPRO",
+      "frequency": "月度",
+      "unit": "指数",
+      "kind": "index",
+      "seasonal_adjustment": null,
+      "recommended_source": "BEA_API",
+      "dataset": "NIUnderlyingDetail",
+      "provider_series_id": null,
+      "locator": {
+        "table_name": "U20404",
+        "frequency": "M",
+        "year": "ALL",
+        "resolve_by": [
+          "SeriesCode",
+          "LineNumber",
+          "LineDescription"
+        ],
+        "target_description_zh": "其他医疗专业服务",
+        "max_staleness_days": 90,
+        "min_observations_incremental": 24,
+        "min_observations_backfill": 60,
+        "require_contiguous": true,
+        "target_description_en": "Other Medical Professional Services",
+        "allow_contains_match": false
+      },
+      "mapping_type": "DIRECT",
+      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "license_class": "US_GOV_PUBLIC",
+      "fallback": "FRED for headline/core only; do not use FRED IDs as BEA IDs",
+      "notes": [
+        "通过 BEA 元数据锁定 SeriesCode/LineNumber，不能把原型中的 BEA.PCE.* 当作官方序列号。"
+      ]
+    },
+    {
+      "id": "ind-pce-dental",
+      "canonical_code": "US.PCE.DENTAL",
+      "name_zh": "牙科服务",
+      "name_en": "Dental Services",
+      "prototype_code": "BEA.PCE.DENTAL",
+      "frequency": "月度",
+      "unit": "指数",
+      "kind": "index",
+      "seasonal_adjustment": null,
+      "recommended_source": "BEA_API",
+      "dataset": "NIUnderlyingDetail",
+      "provider_series_id": null,
+      "locator": {
+        "table_name": "U20404",
+        "frequency": "M",
+        "year": "ALL",
+        "resolve_by": [
+          "SeriesCode",
+          "LineNumber",
+          "LineDescription"
+        ],
+        "target_description_zh": "牙科服务",
+        "max_staleness_days": 90,
+        "min_observations_incremental": 24,
+        "min_observations_backfill": 60,
+        "require_contiguous": true,
+        "target_description_en": "Dental Services",
+        "allow_contains_match": false
+      },
+      "mapping_type": "DIRECT",
+      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "license_class": "US_GOV_PUBLIC",
+      "fallback": "FRED for headline/core only; do not use FRED IDs as BEA IDs",
+      "notes": [
+        "通过 BEA 元数据锁定 SeriesCode/LineNumber，不能把原型中的 BEA.PCE.* 当作官方序列号。"
+      ]
+    },
+    {
+      "id": "ind-pce-medical-equipment",
+      "canonical_code": "US.PCE.MEDICAL.EQUIPMENT",
+      "name_zh": "医疗设备及用品",
+      "name_en": "Medical Equipment & Supplies",
+      "prototype_code": "BEA.PCE.MEDEQUIP",
+      "frequency": "月度",
+      "unit": "指数",
+      "kind": "index",
+      "seasonal_adjustment": null,
+      "recommended_source": "BEA_API",
+      "dataset": "NIUnderlyingDetail",
+      "provider_series_id": null,
+      "locator": {
+        "table_name": "U20404",
+        "frequency": "M",
+        "year": "ALL",
+        "resolve_by": [
+          "SeriesCode",
+          "LineNumber",
+          "LineDescription"
+        ],
+        "target_description_zh": "医疗设备及用品",
+        "max_staleness_days": 90,
+        "min_observations_incremental": 24,
+        "min_observations_backfill": 60,
+        "require_contiguous": true,
+        "target_description_en": "Medical Equipment & Supplies",
+        "allow_contains_match": false
+      },
+      "mapping_type": "DIRECT",
+      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "license_class": "US_GOV_PUBLIC",
+      "fallback": "FRED for headline/core only; do not use FRED IDs as BEA IDs",
+      "notes": [
+        "通过 BEA 元数据锁定 SeriesCode/LineNumber，不能把原型中的 BEA.PCE.* 当作官方序列号。"
+      ]
+    },
+    {
+      "id": "ind-pce-prescription",
+      "canonical_code": "US.PCE.PRESCRIPTION",
+      "name_zh": "处方药",
+      "name_en": "Prescription Drugs",
+      "prototype_code": "BEA.PCE.RXDRUGS",
+      "frequency": "月度",
+      "unit": "指数",
+      "kind": "index",
+      "seasonal_adjustment": null,
+      "recommended_source": "BEA_API",
+      "dataset": "NIUnderlyingDetail",
+      "provider_series_id": null,
+      "locator": {
+        "table_name": "U20404",
+        "frequency": "M",
+        "year": "ALL",
+        "resolve_by": [
+          "SeriesCode",
+          "LineNumber",
+          "LineDescription"
+        ],
+        "target_description_zh": "处方药",
+        "max_staleness_days": 90,
+        "min_observations_incremental": 24,
+        "min_observations_backfill": 60,
+        "require_contiguous": true,
+        "target_description_en": "Prescription Drugs",
+        "allow_contains_match": false
+      },
+      "mapping_type": "DIRECT",
+      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "license_class": "US_GOV_PUBLIC",
+      "fallback": "FRED for headline/core only; do not use FRED IDs as BEA IDs",
+      "notes": [
+        "通过 BEA 元数据锁定 SeriesCode/LineNumber，不能把原型中的 BEA.PCE.* 当作官方序列号。"
+      ]
+    },
+    {
+      "id": "ind-pce-health-insurance",
+      "canonical_code": "US.PCE.HEALTH.INSURANCE",
+      "name_zh": "健康保险服务",
+      "name_en": "Health Insurance Services",
+      "prototype_code": "BEA.PCE.HEALTHINS",
+      "frequency": "月度",
+      "unit": "指数",
+      "kind": "index",
+      "seasonal_adjustment": null,
+      "recommended_source": "BEA_API",
+      "dataset": "NIUnderlyingDetail",
+      "provider_series_id": null,
+      "locator": {
+        "table_name": "U20404",
+        "frequency": "M",
+        "year": "ALL",
+        "resolve_by": [
+          "SeriesCode",
+          "LineNumber",
+          "LineDescription"
+        ],
+        "target_description_zh": "健康保险服务",
+        "max_staleness_days": 90,
+        "min_observations_incremental": 24,
+        "min_observations_backfill": 60,
+        "require_contiguous": true,
+        "target_description_en": "Health Insurance Services",
+        "allow_contains_match": false
+      },
+      "mapping_type": "DIRECT",
+      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "license_class": "US_GOV_PUBLIC",
+      "fallback": "FRED for headline/core only; do not use FRED IDs as BEA IDs",
+      "notes": [
+        "通过 BEA 元数据锁定 SeriesCode/LineNumber，不能把原型中的 BEA.PCE.* 当作官方序列号。"
+      ]
+    },
+    {
+      "id": "ind-pce-longterm-care",
+      "canonical_code": "US.PCE.LONGTERM.CARE",
+      "name_zh": "长期护理服务",
+      "name_en": "Long-Term Care Services",
+      "prototype_code": "BEA.PCE.LONGCARE",
+      "frequency": "月度",
+      "unit": "指数",
+      "kind": "index",
+      "seasonal_adjustment": null,
+      "recommended_source": "BEA_API",
+      "dataset": "NIUnderlyingDetail",
+      "provider_series_id": null,
+      "locator": {
+        "table_name": "U20404",
+        "frequency": "M",
+        "year": "ALL",
+        "resolve_by": [
+          "SeriesCode",
+          "LineNumber",
+          "LineDescription"
+        ],
+        "target_description_zh": "长期护理服务",
+        "max_staleness_days": 90,
+        "min_observations_incremental": 24,
+        "min_observations_backfill": 60,
+        "require_contiguous": true,
+        "target_description_en": "Long-Term Care Services",
+        "allow_contains_match": false
+      },
+      "mapping_type": "DIRECT",
+      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "license_class": "US_GOV_PUBLIC",
+      "fallback": "FRED for headline/core only; do not use FRED IDs as BEA IDs",
+      "notes": [
+        "通过 BEA 元数据锁定 SeriesCode/LineNumber，不能把原型中的 BEA.PCE.* 当作官方序列号。"
+      ]
+    },
+    {
+      "id": "ind-pce-transport",
+      "canonical_code": "US.PCE.TRANSPORT",
+      "name_zh": "交通服务",
+      "name_en": "Transportation Services",
+      "prototype_code": "BEA.PCE.TRANSPORT",
+      "frequency": "月度",
+      "unit": "指数",
+      "kind": "index",
+      "seasonal_adjustment": null,
+      "recommended_source": "BEA_API",
+      "dataset": "NIUnderlyingDetail",
+      "provider_series_id": null,
+      "locator": {
+        "table_name": "U20404",
+        "frequency": "M",
+        "year": "ALL",
+        "resolve_by": [
+          "SeriesCode",
+          "LineNumber",
+          "LineDescription"
+        ],
+        "target_description_zh": "交通服务",
+        "max_staleness_days": 90,
+        "min_observations_incremental": 24,
+        "min_observations_backfill": 60,
+        "require_contiguous": true,
+        "target_description_en": "Transportation Services",
+        "allow_contains_match": false
+      },
+      "mapping_type": "DIRECT",
+      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "license_class": "US_GOV_PUBLIC",
+      "fallback": "FRED for headline/core only; do not use FRED IDs as BEA IDs",
+      "notes": [
+        "通过 BEA 元数据锁定 SeriesCode/LineNumber，不能把原型中的 BEA.PCE.* 当作官方序列号。"
+      ]
+    },
+    {
+      "id": "ind-pce-recreation",
+      "canonical_code": "US.PCE.RECREATION",
+      "name_zh": "娱乐服务",
+      "name_en": "Recreation Services",
+      "prototype_code": "BEA.PCE.RECREATION",
+      "frequency": "月度",
+      "unit": "指数",
+      "kind": "index",
+      "seasonal_adjustment": null,
+      "recommended_source": "BEA_API",
+      "dataset": "NIUnderlyingDetail",
+      "provider_series_id": null,
+      "locator": {
+        "table_name": "U20404",
+        "frequency": "M",
+        "year": "ALL",
+        "resolve_by": [
+          "SeriesCode",
+          "LineNumber",
+          "LineDescription"
+        ],
+        "target_description_zh": "娱乐服务",
+        "max_staleness_days": 90,
+        "min_observations_incremental": 24,
+        "min_observations_backfill": 60,
+        "require_contiguous": true,
+        "target_description_en": "Recreation Services",
+        "allow_contains_match": false
+      },
+      "mapping_type": "DIRECT",
+      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "license_class": "US_GOV_PUBLIC",
+      "fallback": "FRED for headline/core only; do not use FRED IDs as BEA IDs",
+      "notes": [
+        "通过 BEA 元数据锁定 SeriesCode/LineNumber，不能把原型中的 BEA.PCE.* 当作官方序列号。"
+      ]
+    },
+    {
+      "id": "ind-pce-food-services",
+      "canonical_code": "US.PCE.FOOD.SERVICES",
+      "name_zh": "餐饮住宿服务",
+      "name_en": "Food Services & Accommodation",
+      "prototype_code": "BEA.PCE.FOOD.ACCOM",
+      "frequency": "月度",
+      "unit": "指数",
+      "kind": "index",
+      "seasonal_adjustment": null,
+      "recommended_source": "BEA_API",
+      "dataset": "NIUnderlyingDetail",
+      "provider_series_id": null,
+      "locator": {
+        "table_name": "U20404",
+        "frequency": "M",
+        "year": "ALL",
+        "resolve_by": [
+          "SeriesCode",
+          "LineNumber",
+          "LineDescription"
+        ],
+        "target_description_zh": "餐饮住宿服务",
+        "max_staleness_days": 90,
+        "min_observations_incremental": 24,
+        "min_observations_backfill": 60,
+        "require_contiguous": true,
+        "target_description_en": "Food Services & Accommodation",
+        "allow_contains_match": false
+      },
+      "mapping_type": "DIRECT",
+      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "license_class": "US_GOV_PUBLIC",
+      "fallback": "FRED for headline/core only; do not use FRED IDs as BEA IDs",
+      "notes": [
+        "通过 BEA 元数据锁定 SeriesCode/LineNumber，不能把原型中的 BEA.PCE.* 当作官方序列号。"
+      ]
+    },
+    {
+      "id": "ind-pce-finance",
+      "canonical_code": "US.PCE.FINANCE",
+      "name_zh": "金融服务与保险",
+      "name_en": "Financial Services & Insurance",
+      "prototype_code": "BEA.PCE.FINANCE",
+      "frequency": "月度",
+      "unit": "指数",
+      "kind": "index",
+      "seasonal_adjustment": null,
+      "recommended_source": "BEA_API",
+      "dataset": "NIUnderlyingDetail",
+      "provider_series_id": null,
+      "locator": {
+        "table_name": "U20404",
+        "frequency": "M",
+        "year": "ALL",
+        "resolve_by": [
+          "SeriesCode",
+          "LineNumber",
+          "LineDescription"
+        ],
+        "target_description_zh": "金融服务与保险",
+        "max_staleness_days": 90,
+        "min_observations_incremental": 24,
+        "min_observations_backfill": 60,
+        "require_contiguous": true,
+        "target_description_en": "Financial Services & Insurance",
+        "allow_contains_match": false
+      },
+      "mapping_type": "DIRECT",
+      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "license_class": "US_GOV_PUBLIC",
+      "fallback": "FRED for headline/core only; do not use FRED IDs as BEA IDs",
+      "notes": [
+        "通过 BEA 元数据锁定 SeriesCode/LineNumber，不能把原型中的 BEA.PCE.* 当作官方序列号。"
+      ]
+    },
+    {
+      "id": "ind-pce-other-services",
+      "canonical_code": "US.PCE.OTHER.SERVICES",
+      "name_zh": "其他核心服务",
+      "name_en": "Other Core Services",
+      "prototype_code": "BEA.PCE.OTHER.SERVICES",
+      "frequency": "月度",
+      "unit": "指数",
+      "kind": "index",
+      "seasonal_adjustment": null,
+      "recommended_source": "BEA_API",
+      "dataset": "NIUnderlyingDetail",
+      "provider_series_id": null,
+      "locator": {
+        "table_name": "U20404",
+        "frequency": "M",
+        "year": "ALL",
+        "resolve_by": [
+          "SeriesCode",
+          "LineNumber",
+          "LineDescription"
+        ],
+        "target_description_zh": "其他核心服务",
+        "max_staleness_days": 90,
+        "min_observations_incremental": 24,
+        "min_observations_backfill": 60,
+        "require_contiguous": true,
+        "target_description_en": "Other Core Services",
+        "allow_contains_match": false
+      },
+      "mapping_type": "DERIVED_AGGREGATE",
+      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "license_class": "US_GOV_PUBLIC",
+      "fallback": "FRED for headline/core only; do not use FRED IDs as BEA IDs",
+      "notes": [
+        "先在 U20404 元数据中寻找官方聚合行；若不存在，按明确组件权重/指数方法派生并版本化公式。"
+      ]
+    },
+    {
+      "id": "ind-pce-durables",
+      "canonical_code": "US.PCE.DURABLES",
+      "name_zh": "耐用品价格指数",
+      "name_en": "Durable Goods Price Index",
+      "prototype_code": "BEA.PCE.DURABLES",
+      "frequency": "月度",
+      "unit": "指数",
+      "kind": "index",
+      "seasonal_adjustment": null,
+      "recommended_source": "BEA_API",
+      "dataset": "NIUnderlyingDetail",
+      "provider_series_id": null,
+      "locator": {
+        "table_name": "U20404",
+        "frequency": "M",
+        "year": "ALL",
+        "resolve_by": [
+          "SeriesCode",
+          "LineNumber",
+          "LineDescription"
+        ],
+        "target_description_zh": "耐用品价格指数",
+        "max_staleness_days": 90,
+        "min_observations_incremental": 24,
+        "min_observations_backfill": 60,
+        "require_contiguous": true,
+        "target_description_en": "Durable Goods Price Index",
+        "allow_contains_match": false
+      },
+      "mapping_type": "DIRECT",
+      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "license_class": "US_GOV_PUBLIC",
+      "fallback": "FRED for headline/core only; do not use FRED IDs as BEA IDs",
+      "notes": [
+        "通过 BEA 元数据锁定 SeriesCode/LineNumber，不能把原型中的 BEA.PCE.* 当作官方序列号。"
+      ]
+    },
+    {
+      "id": "ind-pce-nondurables",
+      "canonical_code": "US.PCE.NONDURABLES",
+      "name_zh": "非耐用品价格指数",
+      "name_en": "Nondurable Goods Price Index",
+      "prototype_code": "BEA.PCE.NONDURABLES",
+      "frequency": "月度",
+      "unit": "指数",
+      "kind": "index",
+      "seasonal_adjustment": null,
+      "recommended_source": "BEA_API",
+      "dataset": "NIUnderlyingDetail",
+      "provider_series_id": null,
+      "locator": {
+        "table_name": "U20404",
+        "frequency": "M",
+        "year": "ALL",
+        "resolve_by": [
+          "SeriesCode",
+          "LineNumber",
+          "LineDescription"
+        ],
+        "target_description_zh": "非耐用品价格指数",
+        "max_staleness_days": 90,
+        "min_observations_incremental": 24,
+        "min_observations_backfill": 60,
+        "require_contiguous": true,
+        "target_description_en": "Nondurable Goods Price Index",
+        "allow_contains_match": false
+      },
+      "mapping_type": "DIRECT",
+      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "license_class": "US_GOV_PUBLIC",
+      "fallback": "FRED for headline/core only; do not use FRED IDs as BEA IDs",
+      "notes": [
+        "通过 BEA 元数据锁定 SeriesCode/LineNumber，不能把原型中的 BEA.PCE.* 当作官方序列号。"
+      ]
+    },
+    {
+      "id": "ind-cpi-headline",
+      "canonical_code": "US.CPI.HEADLINE",
+      "name_zh": "CPI总指数",
+      "name_en": "Consumer Price Index",
+      "prototype_code": "BLS.CUSR0000SA0",
+      "frequency": "月度",
+      "unit": "指数",
+      "kind": "index",
+      "seasonal_adjustment": null,
+      "recommended_source": "BLS_API_V2",
+      "dataset": "Public Data API",
+      "provider_series_id": "CUSR0000SA0",
+      "locator": {
+        "max_staleness_days": 90,
+        "min_observations_incremental": 24,
+        "min_observations_backfill": 60,
+        "require_contiguous": true,
+        "start_year": 1947,
+        "expected_first_period": "1947-01-01"
+      },
+      "mapping_type": "DIRECT",
+      "mapping_status": "READY",
+      "license_class": "US_GOV_PUBLIC",
+      "fallback": null,
+      "notes": []
+    },
+    {
+      "id": "ind-cpi-core",
+      "canonical_code": "US.CPI.CORE",
+      "name_zh": "核心CPI",
+      "name_en": "Core CPI",
+      "prototype_code": "BLS.CUSR0000SA0L1E",
+      "frequency": "月度",
+      "unit": "指数",
+      "kind": "index",
+      "seasonal_adjustment": null,
+      "recommended_source": "BLS_API_V2",
+      "dataset": "Public Data API",
+      "provider_series_id": "CUSR0000SA0L1E",
+      "locator": {
+        "max_staleness_days": 90,
+        "min_observations_incremental": 24,
+        "min_observations_backfill": 60,
+        "require_contiguous": true,
+        "start_year": 1957,
+        "expected_first_period": "1957-01-01"
+      },
+      "mapping_type": "DIRECT",
+      "mapping_status": "READY",
+      "license_class": "US_GOV_PUBLIC",
+      "fallback": null,
+      "notes": []
+    },
+    {
+      "id": "ind-cpi-shelter",
+      "canonical_code": "US.CPI.SHELTER",
+      "name_zh": "CPI住房项",
+      "name_en": "CPI Shelter",
+      "prototype_code": "BLS.CUSR0000SAH1",
+      "frequency": "月度",
+      "unit": "指数",
+      "kind": "index",
+      "seasonal_adjustment": null,
+      "recommended_source": "BLS_API_V2",
+      "dataset": "Public Data API",
+      "provider_series_id": "CUSR0000SAH1",
+      "locator": {
+        "max_staleness_days": 90,
+        "min_observations_incremental": 24,
+        "min_observations_backfill": 60,
+        "require_contiguous": true,
+        "start_year": 1953,
+        "expected_first_period": "1953-01-01"
+      },
+      "mapping_type": "DIRECT",
+      "mapping_status": "READY",
+      "license_class": "US_GOV_PUBLIC",
+      "fallback": null,
+      "notes": []
+    },
+    {
+      "id": "ind-cpi-medical",
+      "canonical_code": "US.CPI.MEDICAL",
+      "name_zh": "CPI医疗服务",
+      "name_en": "CPI Medical Care Services",
+      "prototype_code": "BLS.CUSR0000SAM2",
+      "frequency": "月度",
+      "unit": "指数",
+      "kind": "index",
+      "seasonal_adjustment": null,
+      "recommended_source": "BLS_API_V2",
+      "dataset": "Public Data API",
+      "provider_series_id": "CUSR0000SAM2",
+      "locator": {
+        "max_staleness_days": 90,
+        "min_observations_incremental": 24,
+        "min_observations_backfill": 60,
+        "require_contiguous": true,
+        "start_year": 1956,
+        "expected_first_period": "1956-01-01"
+      },
+      "mapping_type": "DIRECT",
+      "mapping_status": "READY",
+      "license_class": "US_GOV_PUBLIC",
+      "fallback": null,
+      "notes": []
+    },
+    {
+      "id": "ind-ppi-final",
+      "canonical_code": "US.PPI.FINAL",
+      "name_zh": "PPI最终需求",
+      "name_en": "PPI Final Demand",
+      "prototype_code": "BLS.WPSFD4",
+      "frequency": "月度",
+      "unit": "指数",
+      "kind": "index",
+      "seasonal_adjustment": "季调",
+      "recommended_source": "BLS_API_V2",
+      "dataset": "Public Data API",
+      "provider_series_id": "WPSFD4",
+      "locator": {
+        "max_staleness_days": 90,
+        "min_observations_incremental": 24,
+        "min_observations_backfill": 60,
+        "require_contiguous": true,
+        "start_year": 2009,
+        "expected_first_period": "2009-11-01"
+      },
+      "mapping_type": "DIRECT",
+      "mapping_status": "READY",
+      "license_class": "US_GOV_PUBLIC",
+      "fallback": null,
+      "notes": [
+        "BLS 已核验 Series ID WPSFD4：Final demand，WPS 前缀表示季节调整序列。",
+        "生产采集通过 BLS Public Data API V2，保留 BLS 最新值标识与脚注。"
+      ]
+    },
+    {
+      "id": "ind-ppi-core",
+      "canonical_code": "US.PPI.CORE",
+      "name_zh": "核心PPI最终需求（不含食品、能源和贸易服务）",
+      "name_en": "PPI Final Demand Less Foods, Energy, and Trade Services",
+      "prototype_code": "BLS.WPSFD49116",
+      "frequency": "月度",
+      "unit": "指数",
+      "kind": "index",
+      "seasonal_adjustment": "季调",
+      "recommended_source": "BLS_API_V2",
+      "dataset": "Public Data API",
+      "provider_series_id": "WPSFD49116",
+      "locator": {
+        "max_staleness_days": 90,
+        "min_observations_incremental": 24,
+        "min_observations_backfill": 60,
+        "require_contiguous": true,
+        "start_year": 2013,
+        "expected_first_period": "2013-08-01"
+      },
+      "mapping_type": "DIRECT",
+      "mapping_status": "READY",
+      "license_class": "US_GOV_PUBLIC",
+      "fallback": null,
+      "notes": [
+        "BLS 已核验 Series ID WPSFD49116：Final demand less foods, energy, and trade services。",
+        "生产采集通过 BLS Public Data API V2，保留 BLS 最新值标识与脚注。"
+      ]
+    },
+    {
+      "id": "ind-breakeven-5y5y",
+      "canonical_code": "US.BREAKEVEN.5Y5Y",
+      "name_zh": "5年5年远期通胀预期",
+      "name_en": "5-Year, 5-Year Forward Inflation Expectation",
+      "prototype_code": "FRED.T5YIFR",
+      "frequency": "日度",
+      "unit": "%",
+      "kind": "rate",
+      "seasonal_adjustment": "不适用",
+      "recommended_source": "FRED_API",
+      "dataset": "Inflation Expectations",
+      "provider_series_id": "T5YIFR",
+      "locator": {
+        "max_staleness_days": 14,
+        "min_observations_incremental": 20,
+        "min_observations_backfill": 100,
+        "require_contiguous": false,
+        "expected_first_period": "2003-01-02",
+        "observation_start": "2003-01-02"
+      },
+      "mapping_type": "DIRECT",
+      "mapping_status": "READY",
+      "license_class": "PUBLIC_WITH_TERMS",
+      "fallback": null,
+      "notes": [
+        "完整历史边界已核验并固定为 2003-01-02；回填缺少该首期时禁止发布。"
+      ]
+    },
+    {
+      "id": "ind-michigan-1y",
+      "canonical_code": "US.MICHIGAN.1Y",
+      "name_zh": "密歇根大学1年通胀预期",
+      "name_en": "University of Michigan 1-Year Inflation Expectations",
+      "prototype_code": "FRED.MICH",
+      "frequency": "月度",
+      "unit": "%",
+      "kind": "rate",
+      "seasonal_adjustment": "未季调",
+      "recommended_source": "UMICH_SURVEYS_OF_CONSUMERS",
+      "dataset": "Public Tables",
+      "provider_series_id": "1Y_INFLATION_EXPECTATIONS",
+      "locator": {
+        "public_table": true,
+        "citation_required": true,
+        "max_staleness_days": 90,
+        "min_observations_incremental": 24,
+        "min_observations_backfill": 60,
+        "require_contiguous": true
+      },
+      "mapping_type": "DIRECT",
+      "mapping_status": "LEGAL_REVIEW_REQUIRED",
+      "license_class": "PUBLIC_WITH_ATTRIBUTION",
+      "fallback": "FRED: MICH",
+      "notes": [
+        "公开网页表格可重制并引用；完整报告或更细数据可能需要订阅。",
+        "University of Michigan data is copyrighted; production ingestion requires an approved license/usage agreement."
+      ]
+    },
+    {
+      "id": "ind-payrolls",
+      "canonical_code": "US.PAYROLLS",
+      "name_zh": "非农就业新增",
+      "name_en": "Change in Total Nonfarm Payrolls",
+      "prototype_code": "BLS.CES0000000001.CHANGE",
+      "frequency": "月度",
+      "unit": "千人",
+      "kind": "change",
+      "seasonal_adjustment": "季调",
+      "recommended_source": "BLS_API_V2",
+      "dataset": "Public Data API",
+      "provider_series_id": "CES0000000001",
+      "locator": {
+        "transform": "period_difference",
+        "periods": 1,
+        "max_staleness_days": 90,
+        "min_observations_incremental": 24,
+        "min_observations_backfill": 60,
+        "require_contiguous": true,
+        "start_year": 1939,
+        "expected_first_period": "1939-02-01"
+      },
+      "mapping_type": "DERIVED_TRANSFORM",
+      "mapping_status": "READY",
+      "license_class": "US_GOV_PUBLIC",
+      "fallback": null,
+      "notes": [
+        "原型的 .CHANGE 是内部派生标记；官方原始序列为总非农就业水平。"
+      ]
+    },
+    {
+      "id": "ind-unemployment",
+      "canonical_code": "US.UNEMPLOYMENT",
+      "name_zh": "失业率",
+      "name_en": "Unemployment Rate",
+      "prototype_code": "BLS.LNS14000000",
+      "frequency": "月度",
+      "unit": "%",
+      "kind": "rate",
+      "seasonal_adjustment": "季调",
+      "recommended_source": "BLS_API_V2",
+      "dataset": "Public Data API",
+      "provider_series_id": "LNS14000000",
+      "locator": {
+        "max_staleness_days": 90,
+        "min_observations_incremental": 24,
+        "min_observations_backfill": 60,
+        "require_contiguous": true,
+        "start_year": 1948,
+        "expected_first_period": "1948-01-01"
+      },
+      "mapping_type": "DIRECT",
+      "mapping_status": "READY",
+      "license_class": "US_GOV_PUBLIC",
+      "fallback": null,
+      "notes": []
+    },
+    {
+      "id": "ind-participation",
+      "canonical_code": "US.PARTICIPATION",
+      "name_zh": "劳动参与率",
+      "name_en": "Labor Force Participation Rate",
+      "prototype_code": "BLS.LNS11300000",
+      "frequency": "月度",
+      "unit": "%",
+      "kind": "rate",
+      "seasonal_adjustment": "季调",
+      "recommended_source": "BLS_API_V2",
+      "dataset": "Public Data API",
+      "provider_series_id": "LNS11300000",
+      "locator": {
+        "max_staleness_days": 90,
+        "min_observations_incremental": 24,
+        "min_observations_backfill": 60,
+        "require_contiguous": true,
+        "start_year": 1948,
+        "expected_first_period": "1948-01-01"
+      },
+      "mapping_type": "DIRECT",
+      "mapping_status": "READY",
+      "license_class": "US_GOV_PUBLIC",
+      "fallback": null,
+      "notes": []
+    },
+    {
+      "id": "ind-average-hourly",
+      "canonical_code": "US.AVERAGE.HOURLY",
+      "name_zh": "平均时薪指数",
+      "name_en": "Average Hourly Earnings Index",
+      "prototype_code": "BLS.CES0500000003",
+      "frequency": "月度",
+      "unit": "美元/小时",
+      "kind": "amount",
+      "seasonal_adjustment": "季调",
+      "recommended_source": "BLS_API_V2",
+      "dataset": "Public Data API",
+      "provider_series_id": "CES0500000003",
+      "locator": {
+        "max_staleness_days": 90,
+        "min_observations_incremental": 24,
+        "min_observations_backfill": 60,
+        "require_contiguous": true,
+        "start_year": 2006,
+        "expected_first_period": "2006-03-01"
+      },
+      "mapping_type": "DIRECT",
+      "mapping_status": "READY",
+      "license_class": "US_GOV_PUBLIC",
+      "fallback": null,
+      "notes": [
+        "BLS CES0500000003 begins in March 2006; the backfill gate must reject any truncated history after 2006-03."
+      ]
+    },
+    {
+      "id": "ind-eci",
+      "canonical_code": "US.ECI",
+      "name_zh": "就业成本指数：民用工作人员总补偿",
+      "name_en": "Employment Cost Index: Civilian Workers, Total Compensation",
+      "prototype_code": "BLS.CIS1010000000000I",
+      "frequency": "季度",
+      "unit": "指数",
+      "kind": "index",
+      "seasonal_adjustment": "季调",
+      "recommended_source": "BLS_API_V2",
+      "dataset": "Public Data API",
+      "provider_series_id": "CIS1010000000000I",
+      "locator": {
+        "max_staleness_days": 180,
+        "min_observations_incremental": 8,
+        "min_observations_backfill": 20,
+        "require_contiguous": true,
+        "start_year": 2001,
+        "expected_first_period": "2001-01-01"
+      },
+      "mapping_type": "DIRECT",
+      "mapping_status": "READY",
+      "license_class": "US_GOV_PUBLIC",
+      "fallback": null,
+      "notes": [
+        "BLS 已核验 Series ID CIS1010000000000I：季调、民用工作人员、总补偿指数。",
+        "该口径作为平台 headline ECI；工资与薪金口径应另建独立指标，不能混用。"
+      ]
+    },
+    {
+      "id": "ind-job-openings",
+      "canonical_code": "US.JOB.OPENINGS",
+      "name_zh": "职位空缺数",
+      "name_en": "Job Openings",
+      "prototype_code": "BLS.JTS000000000000000JOL",
+      "frequency": "月度",
+      "unit": "千人",
+      "kind": "amount",
+      "seasonal_adjustment": "季调",
+      "recommended_source": "BLS_API_V2",
+      "dataset": "Public Data API",
+      "provider_series_id": "JTS000000000000000JOL",
+      "locator": {
+        "max_staleness_days": 90,
+        "min_observations_incremental": 24,
+        "min_observations_backfill": 60,
+        "require_contiguous": true,
+        "start_year": 2000,
+        "expected_first_period": "2000-12-01"
+      },
+      "mapping_type": "DIRECT",
+      "mapping_status": "READY",
+      "license_class": "US_GOV_PUBLIC",
+      "fallback": null,
+      "notes": [
+        "BLS JTS000000000000000JOL begins in December 2000; earlier requested years must not be treated as missing provider data."
+      ]
+    },
+    {
+      "id": "ind-initial-claims",
+      "canonical_code": "US.INITIAL.CLAIMS",
+      "name_zh": "初请失业金人数",
+      "name_en": "Initial Unemployment Claims",
+      "prototype_code": "FRED.ICSA",
+      "frequency": "周度",
+      "unit": "千人",
+      "kind": "amount",
+      "seasonal_adjustment": "季调",
+      "recommended_source": "FRED_API",
+      "dataset": "Unemployment Insurance Weekly Claims Report",
+      "provider_series_id": "ICSA",
+      "locator": {
+        "observation_start": "1967-01-07",
+        "expected_first_period": "1967-01-07",
+        "max_staleness_days": 28,
+        "min_observations_incremental": 26,
+        "min_observations_backfill": 100,
+        "require_contiguous": true,
+        "expected_title": "Initial Claims",
+        "scale_factor": "0.001"
+      },
+      "mapping_type": "DIRECT",
+      "mapping_status": "READY",
+      "license_class": "US_GOV_PUBLIC_ATTRIBUTION",
+      "fallback": "Direct DOL Open Data API after its endpoint and pagination contract are pinned.",
+      "notes": [
+        "Authoritative source is the U.S. Employment and Training Administration; FRED is the verified transport and preserves the full weekly series from 1967-01-07.",
+        "Direct DOL ingestion remains available as an adapter but is not enabled without an exact endpoint and completeness contract.",
+        "FRED ICSA is published as persons; scale_factor 0.001 converts it to the platform unit of thousands of persons."
+      ]
+    },
+    {
+      "id": "ind-real-gdp",
+      "canonical_code": "US.REAL.GDP",
+      "name_zh": "实际GDP",
+      "name_en": "Real Gross Domestic Product",
+      "prototype_code": "BEA.GDPC1",
+      "frequency": "季度",
+      "unit": "十亿美元",
+      "kind": "amount",
+      "seasonal_adjustment": "季调年率",
+      "recommended_source": "BEA_API",
+      "dataset": "NIPA",
+      "provider_series_id": null,
+      "locator": {
+        "table_name": "T10106",
+        "frequency": "Q",
+        "year": "ALL",
+        "line_match": "Gross domestic product",
+        "max_staleness_days": 180,
+        "min_observations_incremental": 8,
+        "min_observations_backfill": 20,
+        "require_contiguous": true,
+        "target_description_en": "Real Gross Domestic Product",
+        "allow_contains_match": false
+      },
+      "mapping_type": "DIRECT",
+      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "license_class": "US_GOV_PUBLIC",
+      "fallback": "FRED: GDPC1",
+      "notes": [
+        "GDPC1 是 FRED 序列号，不是 BEA API 序列号。"
+      ]
+    },
+    {
+      "id": "ind-industrial-production",
+      "canonical_code": "US.INDUSTRIAL.PRODUCTION",
+      "name_zh": "工业生产指数",
+      "name_en": "Industrial Production Index",
+      "prototype_code": "FRB.G17.INDPRO",
+      "frequency": "月度",
+      "unit": "指数",
+      "kind": "index",
+      "seasonal_adjustment": "季调",
+      "recommended_source": "FRED_API",
+      "dataset": "Industrial Production and Capacity Utilization (G.17)",
+      "provider_series_id": "INDPRO",
+      "locator": {
+        "max_staleness_days": 90,
+        "min_observations_incremental": 24,
+        "min_observations_backfill": 60,
+        "require_contiguous": true,
+        "expected_first_period": "1919-01-01",
+        "observation_start": "1919-01-01"
+      },
+      "mapping_type": "DIRECT",
+      "mapping_status": "READY",
+      "license_class": "US_GOV_PUBLIC",
+      "fallback": "Federal Reserve G.17 XML/release files",
+      "notes": [
+        "原始来源是 Federal Reserve Board；当前 Board 数据正在通过 FRED 扩展访问。",
+        "完整历史边界已核验并固定为 1919-01-01；回填缺少该首期时禁止发布。"
+      ]
+    },
+    {
+      "id": "ind-retail-sales",
+      "canonical_code": "US.RETAIL.SALES",
+      "name_zh": "零售销售",
+      "name_en": "Advance Retail Sales",
+      "prototype_code": "CENSUS.MARTS.RETAIL",
+      "frequency": "月度",
+      "unit": "百万美元",
+      "kind": "amount",
+      "seasonal_adjustment": "季调",
+      "recommended_source": "CENSUS_EITS_API",
+      "dataset": "marts",
+      "provider_series_id": null,
+      "locator": {
+        "path": "timeseries/eits/marts",
+        "resolve_dimensions_from_dictionary": true,
+        "max_staleness_days": 90,
+        "min_observations_incremental": 24,
+        "min_observations_backfill": 60,
+        "require_contiguous": true
+      },
+      "mapping_type": "DIRECT",
+      "mapping_status": "NEEDS_DIMENSION_MAPPING",
+      "license_class": "US_GOV_PUBLIC_ATTRIBUTION",
+      "fallback": null,
+      "notes": [
+        "保存官方精度，不自行截断；展示时标注 Census Bureau 与具体调查名称。"
+      ]
+    },
+    {
+      "id": "ind-personal-consumption",
+      "canonical_code": "US.PERSONAL.CONSUMPTION",
+      "name_zh": "实际个人消费支出",
+      "name_en": "Real Personal Consumption Expenditures",
+      "prototype_code": "BEA.PCEC96",
+      "frequency": "月度",
+      "unit": "十亿美元",
+      "kind": "amount",
+      "seasonal_adjustment": "季调年率",
+      "recommended_source": "BEA_API",
+      "dataset": "NIPA",
+      "provider_series_id": null,
+      "locator": {
+        "table_name": "T20306",
+        "frequency": "M",
+        "year": "ALL",
+        "line_match": "Personal consumption expenditures",
+        "max_staleness_days": 90,
+        "min_observations_incremental": 24,
+        "min_observations_backfill": 60,
+        "require_contiguous": true,
+        "target_description_en": "Real Personal Consumption Expenditures",
+        "allow_contains_match": false
+      },
+      "mapping_type": "DIRECT",
+      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "license_class": "US_GOV_PUBLIC",
+      "fallback": "FRED: PCEC96",
+      "notes": [
+        "PCEC96 是 FRED 序列号，不是 BEA API 序列号。"
+      ]
+    },
+    {
+      "id": "ind-durable-orders",
+      "canonical_code": "US.DURABLE.ORDERS",
+      "name_zh": "耐用品新订单",
+      "name_en": "Manufacturers New Orders: Durable Goods",
+      "prototype_code": "CENSUS.ADVM3.DGORDER",
+      "frequency": "月度",
+      "unit": "百万美元",
+      "kind": "amount",
+      "seasonal_adjustment": "季调",
+      "recommended_source": "CENSUS_EITS_API",
+      "dataset": "advm3",
+      "provider_series_id": null,
+      "locator": {
+        "path": "timeseries/eits/advm3",
+        "resolve_dimensions_from_dictionary": true,
+        "max_staleness_days": 90,
+        "min_observations_incremental": 24,
+        "min_observations_backfill": 60,
+        "require_contiguous": true
+      },
+      "mapping_type": "DIRECT",
+      "mapping_status": "NEEDS_DIMENSION_MAPPING",
+      "license_class": "US_GOV_PUBLIC_ATTRIBUTION",
+      "fallback": null,
+      "notes": [
+        "保存官方精度，不自行截断；展示时标注 Census Bureau 与具体调查名称。"
+      ]
+    },
+    {
+      "id": "ind-fed-funds",
+      "canonical_code": "US.FED.FUNDS",
+      "name_zh": "有效联邦基金利率",
+      "name_en": "Effective Federal Funds Rate",
+      "prototype_code": "NYFED.EFFR",
+      "frequency": "日度",
+      "unit": "%",
+      "kind": "rate",
+      "seasonal_adjustment": "不适用",
+      "recommended_source": "NYFED_MARKETS_API",
+      "dataset": "Reference Rates",
+      "provider_series_id": "EFFR",
+      "locator": {
+        "route": "rates/unsecured/effr/search.json",
+        "max_staleness_days": 14,
+        "min_observations_incremental": 20,
+        "min_observations_backfill": 100,
+        "require_contiguous": false,
+        "type": "rate",
+        "aggregation": "unique",
+        "start_date": "2000-07-03",
+        "expected_first_period": "2000-07-03"
+      },
+      "mapping_type": "DIRECT",
+      "mapping_status": "READY",
+      "license_class": "PUBLIC_WITH_TERMS",
+      "fallback": null,
+      "notes": [
+        "New York Fed EFFR public reference-rate history begins on 2000-07-03."
+      ]
+    },
+    {
+      "id": "ind-sofr",
+      "canonical_code": "US.SOFR",
+      "name_zh": "SOFR",
+      "name_en": "Secured Overnight Financing Rate",
+      "prototype_code": "NYFED.SOFR",
+      "frequency": "日度",
+      "unit": "%",
+      "kind": "rate",
+      "seasonal_adjustment": "不适用",
+      "recommended_source": "NYFED_MARKETS_API",
+      "dataset": "Reference Rates",
+      "provider_series_id": "SOFR",
+      "locator": {
+        "route": "rates/secured/sofr/search.json",
+        "max_staleness_days": 14,
+        "min_observations_incremental": 20,
+        "min_observations_backfill": 100,
+        "require_contiguous": false,
+        "type": "rate",
+        "aggregation": "unique",
+        "start_date": "2018-04-02",
+        "expected_first_period": "2018-04-02"
+      },
+      "mapping_type": "DIRECT",
+      "mapping_status": "READY",
+      "license_class": "PUBLIC_WITH_TERMS",
+      "fallback": null,
+      "notes": []
+    },
+    {
+      "id": "ind-treasury-2y",
+      "canonical_code": "US.TREASURY.2Y",
+      "name_zh": "2年期美国国债收益率",
+      "name_en": "2-Year Treasury Yield",
+      "prototype_code": "TREASURY.DGS2",
+      "frequency": "日度",
+      "unit": "%",
+      "kind": "rate",
+      "seasonal_adjustment": "不适用",
+      "recommended_source": "US_TREASURY_XML",
+      "dataset": "Daily Treasury Interest Rates",
+      "provider_series_id": "2Y_PAR_NOMINAL",
+      "locator": {
+        "feed": "Daily Treasury Par Yield Curve Rates",
+        "max_staleness_days": 14,
+        "min_observations_incremental": 20,
+        "min_observations_backfill": 100,
+        "require_contiguous": false,
+        "start_year": 1990,
+        "expected_first_period": "1990-01-02"
+      },
+      "mapping_type": "DIRECT",
+      "mapping_status": "READY",
+      "license_class": "US_GOV_PUBLIC",
+      "fallback": null,
+      "notes": [
+        "DGS2、DGS10、DFII10 是 FRED 序列号；直接 Treasury 源应按期限/曲线字段映射。"
+      ]
+    },
+    {
+      "id": "ind-treasury-10y",
+      "canonical_code": "US.TREASURY.10Y",
+      "name_zh": "10年期美国国债收益率",
+      "name_en": "10-Year Treasury Yield",
+      "prototype_code": "TREASURY.DGS10",
+      "frequency": "日度",
+      "unit": "%",
+      "kind": "rate",
+      "seasonal_adjustment": "不适用",
+      "recommended_source": "US_TREASURY_XML",
+      "dataset": "Daily Treasury Interest Rates",
+      "provider_series_id": "10Y_PAR_NOMINAL",
+      "locator": {
+        "feed": "Daily Treasury Par Yield Curve Rates",
+        "max_staleness_days": 14,
+        "min_observations_incremental": 20,
+        "min_observations_backfill": 100,
+        "require_contiguous": false,
+        "start_year": 1990,
+        "expected_first_period": "1990-01-02"
+      },
+      "mapping_type": "DIRECT",
+      "mapping_status": "READY",
+      "license_class": "US_GOV_PUBLIC",
+      "fallback": null,
+      "notes": [
+        "DGS2、DGS10、DFII10 是 FRED 序列号；直接 Treasury 源应按期限/曲线字段映射。"
+      ]
+    },
+    {
+      "id": "ind-real-10y",
+      "canonical_code": "US.REAL.10Y",
+      "name_zh": "10年期实际国债收益率",
+      "name_en": "10-Year Real Treasury Yield",
+      "prototype_code": "TREASURY.DFII10",
+      "frequency": "日度",
+      "unit": "%",
+      "kind": "rate",
+      "seasonal_adjustment": "不适用",
+      "recommended_source": "US_TREASURY_XML",
+      "dataset": "Daily Treasury Interest Rates",
+      "provider_series_id": "10Y_PAR_REAL",
+      "locator": {
+        "feed": "Daily Treasury Par Real Yield Curve Rates",
+        "max_staleness_days": 14,
+        "min_observations_incremental": 20,
+        "min_observations_backfill": 100,
+        "require_contiguous": false,
+        "start_year": 2003,
+        "expected_first_period": "2003-01-02"
+      },
+      "mapping_type": "DIRECT",
+      "mapping_status": "READY",
+      "license_class": "US_GOV_PUBLIC",
+      "fallback": null,
+      "notes": [
+        "DGS2、DGS10、DFII10 是 FRED 序列号；直接 Treasury 源应按期限/曲线字段映射。"
+      ]
+    },
+    {
+      "id": "ind-mortgage-30y",
+      "canonical_code": "US.MORTGAGE.30Y",
+      "name_zh": "30年期固定抵押贷款利率",
+      "name_en": "30-Year Fixed Rate Mortgage Average",
+      "prototype_code": "FRED.MORTGAGE30US",
+      "frequency": "周度",
+      "unit": "%",
+      "kind": "rate",
+      "seasonal_adjustment": "未季调",
+      "recommended_source": "FREDDIE_MAC_PMMS",
+      "dataset": "Primary Mortgage Market Survey",
+      "provider_series_id": "30YR_FRM",
+      "locator": {
+        "archive": "consolidated_csv",
+        "max_staleness_days": 28,
+        "min_observations_incremental": 26,
+        "min_observations_backfill": 100,
+        "require_contiguous": true
+      },
+      "mapping_type": "DIRECT",
+      "mapping_status": "LEGAL_REVIEW_REQUIRED",
+      "license_class": "THIRD_PARTY_RESTRICTED",
+      "fallback": "FRED: MORTGAGE30US (仍需遵守原始数据方限制)",
+      "notes": [
+        "Freddie Mac 网站条款对自动抓取、公开再发布和商业化有限制；上线前取得书面许可或购买授权。"
+      ]
+    },
+    {
+      "id": "ind-fed-assets",
+      "canonical_code": "US.FED.ASSETS",
+      "name_zh": "美联储总资产",
+      "name_en": "Federal Reserve Total Assets",
+      "prototype_code": "FRB.H41.WALCL",
+      "frequency": "周度",
+      "unit": "百万美元",
+      "kind": "amount",
+      "seasonal_adjustment": "未季调",
+      "recommended_source": "FRED_API",
+      "dataset": "H.4.1",
+      "provider_series_id": "WALCL",
+      "locator": {
+        "max_staleness_days": 28,
+        "min_observations_incremental": 26,
+        "min_observations_backfill": 100,
+        "require_contiguous": true,
+        "expected_first_period": "2002-12-18",
+        "observation_start": "2002-12-18"
+      },
+      "mapping_type": "DIRECT",
+      "mapping_status": "READY",
+      "license_class": "US_GOV_PUBLIC",
+      "fallback": "Federal Reserve release XML/CSV where available",
+      "notes": [
+        "完整历史边界已核验并固定为 2002-12-18；回填缺少该首期时禁止发布。"
+      ]
+    },
+    {
+      "id": "ind-bank-reserves",
+      "canonical_code": "US.BANK.RESERVES",
+      "name_zh": "存款机构准备金余额",
+      "name_en": "Reserve Balances with Federal Reserve Banks",
+      "prototype_code": "FRB.H41.WRESBAL",
+      "frequency": "周度",
+      "unit": "百万美元",
+      "kind": "amount",
+      "seasonal_adjustment": "未季调",
+      "recommended_source": "FRED_API",
+      "dataset": "H.4.1",
+      "provider_series_id": "WRESBAL",
+      "locator": {
+        "max_staleness_days": 28,
+        "min_observations_incremental": 26,
+        "min_observations_backfill": 100,
+        "require_contiguous": true,
+        "expected_first_period": "2002-12-18",
+        "observation_start": "2002-12-18"
+      },
+      "mapping_type": "DIRECT",
+      "mapping_status": "READY",
+      "license_class": "US_GOV_PUBLIC",
+      "fallback": "Federal Reserve release XML/CSV where available",
+      "notes": [
+        "完整历史边界已核验并固定为 2002-12-18；回填缺少该首期时禁止发布。"
+      ]
+    },
+    {
+      "id": "ind-reverse-repo",
+      "canonical_code": "US.REVERSE.REPO",
+      "name_zh": "隔夜逆回购余额",
+      "name_en": "Overnight Reverse Repurchase Agreements",
+      "prototype_code": "NYFED.RRPONTSYD",
+      "frequency": "日度",
+      "unit": "十亿美元",
+      "kind": "amount",
+      "seasonal_adjustment": "未季调",
+      "recommended_source": "NYFED_MARKETS_API",
+      "dataset": "Reverse Repo Operations",
+      "provider_series_id": "RRP_TOTAL_ACCEPTED",
+      "locator": {
+        "route": "rp/results/search.json",
+        "field": "totalAmtAccepted",
+        "max_staleness_days": 14,
+        "min_observations_incremental": 20,
+        "min_observations_backfill": 100,
+        "require_contiguous": false,
+        "aggregation": "sum",
+        "start_date": "2003-02-07",
+        "expected_first_period": "2003-02-07",
+        "params": {
+          "operationTypes": "reverserepo",
+          "securityType": "tsy",
+          "term": "Overnight"
+        },
+        "allow_empty_windows": true
+      },
+      "mapping_type": "DIRECT",
+      "mapping_status": "READY",
+      "license_class": "PUBLIC_WITH_TERMS",
+      "fallback": null,
+      "notes": [
+        "Use the official repo operation results endpoint, not counterparty proposition details.",
+        "Filters pin reverse repo, Treasury collateral, and Overnight term; totalAmtAccepted is aggregated per operation date."
+      ]
+    },
+    {
+      "id": "ind-fed-mbs",
+      "canonical_code": "US.FED.MBS",
+      "name_zh": "美联储持有MBS",
+      "name_en": "Federal Reserve Holdings of Mortgage-Backed Securities",
+      "prototype_code": "FRB.H41.WSHOMCB",
+      "frequency": "周度",
+      "unit": "百万美元",
+      "kind": "amount",
+      "seasonal_adjustment": "未季调",
+      "recommended_source": "FRED_API",
+      "dataset": "H.4.1",
+      "provider_series_id": "WSHOMCB",
+      "locator": {
+        "max_staleness_days": 28,
+        "min_observations_incremental": 26,
+        "min_observations_backfill": 100,
+        "require_contiguous": true,
+        "expected_first_period": "2002-12-18",
+        "observation_start": "2002-12-18"
+      },
+      "mapping_type": "DIRECT",
+      "mapping_status": "READY",
+      "license_class": "US_GOV_PUBLIC",
+      "fallback": "Federal Reserve release XML/CSV where available",
+      "notes": [
+        "完整历史边界已核验并固定为 2002-12-18；回填缺少该首期时禁止发布。"
+      ]
+    },
+    {
+      "id": "ind-sp500",
+      "canonical_code": "US.SP500",
+      "name_zh": "标普500指数",
+      "name_en": "S&P 500 Index",
+      "prototype_code": "FRED.SP500",
+      "frequency": "日度",
+      "unit": "指数",
+      "kind": "index",
+      "seasonal_adjustment": "不适用",
+      "recommended_source": "LICENSED_MARKET_DATA_VENDOR",
+      "dataset": "US Equity Indices",
+      "provider_series_id": "SPX",
+      "locator": {
+        "vendor_options": [
+          "Cboe",
+          "LSEG",
+          "Bloomberg",
+          "Nasdaq Data Link"
+        ],
+        "max_staleness_days": 14,
+        "min_observations_incremental": 20,
+        "min_observations_backfill": 100,
+        "require_contiguous": false
+      },
+      "mapping_type": "DIRECT",
+      "mapping_status": "LICENSE_REQUIRED",
+      "license_class": "COMMERCIAL",
+      "fallback": null,
+      "notes": [
+        "不要把 FRED.SP500 直接用于公开商业再分发。"
+      ]
+    },
+    {
+      "id": "ind-dollar-index",
+      "canonical_code": "US.DOLLAR.INDEX",
+      "name_zh": "美元广义指数",
+      "name_en": "Trade Weighted U.S. Dollar Index",
+      "prototype_code": "FRB.DTWEXBGS",
+      "frequency": "日度",
+      "unit": "指数",
+      "kind": "index",
+      "seasonal_adjustment": "未季调",
+      "recommended_source": "FRED_API",
+      "dataset": "H.10",
+      "provider_series_id": "DTWEXBGS",
+      "locator": {
+        "max_staleness_days": 14,
+        "min_observations_incremental": 20,
+        "min_observations_backfill": 100,
+        "require_contiguous": false,
+        "expected_first_period": "2006-01-02",
+        "observation_start": "2006-01-02"
+      },
+      "mapping_type": "DIRECT",
+      "mapping_status": "READY",
+      "license_class": "US_GOV_PUBLIC",
+      "fallback": "Federal Reserve release XML/CSV where available",
+      "notes": [
+        "完整历史边界已核验并固定为 2006-01-02；回填缺少该首期时禁止发布。"
+      ]
+    },
+    {
+      "id": "ind-wti",
+      "canonical_code": "US.WTI",
+      "name_zh": "WTI原油现货价格",
+      "name_en": "West Texas Intermediate Spot Price",
+      "prototype_code": "EIA.PET.RWTC.D",
+      "frequency": "日度",
+      "unit": "美元/桶",
+      "kind": "amount",
+      "seasonal_adjustment": "未季调",
+      "recommended_source": "EIA_API_V2",
+      "dataset": "Petroleum",
+      "provider_series_id": "PET.RWTC.D",
+      "locator": {
+        "route": "v2/seriesid/PET.RWTC.D",
+        "max_staleness_days": 14,
+        "min_observations_incremental": 20,
+        "min_observations_backfill": 100,
+        "require_contiguous": false,
+        "value_field": "value",
+        "data_fields": [
+          "value"
+        ],
+        "sort_column": "period",
+        "sort_direction": "asc",
+        "expected_first_period": "1986-01-02",
+        "frequency": "daily"
+      },
+      "mapping_type": "DIRECT",
+      "mapping_status": "READY",
+      "license_class": "US_GOV_PUBLIC",
+      "fallback": null,
+      "notes": [
+        "完整历史边界已核验并固定为 1986-01-02；回填缺少该首期时禁止发布。"
+      ]
+    },
+    {
+      "id": "ind-financial-conditions",
+      "canonical_code": "US.FINANCIAL.CONDITIONS",
+      "name_zh": "芝加哥联储金融条件指数",
+      "name_en": "National Financial Conditions Index",
+      "prototype_code": "FRED.NFCI",
+      "frequency": "周度",
+      "unit": "标准差",
+      "kind": "spread",
+      "seasonal_adjustment": "不适用",
+      "recommended_source": "FRED_API",
+      "dataset": "Chicago Fed National Financial Conditions Index",
+      "provider_series_id": "NFCI",
+      "locator": {
+        "max_staleness_days": 28,
+        "min_observations_incremental": 26,
+        "min_observations_backfill": 100,
+        "require_contiguous": true,
+        "expected_first_period": "1971-01-08",
+        "observation_start": "1971-01-08"
+      },
+      "mapping_type": "DIRECT",
+      "mapping_status": "READY",
+      "license_class": "PUBLIC_WITH_TERMS",
+      "fallback": null,
+      "notes": [
+        "完整历史边界已核验并固定为 1971-01-08；回填缺少该首期时禁止发布。"
+      ]
+    },
+    {
+      "id": "ind-bank-credit",
+      "canonical_code": "US.BANK.CREDIT",
+      "name_zh": "商业银行信贷",
+      "name_en": "Bank Credit, All Commercial Banks",
+      "prototype_code": "FRED.TOTBKCR",
+      "frequency": "周度",
+      "unit": "十亿美元",
+      "kind": "amount",
+      "seasonal_adjustment": "季调",
+      "recommended_source": "FRED_API",
+      "dataset": "H.8 Assets and Liabilities of Commercial Banks in the United States",
+      "provider_series_id": "TOTBKCR",
+      "locator": {
+        "max_staleness_days": 28,
+        "min_observations_incremental": 26,
+        "min_observations_backfill": 100,
+        "require_contiguous": true,
+        "expected_first_period": "1973-01-03",
+        "observation_start": "1973-01-03"
+      },
+      "mapping_type": "DIRECT",
+      "mapping_status": "READY",
+      "license_class": "US_GOV_PUBLIC",
+      "fallback": "Federal Reserve H.8 official release files",
+      "notes": [
+        "完整历史边界已核验并固定为 1973-01-03；回填缺少该首期时禁止发布。"
+      ]
+    },
+    {
+      "id": "ind-consumer-credit",
+      "canonical_code": "US.CONSUMER.CREDIT",
+      "name_zh": "消费信贷余额",
+      "name_en": "Total Consumer Credit Outstanding",
+      "prototype_code": "FRB.G19.TOTALSL",
+      "frequency": "月度",
+      "unit": "十亿美元",
+      "kind": "amount",
+      "seasonal_adjustment": "季调",
+      "recommended_source": "FRED_API",
+      "dataset": "G.19",
+      "provider_series_id": "TOTALSL",
+      "locator": {
+        "max_staleness_days": 90,
+        "min_observations_incremental": 24,
+        "min_observations_backfill": 60,
+        "require_contiguous": true,
+        "expected_first_period": "1943-01-01",
+        "observation_start": "1943-01-01"
+      },
+      "mapping_type": "DIRECT",
+      "mapping_status": "READY",
+      "license_class": "US_GOV_PUBLIC",
+      "fallback": "Federal Reserve release XML/CSV where available",
+      "notes": [
+        "完整历史边界已核验并固定为 1943-01-01；回填缺少该首期时禁止发布。"
+      ]
+    },
+    {
+      "id": "ind-card-delinquency",
+      "canonical_code": "US.CARD.DELINQUENCY",
+      "name_zh": "信用卡贷款逾期率",
+      "name_en": "Credit Card Delinquency Rate",
+      "prototype_code": "FRB.DRCCLACBS",
+      "frequency": "季度",
+      "unit": "%",
+      "kind": "rate",
+      "seasonal_adjustment": "季调",
+      "recommended_source": "FRED_API",
+      "dataset": "Charge-Off and Delinquency Rates",
+      "provider_series_id": "DRCCLACBS",
+      "locator": {
+        "max_staleness_days": 180,
+        "min_observations_incremental": 8,
+        "min_observations_backfill": 20,
+        "require_contiguous": true,
+        "expected_first_period": "1991-01-01",
+        "observation_start": "1991-01-01"
+      },
+      "mapping_type": "DIRECT",
+      "mapping_status": "READY",
+      "license_class": "US_GOV_PUBLIC",
+      "fallback": "Federal Reserve release XML/CSV where available",
+      "notes": [
+        "完整历史边界已核验并固定为 1991-01-01；回填缺少该首期时禁止发布。"
+      ]
+    },
+    {
+      "id": "ind-sloos",
+      "canonical_code": "US.SLOOS",
+      "name_zh": "大型和中型企业C&I贷款标准净收紧比例",
+      "name_en": "Net Percentage of Domestic Banks Tightening Standards for C&I Loans to Large and Middle-Market Firms",
+      "prototype_code": "FRED.DRTSCILM",
+      "frequency": "季度",
+      "unit": "%",
+      "kind": "rate",
+      "seasonal_adjustment": "未季调",
+      "recommended_source": "FRED_API",
+      "dataset": "Senior Loan Officer Opinion Survey",
+      "provider_series_id": "DRTSCILM",
+      "locator": {
+        "max_staleness_days": 180,
+        "min_observations_incremental": 8,
+        "min_observations_backfill": 20,
+        "require_contiguous": true,
+        "observation_start": "1990-04-01",
+        "release": "Senior Loan Officer Opinion Survey on Bank Lending Practices",
+        "expected_first_period": "1990-04-01"
+      },
+      "mapping_type": "DIRECT",
+      "mapping_status": "READY",
+      "license_class": "US_GOV_PUBLIC",
+      "fallback": "Federal Reserve release XML/CSV where available",
+      "notes": [
+        "已固定口径为国内银行对大型和中型企业商业与工业贷款标准的净收紧比例。",
+        "FRED/ALFRED Series ID DRTSCILM，季度、未季调、单位为百分比。"
+      ]
+    },
+    {
+      "id": "ind-corporate-spread",
+      "canonical_code": "US.CORPORATE.SPREAD",
+      "name_zh": "美国高收益债利差",
+      "name_en": "ICE BofA U.S. High Yield Option-Adjusted Spread",
+      "prototype_code": "FRED.BAMLH0A0HYM2",
+      "frequency": "日度",
+      "unit": "百分点",
+      "kind": "spread",
+      "seasonal_adjustment": "不适用",
+      "recommended_source": "ICE_DATA_LICENSED_FEED",
+      "dataset": "ICE BofA Indices",
+      "provider_series_id": "BAMLH0A0HYM2",
+      "locator": {
+        "max_staleness_days": 14,
+        "min_observations_incremental": 20,
+        "min_observations_backfill": 100,
+        "require_contiguous": false
+      },
+      "mapping_type": "DIRECT",
+      "mapping_status": "LICENSE_REQUIRED",
+      "license_class": "COMMERCIAL",
+      "fallback": null,
+      "notes": [
+        "FRED 页面明确限制为内部使用并禁止第三方发布；无授权时从产品中移除。"
+      ]
+    }
+  ]
+}

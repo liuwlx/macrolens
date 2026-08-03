@@ -1,0 +1,5449 @@
+openapi: 3.1.0
+info:
+  title: MacroLens API
+  description: 宏观数据、发布日历、FOMC、文档检索和 AI 研究平台 API。
+  version: 1.0.2
+paths:
+  /api/v1/health:
+    get:
+      tags:
+      - System
+      summary: Live
+      description: Process liveness probe independent from PostgreSQL and external providers.
+      operationId: live_api_v1_health_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+  /api/v1/ready:
+    get:
+      tags:
+      - System
+      summary: Ready
+      description: Readiness probe that verifies the API can reach its primary database.
+      operationId: ready_api_v1_ready_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+  /api/v1/auth/config:
+    get:
+      tags:
+      - Auth
+      summary: Auth Config
+      operationId: auth_config_api_v1_auth_config_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  type: boolean
+                type: object
+                title: Response Auth Config Api V1 Auth Config Get
+  /api/v1/auth/register:
+    post:
+      tags:
+      - Auth
+      summary: Register
+      operationId: register_api_v1_auth_register_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+        required: true
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/auth/login:
+    post:
+      tags:
+      - Auth
+      summary: Login
+      operationId: login_api_v1_auth_login_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/auth/refresh:
+    post:
+      tags:
+      - Auth
+      summary: Refresh
+      operationId: refresh_api_v1_auth_refresh_post
+      parameters:
+      - name: macrolens_refresh
+        in: cookie
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Macrolens Refresh
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/auth/logout:
+    post:
+      tags:
+      - Auth
+      summary: Logout
+      operationId: logout_api_v1_auth_logout_post
+      parameters:
+      - name: macrolens_refresh
+        in: cookie
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Macrolens Refresh
+      responses:
+        '204':
+          description: Successful Response
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/auth/me:
+    get:
+      tags:
+      - Auth
+      summary: Me
+      operationId: me_api_v1_auth_me_get
+      parameters:
+      - name: macrolens_access
+        in: cookie
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Macrolens Access
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserPublic'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/taxonomies/{tree_code}:
+    get:
+      tags:
+      - Catalog
+      summary: Taxonomy
+      operationId: taxonomy_api_v1_taxonomies__tree_code__get
+      parameters:
+      - name: tree_code
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Tree Code
+      - name: include_series
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: true
+          title: Include Series
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                title: Response Taxonomy Api V1 Taxonomies  Tree Code  Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/series:
+    get:
+      tags:
+      - Series
+      summary: List Series
+      operationId: list_series_api_v1_series_get
+      parameters:
+      - name: q
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            maxLength: 200
+          - type: 'null'
+          title: Q
+      - name: theme
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Theme
+      - name: provider
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Provider
+      - name: frequency
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Frequency
+      - name: unit
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Unit
+      - name: status
+        in: query
+        required: false
+        schema:
+          type: string
+          default: active
+          title: Status
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 200
+          minimum: 1
+          default: 50
+          title: Limit
+      - name: offset
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          default: 0
+          title: Offset
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                title: Response List Series Api V1 Series Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/series/{series_id}:
+    get:
+      tags:
+      - Series
+      summary: Series Detail
+      operationId: series_detail_api_v1_series__series_id__get
+      parameters:
+      - name: series_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Series Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SeriesDetail'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/series/{series_id}/observations:
+    get:
+      tags:
+      - Series
+      summary: Series Observations
+      operationId: series_observations_api_v1_series__series_id__observations_get
+      parameters:
+      - name: series_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Series Id
+      - name: start
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          title: Start
+      - name: end
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          title: End
+      - name: transform
+        in: query
+        required: false
+        schema:
+          type: string
+          pattern: ^(level|difference|mom|qoq|yoy|annualized_3m|annualized_6m|rebased_100|zscore)$
+          default: level
+          title: Transform
+      - name: vintage
+        in: query
+        required: false
+        schema:
+          type: string
+          default: latest
+          title: Vintage
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ObservationResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/series/{series_id}/revisions:
+    get:
+      tags:
+      - Series
+      summary: Series Revisions
+      operationId: series_revisions_api_v1_series__series_id__revisions_get
+      parameters:
+      - name: series_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Series Id
+      - name: start
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          title: Start
+      - name: end
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          title: End
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RevisionResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/compare/query:
+    post:
+      tags:
+      - Compare
+      summary: Compare
+      operationId: compare_api_v1_compare_query_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompareRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompareResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/release-events:
+    get:
+      tags:
+      - Releases
+      summary: List Events
+      operationId: list_events_api_v1_release_events_get
+      parameters:
+      - name: start
+        in: query
+        required: true
+        schema:
+          type: string
+          format: date
+          title: Start
+      - name: end
+        in: query
+        required: true
+        schema:
+          type: string
+          format: date
+          title: End
+      - name: country
+        in: query
+        required: false
+        schema:
+          type: string
+          default: US
+          title: Country
+      - name: type
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Type
+      - name: importance_min
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+            maximum: 5
+            minimum: 1
+          - type: 'null'
+          title: Importance Min
+      - name: provider
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Provider
+      - name: status
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Status
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 500
+          minimum: 1
+          default: 100
+          title: Limit
+      - name: offset
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          default: 0
+          title: Offset
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                title: Response List Events Api V1 Release Events Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/release-events/{event_id}:
+    get:
+      tags:
+      - Releases
+      summary: Event Detail
+      operationId: event_detail_api_v1_release_events__event_id__get
+      parameters:
+      - name: event_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Event Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReleaseEventDetail'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/release-events/{event_id}/forecasts:
+    get:
+      tags:
+      - Releases
+      summary: Event Forecasts
+      operationId: event_forecasts_api_v1_release_events__event_id__forecasts_get
+      parameters:
+      - name: event_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Event Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ForecastItem'
+                title: Response Event Forecasts Api V1 Release Events  Event Id  Forecasts Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/release-events/{event_id}/market-reactions:
+    get:
+      tags:
+      - Releases
+      summary: Event Market Reactions
+      operationId: event_market_reactions_api_v1_release_events__event_id__market_reactions_get
+      parameters:
+      - name: event_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Event Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MarketReactionItem'
+                title: Response Event Market Reactions Api V1 Release Events  Event Id  Market Reactions Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/fomc/meetings:
+    get:
+      tags:
+      - FOMC
+      summary: Meetings
+      operationId: meetings_api_v1_fomc_meetings_get
+      parameters:
+      - name: start
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          title: Start
+      - name: end
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          title: End
+      - name: status
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Status
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 200
+          minimum: 1
+          default: 40
+          title: Limit
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                title: Response Meetings Api V1 Fomc Meetings Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/fomc/meetings/{meeting_id}:
+    get:
+      tags:
+      - FOMC
+      summary: Meeting Detail
+      operationId: meeting_detail_api_v1_fomc_meetings__meeting_id__get
+      parameters:
+      - name: meeting_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Meeting Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FomcMeetingDetail'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/fomc/meetings/{meeting_id}/probabilities:
+    get:
+      tags:
+      - FOMC
+      summary: Meeting Probabilities
+      operationId: meeting_probabilities_api_v1_fomc_meetings__meeting_id__probabilities_get
+      parameters:
+      - name: meeting_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Meeting Id
+      - name: observed_at
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Observed At
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FomcProbabilityPublic'
+                title: Response Meeting Probabilities Api V1 Fomc Meetings  Meeting Id  Probabilities Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/documents:
+    get:
+      tags:
+      - Documents
+      summary: Documents
+      operationId: documents_api_v1_documents_get
+      parameters:
+      - name: q
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            maxLength: 300
+          - type: 'null'
+          title: Q
+      - name: document_type
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Document Type
+      - name: provider
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Provider
+      - name: series_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Series Id
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 100
+          minimum: 1
+          default: 30
+          title: Limit
+      - name: offset
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          default: 0
+          title: Offset
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                title: Response Documents Api V1 Documents Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/documents/{document_id}:
+    get:
+      tags:
+      - Documents
+      summary: Document Detail
+      operationId: document_detail_api_v1_documents__document_id__get
+      parameters:
+      - name: document_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Document Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentDetail'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/documents/{document_id}/content:
+    get:
+      tags:
+      - Documents
+      summary: Document Content
+      operationId: document_content_api_v1_documents__document_id__content_get
+      parameters:
+      - name: document_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Document Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentDetail'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/documents/{document_id}/summary:
+    post:
+      tags:
+      - Documents
+      summary: Generate Document Summary
+      operationId: generate_document_summary_api_v1_documents__document_id__summary_post
+      parameters:
+      - name: document_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Document Id
+      - name: macrolens_access
+        in: cookie
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Macrolens Access
+      responses:
+        '202':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: string
+                title: Response Generate Document Summary Api V1 Documents  Document Id  Summary Post
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/ai/runs:
+    post:
+      tags:
+      - AI
+      summary: Create Ai Run
+      operationId: create_ai_run_api_v1_ai_runs_post
+      parameters:
+      - name: macrolens_access
+        in: cookie
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Macrolens Access
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AIRunCreate'
+      responses:
+        '202':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AIRunPublic'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    get:
+      tags:
+      - AI
+      summary: List Ai Runs
+      operationId: list_ai_runs_api_v1_ai_runs_get
+      parameters:
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 50
+          title: Limit
+      - name: macrolens_access
+        in: cookie
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Macrolens Access
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AIRunPublic'
+                title: Response List Ai Runs Api V1 Ai Runs Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/ai/runs/{run_id}:
+    get:
+      tags:
+      - AI
+      summary: Get Ai Run
+      operationId: get_ai_run_api_v1_ai_runs__run_id__get
+      parameters:
+      - name: run_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Run Id
+      - name: macrolens_access
+        in: cookie
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Macrolens Access
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AIRunPublic'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    delete:
+      tags:
+      - AI
+      summary: Cancel Ai Run
+      operationId: cancel_ai_run_api_v1_ai_runs__run_id__delete
+      parameters:
+      - name: run_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Run Id
+      - name: macrolens_access
+        in: cookie
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Macrolens Access
+      responses:
+        '204':
+          description: Successful Response
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/ai/runs/{run_id}/citations:
+    get:
+      tags:
+      - AI
+      summary: Get Citations
+      operationId: get_citations_api_v1_ai_runs__run_id__citations_get
+      parameters:
+      - name: run_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Run Id
+      - name: macrolens_access
+        in: cookie
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Macrolens Access
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AICitationPublic'
+                title: Response Get Citations Api V1 Ai Runs  Run Id  Citations Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/me/favorites:
+    get:
+      tags:
+      - Workspace
+      summary: Favorites
+      operationId: favorites_api_v1_me_favorites_get
+      parameters:
+      - name: macrolens_access
+        in: cookie
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Macrolens Access
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FavoritePublic'
+                title: Response Favorites Api V1 Me Favorites Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    post:
+      tags:
+      - Workspace
+      summary: Create Favorite
+      operationId: create_favorite_api_v1_me_favorites_post
+      parameters:
+      - name: macrolens_access
+        in: cookie
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Macrolens Access
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FavoriteCreate'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FavoritePublic'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/me/favorites/{favorite_id}:
+    delete:
+      tags:
+      - Workspace
+      summary: Delete Favorite
+      operationId: delete_favorite_api_v1_me_favorites__favorite_id__delete
+      parameters:
+      - name: favorite_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Favorite Id
+      - name: macrolens_access
+        in: cookie
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Macrolens Access
+      responses:
+        '204':
+          description: Successful Response
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/me/saved-views:
+    get:
+      tags:
+      - Workspace
+      summary: Saved Views
+      operationId: saved_views_api_v1_me_saved_views_get
+      parameters:
+      - name: view_type
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: View Type
+      - name: macrolens_access
+        in: cookie
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Macrolens Access
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SavedViewPublic'
+                title: Response Saved Views Api V1 Me Saved Views Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    post:
+      tags:
+      - Workspace
+      summary: Create Saved View
+      operationId: create_saved_view_api_v1_me_saved_views_post
+      parameters:
+      - name: macrolens_access
+        in: cookie
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Macrolens Access
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SavedViewCreate'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SavedViewPublic'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/me/saved-views/{view_id}:
+    get:
+      tags:
+      - Workspace
+      summary: Get Saved View
+      operationId: get_saved_view_api_v1_me_saved_views__view_id__get
+      parameters:
+      - name: view_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: View Id
+      - name: macrolens_access
+        in: cookie
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Macrolens Access
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SavedViewPublic'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    patch:
+      tags:
+      - Workspace
+      summary: Update Saved View
+      operationId: update_saved_view_api_v1_me_saved_views__view_id__patch
+      parameters:
+      - name: view_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: View Id
+      - name: macrolens_access
+        in: cookie
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Macrolens Access
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SavedViewUpdate'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SavedViewPublic'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    delete:
+      tags:
+      - Workspace
+      summary: Delete Saved View
+      operationId: delete_saved_view_api_v1_me_saved_views__view_id__delete
+      parameters:
+      - name: view_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: View Id
+      - name: macrolens_access
+        in: cookie
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Macrolens Access
+      responses:
+        '204':
+          description: Successful Response
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/me/projects:
+    get:
+      tags:
+      - Workspace
+      summary: Projects
+      operationId: projects_api_v1_me_projects_get
+      parameters:
+      - name: macrolens_access
+        in: cookie
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Macrolens Access
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProjectPublic'
+                title: Response Projects Api V1 Me Projects Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    post:
+      tags:
+      - Workspace
+      summary: Create Project
+      operationId: create_project_api_v1_me_projects_post
+      parameters:
+      - name: macrolens_access
+        in: cookie
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Macrolens Access
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectCreate'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectPublic'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/me/projects/{project_id}/items:
+    post:
+      tags:
+      - Workspace
+      summary: Add Project Item
+      operationId: add_project_item_api_v1_me_projects__project_id__items_post
+      parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Project Id
+      - name: macrolens_access
+        in: cookie
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Macrolens Access
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectItemCreate'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                title: Response Add Project Item Api V1 Me Projects  Project Id  Items Post
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    get:
+      tags:
+      - Workspace
+      summary: List Project Items
+      operationId: list_project_items_api_v1_me_projects__project_id__items_get
+      parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Project Id
+      - name: macrolens_access
+        in: cookie
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Macrolens Access
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProjectItemPublic'
+                title: Response List Project Items Api V1 Me Projects  Project Id  Items Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/me/projects/{project_id}:
+    get:
+      tags:
+      - Workspace
+      summary: Project Detail
+      operationId: project_detail_api_v1_me_projects__project_id__get
+      parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Project Id
+      - name: macrolens_access
+        in: cookie
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Macrolens Access
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectDetail'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    delete:
+      tags:
+      - Workspace
+      summary: Delete Project
+      operationId: delete_project_api_v1_me_projects__project_id__delete
+      parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Project Id
+      - name: macrolens_access
+        in: cookie
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Macrolens Access
+      responses:
+        '204':
+          description: Successful Response
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/me/projects/{project_id}/items/{item_id}:
+    delete:
+      tags:
+      - Workspace
+      summary: Delete Project Item
+      operationId: delete_project_item_api_v1_me_projects__project_id__items__item_id__delete
+      parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Project Id
+      - name: item_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Item Id
+      - name: macrolens_access
+        in: cookie
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Macrolens Access
+      responses:
+        '204':
+          description: Successful Response
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/me/projects/{project_id}/notes:
+    post:
+      tags:
+      - Workspace
+      summary: Create Note
+      operationId: create_note_api_v1_me_projects__project_id__notes_post
+      parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Project Id
+      - name: macrolens_access
+        in: cookie
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Macrolens Access
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NoteCreate'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotePublic'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/me/notes:
+    get:
+      tags:
+      - Workspace
+      summary: List Notes
+      operationId: list_notes_api_v1_me_notes_get
+      parameters:
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 200
+          title: Limit
+      - name: macrolens_access
+        in: cookie
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Macrolens Access
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/NotePublic'
+                title: Response List Notes Api V1 Me Notes Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/me/projects/{project_id}/notes/{note_id}:
+    patch:
+      tags:
+      - Workspace
+      summary: Update Note
+      operationId: update_note_api_v1_me_projects__project_id__notes__note_id__patch
+      parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Project Id
+      - name: note_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Note Id
+      - name: macrolens_access
+        in: cookie
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Macrolens Access
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NoteUpdate'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotePublic'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    delete:
+      tags:
+      - Workspace
+      summary: Delete Note
+      operationId: delete_note_api_v1_me_projects__project_id__notes__note_id__delete
+      parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Project Id
+      - name: note_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Note Id
+      - name: macrolens_access
+        in: cookie
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Macrolens Access
+      responses:
+        '204':
+          description: Successful Response
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/me/alerts:
+    get:
+      tags:
+      - Workspace
+      summary: Alerts
+      operationId: alerts_api_v1_me_alerts_get
+      parameters:
+      - name: macrolens_access
+        in: cookie
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Macrolens Access
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AlertPublic'
+                title: Response Alerts Api V1 Me Alerts Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    post:
+      tags:
+      - Workspace
+      summary: Create Alert
+      operationId: create_alert_api_v1_me_alerts_post
+      parameters:
+      - name: macrolens_access
+        in: cookie
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Macrolens Access
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AlertCreate'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlertPublic'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/me/alerts/{alert_id}:
+    patch:
+      tags:
+      - Workspace
+      summary: Toggle Alert
+      operationId: toggle_alert_api_v1_me_alerts__alert_id__patch
+      parameters:
+      - name: alert_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Alert Id
+      - name: active
+        in: query
+        required: true
+        schema:
+          type: boolean
+          title: Active
+      - name: macrolens_access
+        in: cookie
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Macrolens Access
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlertPublic'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    delete:
+      tags:
+      - Workspace
+      summary: Delete Alert
+      operationId: delete_alert_api_v1_me_alerts__alert_id__delete
+      parameters:
+      - name: alert_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Alert Id
+      - name: macrolens_access
+        in: cookie
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Macrolens Access
+      responses:
+        '204':
+          description: Successful Response
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/me/notifications:
+    get:
+      tags:
+      - Workspace
+      summary: Notifications
+      operationId: notifications_api_v1_me_notifications_get
+      parameters:
+      - name: unread_only
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+          title: Unread Only
+      - name: macrolens_access
+        in: cookie
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Macrolens Access
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/NotificationPublic'
+                title: Response Notifications Api V1 Me Notifications Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/me/notifications/{notification_id}/read:
+    post:
+      tags:
+      - Workspace
+      summary: Mark Notification Read
+      operationId: mark_notification_read_api_v1_me_notifications__notification_id__read_post
+      parameters:
+      - name: notification_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Notification Id
+      - name: macrolens_access
+        in: cookie
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Macrolens Access
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationPublic'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/me/reports:
+    get:
+      tags:
+      - Reports
+      summary: List Reports
+      operationId: list_reports_api_v1_me_reports_get
+      parameters:
+      - name: macrolens_access
+        in: cookie
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Macrolens Access
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReportPublic'
+                title: Response List Reports Api V1 Me Reports Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    post:
+      tags:
+      - Reports
+      summary: Create Report
+      operationId: create_report_api_v1_me_reports_post
+      parameters:
+      - name: macrolens_access
+        in: cookie
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Macrolens Access
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReportCreate'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportPublic'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/me/reports/{report_id}:
+    get:
+      tags:
+      - Reports
+      summary: Report Detail
+      operationId: report_detail_api_v1_me_reports__report_id__get
+      parameters:
+      - name: report_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Report Id
+      - name: macrolens_access
+        in: cookie
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Macrolens Access
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportPublic'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    patch:
+      tags:
+      - Reports
+      summary: Update Report
+      operationId: update_report_api_v1_me_reports__report_id__patch
+      parameters:
+      - name: report_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Report Id
+      - name: macrolens_access
+        in: cookie
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Macrolens Access
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReportUpdate'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportPublic'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    delete:
+      tags:
+      - Reports
+      summary: Delete Report
+      operationId: delete_report_api_v1_me_reports__report_id__delete
+      parameters:
+      - name: report_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Report Id
+      - name: macrolens_access
+        in: cookie
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Macrolens Access
+      responses:
+        '204':
+          description: Successful Response
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/me/projects/{project_id}/shares:
+    post:
+      tags:
+      - Project sharing
+      summary: Create Share
+      operationId: create_share_api_v1_me_projects__project_id__shares_post
+      parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Project Id
+      - name: macrolens_access
+        in: cookie
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Macrolens Access
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectShareCreate'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectSharePublic'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    get:
+      tags:
+      - Project sharing
+      summary: List Shares
+      operationId: list_shares_api_v1_me_projects__project_id__shares_get
+      parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Project Id
+      - name: macrolens_access
+        in: cookie
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Macrolens Access
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProjectSharePublic'
+                title: Response List Shares Api V1 Me Projects  Project Id  Shares Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/me/projects/{project_id}/shares/{share_id}:
+    delete:
+      tags:
+      - Project sharing
+      summary: Revoke Share
+      operationId: revoke_share_api_v1_me_projects__project_id__shares__share_id__delete
+      parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Project Id
+      - name: share_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Share Id
+      - name: macrolens_access
+        in: cookie
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Macrolens Access
+      responses:
+        '204':
+          description: Successful Response
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/shared/projects/{token}:
+    get:
+      tags:
+      - Project sharing
+      summary: Shared Project
+      operationId: shared_project_api_v1_shared_projects__token__get
+      parameters:
+      - name: token
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Token
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectDetail'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/admin/users:
+    get:
+      tags:
+      - Admin
+      summary: List Users
+      operationId: list_users_api_v1_admin_users_get
+      parameters:
+      - name: macrolens_access
+        in: cookie
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Macrolens Access
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AdminUserPublic'
+                title: Response List Users Api V1 Admin Users Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    post:
+      tags:
+      - Admin
+      summary: Create User
+      operationId: create_user_api_v1_admin_users_post
+      parameters:
+      - name: macrolens_access
+        in: cookie
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Macrolens Access
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdminUserCreate'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminUserPublic'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/admin/users/{user_id}:
+    patch:
+      tags:
+      - Admin
+      summary: Update User
+      operationId: update_user_api_v1_admin_users__user_id__patch
+      parameters:
+      - name: user_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: User Id
+      - name: macrolens_access
+        in: cookie
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Macrolens Access
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdminUserUpdate'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminUserPublic'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/admin/documents/fetch:
+    post:
+      tags:
+      - Admin
+      summary: Fetch Official Document
+      operationId: fetch_official_document_api_v1_admin_documents_fetch_post
+      parameters:
+      - name: macrolens_access
+        in: cookie
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Macrolens Access
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdminDocumentFetchRequest'
+      responses:
+        '202':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobPublic'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/admin/jobs:
+    post:
+      tags:
+      - Admin
+      summary: Create Job
+      operationId: create_job_api_v1_admin_jobs_post
+      parameters:
+      - name: macrolens_access
+        in: cookie
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Macrolens Access
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JobCreate'
+      responses:
+        '202':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobPublic'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    get:
+      tags:
+      - Admin
+      summary: List Jobs
+      operationId: list_jobs_api_v1_admin_jobs_get
+      parameters:
+      - name: status
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Status
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 500
+          minimum: 1
+          default: 100
+          title: Limit
+      - name: macrolens_access
+        in: cookie
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Macrolens Access
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/JobPublic'
+                title: Response List Jobs Api V1 Admin Jobs Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/admin/jobs/{job_id}/retry:
+    post:
+      tags:
+      - Admin
+      summary: Retry Job
+      operationId: retry_job_api_v1_admin_jobs__job_id__retry_post
+      parameters:
+      - name: job_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Job Id
+      - name: macrolens_access
+        in: cookie
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Macrolens Access
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobPublic'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/admin/ingestion-runs:
+    get:
+      tags:
+      - Admin
+      summary: Ingestion Runs
+      operationId: ingestion_runs_api_v1_admin_ingestion_runs_get
+      parameters:
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 500
+          minimum: 1
+          default: 100
+          title: Limit
+      - name: macrolens_access
+        in: cookie
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Macrolens Access
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  additionalProperties: true
+                title: Response Ingestion Runs Api V1 Admin Ingestion Runs Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/admin/providers:
+    get:
+      tags:
+      - Admin
+      summary: List Providers
+      operationId: list_providers_api_v1_admin_providers_get
+      parameters:
+      - name: macrolens_access
+        in: cookie
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Macrolens Access
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  additionalProperties: true
+                title: Response List Providers Api V1 Admin Providers Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/admin/source-mappings:
+    get:
+      tags:
+      - Admin
+      summary: List Source Mappings
+      operationId: list_source_mappings_api_v1_admin_source_mappings_get
+      parameters:
+      - name: status
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Status
+      - name: provider
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Provider
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 2000
+          minimum: 1
+          default: 500
+          title: Limit
+      - name: macrolens_access
+        in: cookie
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Macrolens Access
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  additionalProperties: true
+                title: Response List Source Mappings Api V1 Admin Source Mappings Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/admin/source-mappings/{source_mapping_id}:
+    patch:
+      tags:
+      - Admin
+      summary: Update Source Mapping
+      operationId: update_source_mapping_api_v1_admin_source_mappings__source_mapping_id__patch
+      parameters:
+      - name: source_mapping_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Source Mapping Id
+      - name: macrolens_access
+        in: cookie
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Macrolens Access
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SourceMappingUpdate'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                title: Response Update Source Mapping Api V1 Admin Source Mappings  Source Mapping Id  Patch
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/admin/quality-results:
+    get:
+      tags:
+      - Admin
+      summary: Quality Results
+      operationId: quality_results_api_v1_admin_quality_results_get
+      parameters:
+      - name: severity
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Severity
+      - name: passed
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Passed
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 1000
+          minimum: 1
+          default: 200
+          title: Limit
+      - name: macrolens_access
+        in: cookie
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Macrolens Access
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  additionalProperties: true
+                title: Response Quality Results Api V1 Admin Quality Results Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/admin/raw-objects:
+    get:
+      tags:
+      - Admin
+      summary: Raw Objects
+      operationId: raw_objects_api_v1_admin_raw_objects_get
+      parameters:
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 500
+          minimum: 1
+          default: 100
+          title: Limit
+      - name: macrolens_access
+        in: cookie
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Macrolens Access
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  additionalProperties: true
+                title: Response Raw Objects Api V1 Admin Raw Objects Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/admin/audit-logs:
+    get:
+      tags:
+      - Admin
+      summary: Audit Logs
+      operationId: audit_logs_api_v1_admin_audit_logs_get
+      parameters:
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 1000
+          minimum: 1
+          default: 200
+          title: Limit
+      - name: macrolens_access
+        in: cookie
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Macrolens Access
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  additionalProperties: true
+                title: Response Audit Logs Api V1 Admin Audit Logs Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/admin/publication-batches:
+    get:
+      tags:
+      - Admin
+      summary: Publication Batches
+      operationId: publication_batches_api_v1_admin_publication_batches_get
+      parameters:
+      - name: provider_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Provider Id
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 500
+          minimum: 1
+          default: 100
+          title: Limit
+      - name: macrolens_access
+        in: cookie
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Macrolens Access
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  additionalProperties: true
+                title: Response Publication Batches Api V1 Admin Publication Batches Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/admin/publication-batches/{batch_id}/rollback:
+    post:
+      tags:
+      - Admin
+      summary: Rollback Publication Batch
+      operationId: rollback_publication_batch_api_v1_admin_publication_batches__batch_id__rollback_post
+      parameters:
+      - name: batch_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Batch Id
+      - name: macrolens_access
+        in: cookie
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Macrolens Access
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                title: Response Rollback Publication Batch Api V1 Admin Publication Batches  Batch Id  Rollback Post
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+components:
+  schemas:
+    AICitationPublic:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        citation_no:
+          type: integer
+          title: Citation No
+        document_chunk_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Document Chunk Id
+        series_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Series Id
+        period_start:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          title: Period Start
+        vintage_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Vintage At
+        quote_text:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Quote Text
+        locator:
+          additionalProperties: true
+          type: object
+          title: Locator
+      type: object
+      required:
+      - id
+      - citation_no
+      - document_chunk_id
+      - series_id
+      - period_start
+      - vintage_at
+      - quote_text
+      - locator
+      title: AICitationPublic
+    AIContextInput:
+      properties:
+        context_type:
+          type: string
+          enum:
+          - series
+          - document
+          - release_event
+          - fomc_meeting
+          - saved_view
+          - note
+          title: Context Type
+        context_id:
+          type: string
+          format: uuid
+          title: Context Id
+      type: object
+      required:
+      - context_type
+      - context_id
+      title: AIContextInput
+    AIRunCreate:
+      properties:
+        prompt:
+          type: string
+          maxLength: 20000
+          minLength: 5
+          title: Prompt
+        mode:
+          type: string
+          enum:
+          - quick
+          - deep_research
+          - scenario
+          title: Mode
+          default: quick
+        project_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Project Id
+        contexts:
+          items:
+            $ref: '#/components/schemas/AIContextInput'
+          type: array
+          maxItems: 12
+          minItems: 1
+          title: Contexts
+      type: object
+      required:
+      - prompt
+      - contexts
+      title: AIRunCreate
+    AIRunPublic:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        prompt:
+          type: string
+          title: Prompt
+        mode:
+          type: string
+          title: Mode
+        model_name:
+          type: string
+          title: Model Name
+        model_version:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Model Version
+        prompt_version:
+          type: string
+          title: Prompt Version
+        data_as_of:
+          type: string
+          format: date-time
+          title: Data As Of
+        status:
+          type: string
+          title: Status
+        result_markdown:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Result Markdown
+        assumptions:
+          items: {}
+          type: array
+          title: Assumptions
+        error_message:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Error Message
+        token_usage:
+          additionalProperties: true
+          type: object
+          title: Token Usage
+        estimated_cost_usd:
+          anyOf:
+          - type: string
+            pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          - type: 'null'
+          title: Estimated Cost Usd
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        completed_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Completed At
+      type: object
+      required:
+      - id
+      - prompt
+      - mode
+      - model_name
+      - model_version
+      - prompt_version
+      - data_as_of
+      - status
+      - result_markdown
+      - assumptions
+      - error_message
+      - token_usage
+      - estimated_cost_usd
+      - created_at
+      - completed_at
+      title: AIRunPublic
+    AdminDocumentFetchRequest:
+      properties:
+        provider_code:
+          type: string
+          maxLength: 80
+          minLength: 2
+          title: Provider Code
+        source_url:
+          type: string
+          maxLength: 4000
+          minLength: 8
+          title: Source Url
+        title:
+          type: string
+          maxLength: 1000
+          minLength: 1
+          title: Title
+        title_zh:
+          anyOf:
+          - type: string
+            maxLength: 1000
+          - type: 'null'
+          title: Title Zh
+        document_type:
+          type: string
+          maxLength: 80
+          minLength: 2
+          title: Document Type
+          default: official_release
+        external_id:
+          anyOf:
+          - type: string
+            maxLength: 240
+          - type: 'null'
+          title: External Id
+        language:
+          type: string
+          maxLength: 16
+          minLength: 2
+          title: Language
+          default: en
+        published_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Published At
+        copyright_status:
+          type: string
+          maxLength: 40
+          title: Copyright Status
+          default: official
+        metadata:
+          additionalProperties: true
+          type: object
+          title: Metadata
+      type: object
+      required:
+      - provider_code
+      - source_url
+      - title
+      title: AdminDocumentFetchRequest
+    AdminUserCreate:
+      properties:
+        email:
+          type: string
+          format: email
+          title: Email
+        display_name:
+          type: string
+          maxLength: 120
+          minLength: 2
+          title: Display Name
+        password:
+          type: string
+          maxLength: 256
+          minLength: 12
+          title: Password
+        role:
+          type: string
+          enum:
+          - researcher
+          - admin
+          title: Role
+          default: researcher
+      type: object
+      required:
+      - email
+      - display_name
+      - password
+      title: AdminUserCreate
+    AdminUserPublic:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        email:
+          type: string
+          format: email
+          title: Email
+        display_name:
+          type: string
+          title: Display Name
+        role:
+          type: string
+          title: Role
+        active:
+          type: boolean
+          title: Active
+        last_login_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Last Login At
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+      type: object
+      required:
+      - id
+      - email
+      - display_name
+      - role
+      - active
+      - last_login_at
+      - created_at
+      - updated_at
+      title: AdminUserPublic
+    AdminUserUpdate:
+      properties:
+        display_name:
+          anyOf:
+          - type: string
+            maxLength: 120
+            minLength: 2
+          - type: 'null'
+          title: Display Name
+        password:
+          anyOf:
+          - type: string
+            maxLength: 256
+            minLength: 12
+          - type: 'null'
+          title: Password
+        role:
+          anyOf:
+          - type: string
+            enum:
+            - researcher
+            - admin
+          - type: 'null'
+          title: Role
+        active:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Active
+      type: object
+      title: AdminUserUpdate
+    AlertCreate:
+      properties:
+        name:
+          type: string
+          maxLength: 240
+          minLength: 1
+          title: Name
+        alert_type:
+          type: string
+          enum:
+          - release_reminder
+          - threshold
+          - revision
+          - new_document
+          - fomc_update
+          - digest
+          title: Alert Type
+        target_type:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Target Type
+        target_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Target Id
+        rule:
+          additionalProperties: true
+          type: object
+          title: Rule
+        channels:
+          items:
+            type: string
+            enum:
+            - in_app
+            - email
+          type: array
+          title: Channels
+      type: object
+      required:
+      - name
+      - alert_type
+      - rule
+      title: AlertCreate
+    AlertPublic:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        name:
+          type: string
+          title: Name
+        alert_type:
+          type: string
+          title: Alert Type
+        target_type:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Target Type
+        target_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Target Id
+        rule:
+          additionalProperties: true
+          type: object
+          title: Rule
+        channels:
+          items: {}
+          type: array
+          title: Channels
+        active:
+          type: boolean
+          title: Active
+        last_evaluated_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Last Evaluated At
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+      type: object
+      required:
+      - id
+      - name
+      - alert_type
+      - target_type
+      - target_id
+      - rule
+      - channels
+      - active
+      - last_evaluated_at
+      - created_at
+      - updated_at
+      title: AlertPublic
+    AuthResponse:
+      properties:
+        user:
+          $ref: '#/components/schemas/UserPublic'
+        access_expires_in_seconds:
+          type: integer
+          title: Access Expires In Seconds
+      type: object
+      required:
+      - user
+      - access_expires_in_seconds
+      title: AuthResponse
+    CompareRequest:
+      properties:
+        series:
+          items:
+            $ref: '#/components/schemas/CompareSeriesSpec'
+          type: array
+          maxItems: 10
+          minItems: 1
+          title: Series
+        start:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          title: Start
+        end:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          title: End
+        vintage:
+          type: string
+          title: Vintage
+          default: latest
+        include_correlation:
+          type: boolean
+          title: Include Correlation
+          default: true
+      type: object
+      required:
+      - series
+      title: CompareRequest
+    CompareResponse:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/CompareSeriesResult'
+          type: array
+          title: Items
+        correlations:
+          items:
+            $ref: '#/components/schemas/CorrelationCell'
+          type: array
+          title: Correlations
+        data_as_of:
+          type: string
+          format: date-time
+          title: Data As Of
+      type: object
+      required:
+      - items
+      - correlations
+      - data_as_of
+      title: CompareResponse
+    CompareSeriesResult:
+      properties:
+        series:
+          $ref: '#/components/schemas/SeriesSummary'
+        transform:
+          type: string
+          title: Transform
+        axis:
+          type: string
+          title: Axis
+        lag_periods:
+          type: integer
+          title: Lag Periods
+        data:
+          items:
+            $ref: '#/components/schemas/ObservationPoint'
+          type: array
+          title: Data
+        license:
+          anyOf:
+          - $ref: '#/components/schemas/LicenseInfo'
+          - type: 'null'
+      type: object
+      required:
+      - series
+      - transform
+      - axis
+      - lag_periods
+      - data
+      title: CompareSeriesResult
+    CompareSeriesSpec:
+      properties:
+        series_id:
+          type: string
+          format: uuid
+          title: Series Id
+        transform:
+          type: string
+          enum:
+          - level
+          - difference
+          - mom
+          - qoq
+          - yoy
+          - annualized_3m
+          - annualized_6m
+          - rebased_100
+          - zscore
+          title: Transform
+          default: level
+        lag_periods:
+          type: integer
+          maximum: 120.0
+          minimum: -120.0
+          title: Lag Periods
+          default: 0
+        axis:
+          type: string
+          enum:
+          - left
+          - right
+          title: Axis
+          default: left
+      type: object
+      required:
+      - series_id
+      title: CompareSeriesSpec
+    CorrelationCell:
+      properties:
+        left_series_id:
+          type: string
+          format: uuid
+          title: Left Series Id
+        right_series_id:
+          type: string
+          format: uuid
+          title: Right Series Id
+        coefficient:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Coefficient
+        observations:
+          type: integer
+          title: Observations
+      type: object
+      required:
+      - left_series_id
+      - right_series_id
+      - coefficient
+      - observations
+      title: CorrelationCell
+    DocumentChunkPublic:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        chunk_no:
+          type: integer
+          title: Chunk No
+        page_start:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Page Start
+        page_end:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Page End
+        heading_path:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Heading Path
+        content:
+          type: string
+          title: Content
+      type: object
+      required:
+      - id
+      - chunk_no
+      - page_start
+      - page_end
+      - heading_path
+      - content
+      title: DocumentChunkPublic
+    DocumentDetail:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        title:
+          type: string
+          title: Title
+        title_zh:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Title Zh
+        document_type:
+          type: string
+          title: Document Type
+        provider_code:
+          type: string
+          title: Provider Code
+        provider_name:
+          type: string
+          title: Provider Name
+        source_url:
+          type: string
+          title: Source Url
+        published_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Published At
+        language:
+          type: string
+          title: Language
+        copyright_status:
+          type: string
+          title: Copyright Status
+        status:
+          type: string
+          title: Status
+        summary_zh:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Summary Zh
+        related_series:
+          items:
+            $ref: '#/components/schemas/SeriesSummary'
+          type: array
+          title: Related Series
+        license:
+          anyOf:
+          - $ref: '#/components/schemas/LicenseInfo'
+          - type: 'null'
+        latest_version_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Latest Version Id
+        version_no:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Version No
+        content_hash:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Content Hash
+        extracted_text:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Extracted Text
+        translated_text_zh:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Translated Text Zh
+        chunks:
+          items:
+            $ref: '#/components/schemas/DocumentChunkPublic'
+          type: array
+          title: Chunks
+      type: object
+      required:
+      - id
+      - title
+      - title_zh
+      - document_type
+      - provider_code
+      - provider_name
+      - source_url
+      - published_at
+      - language
+      - copyright_status
+      - status
+      title: DocumentDetail
+    DocumentSummary:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        title:
+          type: string
+          title: Title
+        title_zh:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Title Zh
+        document_type:
+          type: string
+          title: Document Type
+        provider_code:
+          type: string
+          title: Provider Code
+        provider_name:
+          type: string
+          title: Provider Name
+        source_url:
+          type: string
+          title: Source Url
+        published_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Published At
+        language:
+          type: string
+          title: Language
+        copyright_status:
+          type: string
+          title: Copyright Status
+        status:
+          type: string
+          title: Status
+        summary_zh:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Summary Zh
+        related_series:
+          items:
+            $ref: '#/components/schemas/SeriesSummary'
+          type: array
+          title: Related Series
+        license:
+          anyOf:
+          - $ref: '#/components/schemas/LicenseInfo'
+          - type: 'null'
+      type: object
+      required:
+      - id
+      - title
+      - title_zh
+      - document_type
+      - provider_code
+      - provider_name
+      - source_url
+      - published_at
+      - language
+      - copyright_status
+      - status
+      title: DocumentSummary
+    FavoriteCreate:
+      properties:
+        object_type:
+          type: string
+          enum:
+          - series
+          - document
+          - release_event
+          - fomc_meeting
+          - saved_view
+          - project
+          - ai_run
+          title: Object Type
+        object_id:
+          type: string
+          format: uuid
+          title: Object Id
+        group_name:
+          anyOf:
+          - type: string
+            maxLength: 120
+          - type: 'null'
+          title: Group Name
+        note:
+          anyOf:
+          - type: string
+            maxLength: 2000
+          - type: 'null'
+          title: Note
+      type: object
+      required:
+      - object_type
+      - object_id
+      title: FavoriteCreate
+    FavoritePublic:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        object_type:
+          type: string
+          title: Object Type
+        object_id:
+          type: string
+          format: uuid
+          title: Object Id
+        group_name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Group Name
+        note:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Note
+        sort_order:
+          type: integer
+          title: Sort Order
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      type: object
+      required:
+      - id
+      - object_type
+      - object_id
+      - group_name
+      - note
+      - sort_order
+      - created_at
+      title: FavoritePublic
+    FomcDotPublic:
+      properties:
+        horizon:
+          type: string
+          title: Horizon
+        dot_value:
+          type: string
+          pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          title: Dot Value
+        dot_count:
+          type: integer
+          title: Dot Count
+      type: object
+      required:
+      - horizon
+      - dot_value
+      - dot_count
+      title: FomcDotPublic
+    FomcMeetingDetail:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        meeting_start:
+          type: string
+          format: date
+          title: Meeting Start
+        meeting_end:
+          type: string
+          format: date
+          title: Meeting End
+        decision_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Decision At
+        status:
+          type: string
+          title: Status
+        target_rate_lower:
+          anyOf:
+          - type: string
+            pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          - type: 'null'
+          title: Target Rate Lower
+        target_rate_upper:
+          anyOf:
+          - type: string
+            pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          - type: 'null'
+          title: Target Rate Upper
+        decision_code:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Decision Code
+        statement_tone:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Statement Tone
+        summary_zh:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Summary Zh
+        official_url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Official Url
+        press_conference_tone:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Press Conference Tone
+        projections:
+          items:
+            $ref: '#/components/schemas/FomcProjectionPublic'
+          type: array
+          title: Projections
+        dots:
+          items:
+            $ref: '#/components/schemas/FomcDotPublic'
+          type: array
+          title: Dots
+        documents:
+          items:
+            $ref: '#/components/schemas/DocumentSummary'
+          type: array
+          title: Documents
+      type: object
+      required:
+      - id
+      - meeting_start
+      - meeting_end
+      - decision_at
+      - status
+      - target_rate_lower
+      - target_rate_upper
+      - decision_code
+      - statement_tone
+      - summary_zh
+      - official_url
+      - press_conference_tone
+      title: FomcMeetingDetail
+    FomcProbabilityPublic:
+      properties:
+        observed_at:
+          type: string
+          format: date-time
+          title: Observed At
+        target_lower:
+          type: string
+          pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          title: Target Lower
+        target_upper:
+          type: string
+          pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          title: Target Upper
+        probability:
+          type: string
+          pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          title: Probability
+        provider_code:
+          type: string
+          title: Provider Code
+      type: object
+      required:
+      - observed_at
+      - target_lower
+      - target_upper
+      - probability
+      - provider_code
+      title: FomcProbabilityPublic
+    FomcProjectionPublic:
+      properties:
+        variable_code:
+          type: string
+          title: Variable Code
+        horizon:
+          type: string
+          title: Horizon
+        statistic:
+          type: string
+          title: Statistic
+        value:
+          anyOf:
+          - type: string
+            pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          - type: 'null'
+          title: Value
+        unit:
+          type: string
+          title: Unit
+      type: object
+      required:
+      - variable_code
+      - horizon
+      - statistic
+      - value
+      - unit
+      title: FomcProjectionPublic
+    ForecastItem:
+      properties:
+        observed_at:
+          type: string
+          format: date-time
+          title: Observed At
+        consensus_value:
+          anyOf:
+          - type: string
+            pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          - type: 'null'
+          title: Consensus Value
+        median_value:
+          anyOf:
+          - type: string
+            pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          - type: 'null'
+          title: Median Value
+        high_value:
+          anyOf:
+          - type: string
+            pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          - type: 'null'
+          title: High Value
+        low_value:
+          anyOf:
+          - type: string
+            pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          - type: 'null'
+          title: Low Value
+        respondent_count:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Respondent Count
+        provider_code:
+          type: string
+          title: Provider Code
+      type: object
+      required:
+      - observed_at
+      - consensus_value
+      - median_value
+      - high_value
+      - low_value
+      - respondent_count
+      - provider_code
+      title: ForecastItem
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          type: array
+          title: Detail
+      type: object
+      title: HTTPValidationError
+    HealthResponse:
+      properties:
+        status:
+          type: string
+          const: ok
+          title: Status
+          default: ok
+        time:
+          type: string
+          format: date-time
+          title: Time
+        version:
+          type: string
+          title: Version
+      type: object
+      required:
+      - time
+      - version
+      title: HealthResponse
+    JobCreate:
+      properties:
+        job_type:
+          type: string
+          title: Job Type
+        payload:
+          additionalProperties: true
+          type: object
+          title: Payload
+        idempotency_key:
+          type: string
+          maxLength: 300
+          minLength: 4
+          title: Idempotency Key
+        priority:
+          type: integer
+          title: Priority
+          default: 0
+      type: object
+      required:
+      - job_type
+      - idempotency_key
+      title: JobCreate
+    JobPublic:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        job_type:
+          type: string
+          title: Job Type
+        status:
+          type: string
+          title: Status
+        priority:
+          type: integer
+          title: Priority
+        payload:
+          additionalProperties: true
+          type: object
+          title: Payload
+        attempts:
+          type: integer
+          title: Attempts
+        max_attempts:
+          type: integer
+          title: Max Attempts
+        last_error:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Last Error
+        result:
+          additionalProperties: true
+          type: object
+          title: Result
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        started_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Started At
+        finished_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Finished At
+      type: object
+      required:
+      - id
+      - job_type
+      - status
+      - priority
+      - payload
+      - attempts
+      - max_attempts
+      - last_error
+      - result
+      - created_at
+      - started_at
+      - finished_at
+      title: JobPublic
+    LicenseInfo:
+      properties:
+        display_allowed:
+          type: boolean
+          title: Display Allowed
+        download_allowed:
+          type: boolean
+          title: Download Allowed
+        api_redistribution_allowed:
+          type: boolean
+          title: Api Redistribution Allowed
+        ai_context_allowed:
+          type: boolean
+          title: Ai Context Allowed
+        attribution_required:
+          type: boolean
+          title: Attribution Required
+        attribution_text:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Attribution Text
+      type: object
+      required:
+      - display_allowed
+      - download_allowed
+      - api_redistribution_allowed
+      - ai_context_allowed
+      - attribution_required
+      title: LicenseInfo
+    LineageInfo:
+      properties:
+        provider:
+          type: string
+          title: Provider
+        dataset:
+          type: string
+          title: Dataset
+        provider_series_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Provider Series Id
+        source_series_id:
+          type: integer
+          title: Source Series Id
+        source_locator:
+          additionalProperties: true
+          type: object
+          title: Source Locator
+      type: object
+      required:
+      - provider
+      - dataset
+      - provider_series_id
+      - source_series_id
+      - source_locator
+      title: LineageInfo
+    LoginRequest:
+      properties:
+        email:
+          type: string
+          format: email
+          title: Email
+        password:
+          type: string
+          title: Password
+      type: object
+      required:
+      - email
+      - password
+      title: LoginRequest
+    MarketReactionItem:
+      properties:
+        instrument_code:
+          type: string
+          title: Instrument Code
+        window_code:
+          type: string
+          title: Window Code
+        absolute_change:
+          anyOf:
+          - type: string
+            pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          - type: 'null'
+          title: Absolute Change
+        percent_change:
+          anyOf:
+          - type: string
+            pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          - type: 'null'
+          title: Percent Change
+        observed_at:
+          type: string
+          format: date-time
+          title: Observed At
+      type: object
+      required:
+      - instrument_code
+      - window_code
+      - absolute_change
+      - percent_change
+      - observed_at
+      title: MarketReactionItem
+    NoteCreate:
+      properties:
+        title:
+          anyOf:
+          - type: string
+            maxLength: 300
+          - type: 'null'
+          title: Title
+        body_markdown:
+          type: string
+          maxLength: 100000
+          minLength: 1
+          title: Body Markdown
+      type: object
+      required:
+      - body_markdown
+      title: NoteCreate
+    NotePublic:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        project_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Project Id
+        author_user_id:
+          type: string
+          format: uuid
+          title: Author User Id
+        title:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Title
+        body_markdown:
+          type: string
+          title: Body Markdown
+        version_no:
+          type: integer
+          title: Version No
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+      type: object
+      required:
+      - id
+      - project_id
+      - author_user_id
+      - title
+      - body_markdown
+      - version_no
+      - created_at
+      - updated_at
+      title: NotePublic
+    NoteUpdate:
+      properties:
+        title:
+          anyOf:
+          - type: string
+            maxLength: 300
+          - type: 'null'
+          title: Title
+        body_markdown:
+          type: string
+          maxLength: 100000
+          minLength: 1
+          title: Body Markdown
+      type: object
+      required:
+      - body_markdown
+      title: NoteUpdate
+    NotificationPublic:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        notification_type:
+          type: string
+          title: Notification Type
+        title:
+          type: string
+          title: Title
+        body:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Body
+        action_url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Action Url
+        payload:
+          additionalProperties: true
+          type: object
+          title: Payload
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        read_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Read At
+      type: object
+      required:
+      - id
+      - notification_type
+      - title
+      - body
+      - action_url
+      - payload
+      - created_at
+      - read_at
+      title: NotificationPublic
+    ObservationMeta:
+      properties:
+        data_as_of:
+          type: string
+          format: date-time
+          title: Data As Of
+        vintage:
+          type: string
+          title: Vintage
+        transform:
+          type: string
+          title: Transform
+        frequency:
+          type: string
+          title: Frequency
+        unit:
+          type: string
+          title: Unit
+        lineage:
+          anyOf:
+          - $ref: '#/components/schemas/LineageInfo'
+          - type: 'null'
+        license:
+          anyOf:
+          - $ref: '#/components/schemas/LicenseInfo'
+          - type: 'null'
+      type: object
+      required:
+      - data_as_of
+      - vintage
+      - transform
+      - frequency
+      - unit
+      title: ObservationMeta
+    ObservationPoint:
+      properties:
+        period_start:
+          type: string
+          format: date
+          title: Period Start
+        period_end:
+          type: string
+          format: date
+          title: Period End
+        value:
+          anyOf:
+          - type: string
+            pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          - type: 'null'
+          title: Value
+        value_text:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Value Text
+        status:
+          type: string
+          title: Status
+        published_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Published At
+        vintage_at:
+          type: string
+          format: date-time
+          title: Vintage At
+      type: object
+      required:
+      - period_start
+      - period_end
+      - value
+      - status
+      - vintage_at
+      title: ObservationPoint
+    ObservationResponse:
+      properties:
+        series:
+          $ref: '#/components/schemas/SeriesSummary'
+        data:
+          items:
+            $ref: '#/components/schemas/ObservationPoint'
+          type: array
+          title: Data
+        meta:
+          $ref: '#/components/schemas/ObservationMeta'
+      type: object
+      required:
+      - series
+      - data
+      - meta
+      title: ObservationResponse
+    ProjectCreate:
+      properties:
+        name:
+          type: string
+          maxLength: 240
+          minLength: 1
+          title: Name
+        description:
+          anyOf:
+          - type: string
+            maxLength: 5000
+          - type: 'null'
+          title: Description
+      type: object
+      required:
+      - name
+      title: ProjectCreate
+    ProjectDetail:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        name:
+          type: string
+          title: Name
+        description:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Description
+        status:
+          type: string
+          title: Status
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+        items:
+          items:
+            $ref: '#/components/schemas/ProjectItemPublic'
+          type: array
+          title: Items
+        notes:
+          items:
+            $ref: '#/components/schemas/NotePublic'
+          type: array
+          title: Notes
+      type: object
+      required:
+      - id
+      - name
+      - description
+      - status
+      - created_at
+      - updated_at
+      title: ProjectDetail
+    ProjectItemCreate:
+      properties:
+        object_type:
+          type: string
+          enum:
+          - series
+          - document
+          - release_event
+          - fomc_meeting
+          - saved_view
+          - ai_run
+          - note
+          title: Object Type
+        object_id:
+          type: string
+          format: uuid
+          title: Object Id
+        title_override:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Title Override
+        metadata:
+          additionalProperties: true
+          type: object
+          title: Metadata
+      type: object
+      required:
+      - object_type
+      - object_id
+      title: ProjectItemCreate
+    ProjectItemPublic:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        project_id:
+          type: string
+          format: uuid
+          title: Project Id
+        object_type:
+          type: string
+          title: Object Type
+        object_id:
+          type: string
+          format: uuid
+          title: Object Id
+        title_override:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Title Override
+        sort_order:
+          type: integer
+          title: Sort Order
+        metadata_json:
+          additionalProperties: true
+          type: object
+          title: Metadata Json
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      type: object
+      required:
+      - id
+      - project_id
+      - object_type
+      - object_id
+      - title_override
+      - sort_order
+      - metadata_json
+      - created_at
+      title: ProjectItemPublic
+    ProjectPublic:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        name:
+          type: string
+          title: Name
+        description:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Description
+        status:
+          type: string
+          title: Status
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+      type: object
+      required:
+      - id
+      - name
+      - description
+      - status
+      - created_at
+      - updated_at
+      title: ProjectPublic
+    ProjectShareCreate:
+      properties:
+        expires_in_days:
+          type: integer
+          maximum: 90.0
+          minimum: 1.0
+          title: Expires In Days
+          default: 7
+      type: object
+      title: ProjectShareCreate
+    ProjectSharePublic:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        project_id:
+          type: string
+          format: uuid
+          title: Project Id
+        share_url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Share Url
+        expires_at:
+          type: string
+          format: date-time
+          title: Expires At
+        revoked_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Revoked At
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      type: object
+      required:
+      - id
+      - project_id
+      - expires_at
+      - revoked_at
+      - created_at
+      title: ProjectSharePublic
+    ProviderInfo:
+      properties:
+        code:
+          type: string
+          title: Code
+        name:
+          type: string
+          title: Name
+        attribution:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Attribution
+        license_class:
+          type: string
+          title: License Class
+      type: object
+      required:
+      - code
+      - name
+      - license_class
+      title: ProviderInfo
+    RegisterRequest:
+      properties:
+        email:
+          type: string
+          format: email
+          title: Email
+        display_name:
+          type: string
+          maxLength: 120
+          minLength: 2
+          title: Display Name
+        password:
+          type: string
+          maxLength: 256
+          minLength: 12
+          title: Password
+      type: object
+      required:
+      - email
+      - display_name
+      - password
+      title: RegisterRequest
+    ReleaseEventDetail:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        title_zh:
+          type: string
+          title: Title Zh
+        title_en:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Title En
+        country_code:
+          type: string
+          title: Country Code
+        reference_period:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Reference Period
+        scheduled_at:
+          type: string
+          format: date-time
+          title: Scheduled At
+        actual_released_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Actual Released At
+        status:
+          type: string
+          title: Status
+        importance_score:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Importance Score
+        release_type:
+          type: string
+          title: Release Type
+        provider_code:
+          type: string
+          title: Provider Code
+        provider_name:
+          type: string
+          title: Provider Name
+        official_url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Official Url
+        metrics:
+          items:
+            $ref: '#/components/schemas/ReleaseMetric'
+          type: array
+          title: Metrics
+        consensus_value:
+          anyOf:
+          - type: string
+            pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          - type: 'null'
+          title: Consensus Value
+        source_timezone:
+          type: string
+          title: Source Timezone
+        forecasts:
+          items:
+            $ref: '#/components/schemas/ForecastItem'
+          type: array
+          title: Forecasts
+        market_reactions:
+          items:
+            $ref: '#/components/schemas/MarketReactionItem'
+          type: array
+          title: Market Reactions
+      type: object
+      required:
+      - id
+      - title_zh
+      - title_en
+      - country_code
+      - reference_period
+      - scheduled_at
+      - actual_released_at
+      - status
+      - importance_score
+      - release_type
+      - provider_code
+      - provider_name
+      - official_url
+      - source_timezone
+      title: ReleaseEventDetail
+    ReleaseMetric:
+      properties:
+        series_id:
+          type: string
+          format: uuid
+          title: Series Id
+        name_zh:
+          type: string
+          title: Name Zh
+        transform:
+          type: string
+          title: Transform
+        actual_value:
+          anyOf:
+          - type: string
+            pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          - type: 'null'
+          title: Actual Value
+        previous_value:
+          anyOf:
+          - type: string
+            pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          - type: 'null'
+          title: Previous Value
+        revised_previous_value:
+          anyOf:
+          - type: string
+            pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          - type: 'null'
+          title: Revised Previous Value
+        unit_label:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Unit Label
+      type: object
+      required:
+      - series_id
+      - name_zh
+      - transform
+      - actual_value
+      - previous_value
+      - revised_previous_value
+      - unit_label
+      title: ReleaseMetric
+    ReportCreate:
+      properties:
+        title:
+          type: string
+          maxLength: 300
+          minLength: 1
+          title: Title
+        content_markdown:
+          anyOf:
+          - type: string
+            maxLength: 500000
+          - type: 'null'
+          title: Content Markdown
+        ai_run_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Ai Run Id
+        project_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Project Id
+        status:
+          type: string
+          enum:
+          - draft
+          - published
+          - archived
+          title: Status
+          default: draft
+      type: object
+      required:
+      - title
+      title: ReportCreate
+    ReportPublic:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        project_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Project Id
+        ai_run_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Ai Run Id
+        title:
+          type: string
+          title: Title
+        content_markdown:
+          type: string
+          title: Content Markdown
+        status:
+          type: string
+          title: Status
+        version_no:
+          type: integer
+          title: Version No
+        metadata_json:
+          additionalProperties: true
+          type: object
+          title: Metadata Json
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+      type: object
+      required:
+      - id
+      - project_id
+      - ai_run_id
+      - title
+      - content_markdown
+      - status
+      - version_no
+      - metadata_json
+      - created_at
+      - updated_at
+      title: ReportPublic
+    ReportUpdate:
+      properties:
+        title:
+          anyOf:
+          - type: string
+            maxLength: 300
+            minLength: 1
+          - type: 'null'
+          title: Title
+        content_markdown:
+          anyOf:
+          - type: string
+            maxLength: 500000
+          - type: 'null'
+          title: Content Markdown
+        status:
+          anyOf:
+          - type: string
+            enum:
+            - draft
+            - published
+            - archived
+          - type: 'null'
+          title: Status
+      type: object
+      title: ReportUpdate
+    RevisionItem:
+      properties:
+        period_start:
+          type: string
+          format: date
+          title: Period Start
+        first_value:
+          anyOf:
+          - type: string
+            pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          - type: 'null'
+          title: First Value
+        latest_value:
+          anyOf:
+          - type: string
+            pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          - type: 'null'
+          title: Latest Value
+        revision:
+          anyOf:
+          - type: string
+            pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          - type: 'null'
+          title: Revision
+        first_vintage_at:
+          type: string
+          format: date-time
+          title: First Vintage At
+        latest_vintage_at:
+          type: string
+          format: date-time
+          title: Latest Vintage At
+        versions:
+          type: integer
+          title: Versions
+      type: object
+      required:
+      - period_start
+      - first_value
+      - latest_value
+      - revision
+      - first_vintage_at
+      - latest_vintage_at
+      - versions
+      title: RevisionItem
+    RevisionResponse:
+      properties:
+        series_id:
+          type: string
+          format: uuid
+          title: Series Id
+        items:
+          items:
+            $ref: '#/components/schemas/RevisionItem'
+          type: array
+          title: Items
+      type: object
+      required:
+      - series_id
+      - items
+      title: RevisionResponse
+    SavedViewCreate:
+      properties:
+        name:
+          type: string
+          maxLength: 240
+          minLength: 1
+          title: Name
+        view_type:
+          type: string
+          enum:
+          - compare
+          - dashboard
+          - search
+          title: View Type
+          default: compare
+        definition:
+          additionalProperties: true
+          type: object
+          title: Definition
+        description:
+          anyOf:
+          - type: string
+            maxLength: 5000
+          - type: 'null'
+          title: Description
+      type: object
+      required:
+      - name
+      - definition
+      title: SavedViewCreate
+    SavedViewPublic:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        name:
+          type: string
+          title: Name
+        view_type:
+          type: string
+          title: View Type
+        definition:
+          additionalProperties: true
+          type: object
+          title: Definition
+        description:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Description
+        is_shared:
+          type: boolean
+          title: Is Shared
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+      type: object
+      required:
+      - id
+      - name
+      - view_type
+      - definition
+      - description
+      - is_shared
+      - created_at
+      - updated_at
+      title: SavedViewPublic
+    SavedViewUpdate:
+      properties:
+        name:
+          anyOf:
+          - type: string
+            maxLength: 240
+            minLength: 1
+          - type: 'null'
+          title: Name
+        definition:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Definition
+        description:
+          anyOf:
+          - type: string
+            maxLength: 5000
+          - type: 'null'
+          title: Description
+        is_shared:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Is Shared
+      type: object
+      title: SavedViewUpdate
+    SeriesDetail:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        canonical_code:
+          type: string
+          title: Canonical Code
+        name_zh:
+          type: string
+          title: Name Zh
+        name_en:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Name En
+        theme:
+          type: string
+          title: Theme
+        frequency:
+          type: string
+          title: Frequency
+        unit_code:
+          type: string
+          title: Unit Code
+        unit_label_zh:
+          type: string
+          title: Unit Label Zh
+        default_transform:
+          type: string
+          title: Default Transform
+        latest_period:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          title: Latest Period
+        latest_value:
+          anyOf:
+          - type: string
+            pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          - type: 'null'
+          title: Latest Value
+        latest_vintage_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Latest Vintage At
+        provider:
+          anyOf:
+          - $ref: '#/components/schemas/ProviderInfo'
+          - type: 'null'
+        description:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Description
+        seasonal_adjustment:
+          type: string
+          title: Seasonal Adjustment
+        geography_code:
+          type: string
+          title: Geography Code
+        decimal_places:
+          type: integer
+          title: Decimal Places
+        status:
+          type: string
+          title: Status
+        first_period:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          title: First Period
+        aliases:
+          items:
+            type: string
+          type: array
+          title: Aliases
+        license:
+          anyOf:
+          - $ref: '#/components/schemas/LicenseInfo'
+          - type: 'null'
+      type: object
+      required:
+      - id
+      - canonical_code
+      - name_zh
+      - name_en
+      - theme
+      - frequency
+      - unit_code
+      - unit_label_zh
+      - default_transform
+      - latest_period
+      - description
+      - seasonal_adjustment
+      - geography_code
+      - decimal_places
+      - status
+      - first_period
+      title: SeriesDetail
+    SeriesSummary:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        canonical_code:
+          type: string
+          title: Canonical Code
+        name_zh:
+          type: string
+          title: Name Zh
+        name_en:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Name En
+        theme:
+          type: string
+          title: Theme
+        frequency:
+          type: string
+          title: Frequency
+        unit_code:
+          type: string
+          title: Unit Code
+        unit_label_zh:
+          type: string
+          title: Unit Label Zh
+        default_transform:
+          type: string
+          title: Default Transform
+        latest_period:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          title: Latest Period
+        latest_value:
+          anyOf:
+          - type: string
+            pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          - type: 'null'
+          title: Latest Value
+        latest_vintage_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Latest Vintage At
+        provider:
+          anyOf:
+          - $ref: '#/components/schemas/ProviderInfo'
+          - type: 'null'
+      type: object
+      required:
+      - id
+      - canonical_code
+      - name_zh
+      - name_en
+      - theme
+      - frequency
+      - unit_code
+      - unit_label_zh
+      - default_transform
+      - latest_period
+      title: SeriesSummary
+    SourceMappingUpdate:
+      properties:
+        provider_series_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Provider Series Id
+        source_locator:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Source Locator
+        mapping_status:
+          anyOf:
+          - type: string
+            enum:
+            - needs_review
+            - verified
+            - license_required
+            - disabled
+          - type: 'null'
+          title: Mapping Status
+        is_primary:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Is Primary
+        notes:
+          anyOf:
+          - type: string
+            maxLength: 5000
+          - type: 'null'
+          title: Notes
+      type: object
+      title: SourceMappingUpdate
+    UserPublic:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        email:
+          type: string
+          format: email
+          title: Email
+        display_name:
+          type: string
+          title: Display Name
+        role:
+          type: string
+          title: Role
+      type: object
+      required:
+      - id
+      - email
+      - display_name
+      - role
+      title: UserPublic
+    ValidationError:
+      properties:
+        loc:
+          items:
+            anyOf:
+            - type: string
+            - type: integer
+          type: array
+          title: Location
+        msg:
+          type: string
+          title: Message
+        type:
+          type: string
+          title: Error Type
+        input:
+          title: Input
+        ctx:
+          type: object
+          title: Context
+      type: object
+      required:
+      - loc
+      - msg
+      - type
+      title: ValidationError

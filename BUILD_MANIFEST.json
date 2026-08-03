@@ -1,0 +1,49 @@
+{
+  "product": "MacroLens Production",
+  "version": "1.0.2",
+  "generated_at": "2026-08-02T05:37:57Z",
+  "architecture": "Next.js Web + FastAPI API + PostgreSQL/pgvector + independent worker/scheduler",
+  "counts": {
+    "sqlalchemy_tables": 46,
+    "openapi_paths": 62,
+    "source_registry_entries": 61,
+    "web_page_routes": 14,
+    "backend_python_files": 71,
+    "web_typescript_files": 32,
+    "sdk_typescript_files": 1,
+    "backend_tests_passed": 86,
+    "backend_coverage_percent": 56.96
+  },
+  "source_mapping_status": {
+    "NEEDS_METADATA_MAPPING": 24,
+    "READY": 31,
+    "LEGAL_REVIEW_REQUIRED": 2,
+    "NEEDS_DIMENSION_MAPPING": 2,
+    "LICENSE_REQUIRED": 2
+  },
+  "validation": {
+    "python_compile": "passed",
+    "pytest": "86 passed",
+    "coverage_gate": "56.96% >= 35%",
+    "api_runtime_smoke": "passed; live/health/openapi/metrics 200; ready correctly 503 without database",
+    "provider_contracts": "8 adapters + release/FOMC/document/pipeline completeness controls covered by mock HTTP and unit contracts",
+    "alembic_offline_upgrade": "passed (864 lines)",
+    "alembic_offline_downgrade": "passed (122 lines)",
+    "repository_contract": "passed",
+    "typescript_syntax": "33 files, 0 diagnostics",
+    "typescript_sdk_typecheck": "passed",
+    "json_yaml_parse": "passed",
+    "openapi_generation": "passed",
+    "networked_frontend_build": "mandatory CI gate; npm registry unavailable in sandbox",
+    "docker_postgres_playwright": "mandatory CI gate; Docker/PostgreSQL unavailable in sandbox",
+    "terraform_validate": "mandatory deployment gate; Terraform unavailable in sandbox",
+    "npm_lockfile": "not generated because registry access is unavailable; required before release tag"
+  },
+  "ingestion_review": {
+    "enabled_ready": 31,
+    "blocked": 30,
+    "guarantee": "fail_closed_no_partial_publish",
+    "live_external_audit": "required in CI; unavailable in build sandbox",
+    "module_review_file": "DATA_COLLECTION_MODULE_REVIEW.json"
+  }
+}

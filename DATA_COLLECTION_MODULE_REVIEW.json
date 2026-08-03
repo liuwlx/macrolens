@@ -1,0 +1,459 @@
+{
+  "generated_at": "2026-08-02T05:36:47Z",
+  "product": "MacroLens Production",
+  "version": "1.0.2",
+  "guarantee_model": "fail_closed_no_partial_publish",
+  "scope_statement": "All enabled mappings must either produce a complete, identity-validated provider batch or the batch is quarantined. Unsupported, unresolved or unlicensed mappings remain disabled and are never replaced by guessed or simulated production data.",
+  "sandbox_live_test_status": "not_executed_no_external_dns_or_official_credentials",
+  "registry": {
+    "indicator_count": 61,
+    "enabled_ready_count": 31,
+    "blocked_count": 30,
+    "all_enabled_ready": true,
+    "all_registry_ready": false
+  },
+  "modules": [
+    {
+      "module": "FRED/ALFRED Adapter",
+      "code": "FRED_API",
+      "implementation": "backend/src/macrolens_worker/providers/fred.py",
+      "enabled_series": 12,
+      "collection_modes": [
+        "incremental",
+        "backfill",
+        "vintage_backfill"
+      ],
+      "completeness_controls": [
+        "series metadata identity check",
+        "official history start boundary check",
+        "observation count and pagination reconciliation",
+        "duplicate row rejection",
+        "complete vintage-date pagination",
+        "immutable point-in-time vintage capture"
+      ],
+      "known_boundary": "Current snapshots and ALFRED vintages are supported. Scheduled production must run periodic full-history and vintage audits; an incremental window alone cannot prove that old annual revisions were captured.",
+      "review_status": "code_reviewed_mock_contract_passed_live_audit_required"
+    },
+    {
+      "module": "BLS Public Data API Adapter",
+      "code": "BLS_API_V2",
+      "implementation": "backend/src/macrolens_worker/providers/bls.py",
+      "enabled_series": 12,
+      "collection_modes": [
+        "incremental",
+        "backfill"
+      ],
+      "completeness_controls": [
+        "maximum 50 series per request",
+        "maximum 20-year request windows",
+        "all requested series must be returned",
+        "catalog metadata checks where available",
+        "period and duplicate validation",
+        "pinned official Series IDs"
+      ],
+      "known_boundary": "The provider does not expose historical point-in-time vintages through the normal series endpoint. MacroLens preserves every snapshot it fetches, but cannot reconstruct releases that were never collected.",
+      "review_status": "code_reviewed_mock_contract_passed_live_audit_required"
+    },
+    {
+      "module": "NY Fed Markets API Adapter",
+      "code": "NYFED_MARKETS_API",
+      "implementation": "backend/src/macrolens_worker/providers/nyfed.py",
+      "enabled_series": 3,
+      "collection_modes": [
+        "incremental",
+        "backfill"
+      ],
+      "completeness_controls": [
+        "annual request windows",
+        "route and field pinning",
+        "date/value validation",
+        "same-date aggregation rules",
+        "duplicate-period rejection",
+        "explicit sparse-window allowance for overnight RRP"
+      ],
+      "known_boundary": "Snapshots are retained as MacroLens vintages; historical provider vintages are not reconstructed.",
+      "review_status": "code_reviewed_mock_contract_passed_live_audit_required"
+    },
+    {
+      "module": "U.S. Treasury XML Adapter",
+      "code": "US_TREASURY_XML",
+      "implementation": "backend/src/macrolens_worker/providers/treasury.py",
+      "enabled_series": 3,
+      "collection_modes": [
+        "incremental",
+        "backfill"
+      ],
+      "completeness_controls": [
+        "official curve/feed and term field pinning",
+        "year-by-year retrieval",
+        "XML identity/date/value validation",
+        "empty-window rejection",
+        "duplicate-period rejection",
+        "exact first-date metadata"
+      ],
+      "known_boundary": "The official daily feed is the source of truth. Every fetched snapshot is preserved, but the feed does not provide a complete historical revision ledger.",
+      "review_status": "code_reviewed_mock_contract_passed_live_audit_required"
+    },
+    {
+      "module": "EIA API v2 Adapter",
+      "code": "EIA_API_V2",
+      "implementation": "backend/src/macrolens_worker/providers/eia.py",
+      "enabled_series": 1,
+      "collection_modes": [
+        "incremental",
+        "backfill"
+      ],
+      "completeness_controls": [
+        "5,000-row pagination",
+        "declared-total reconciliation",
+        "special series-id route support",
+        "duplicate-period rejection",
+        "period/value validation",
+        "official first-date boundary check"
+      ],
+      "known_boundary": "The enabled WTI series is covered. Other EIA datasets require separately pinned routes, facets and value fields before enabling.",
+      "review_status": "code_reviewed_mock_contract_passed_live_audit_required"
+    },
+    {
+      "module": "BEA API Adapter",
+      "code": "BEA_API",
+      "implementation": "backend/src/macrolens_worker/providers/bea.py",
+      "enabled_series": 0,
+      "blocked_series": 24,
+      "collection_modes": [
+        "incremental",
+        "backfill"
+      ],
+      "completeness_controls": [
+        "Table/SeriesCode/LineNumber/LineDescription identity pinning",
+        "conflicting-description rejection",
+        "period/value parsing",
+        "duplicate-period rejection",
+        "non-empty mapped result requirement"
+      ],
+      "known_boundary": "Twenty-four BEA indicators remain disabled until exact official metadata identities are resolved and live-audited. The adapter is ready; the mappings are not. No guessed line numbers are published.",
+      "review_status": "adapter_reviewed_mappings_blocked"
+    },
+    {
+      "module": "Census EITS Adapter",
+      "code": "CENSUS_EITS_API",
+      "implementation": "backend/src/macrolens_worker/providers/census.py",
+      "enabled_series": 0,
+      "blocked_series": 2,
+      "collection_modes": [
+        "incremental",
+        "backfill"
+      ],
+      "completeness_controls": [
+        "dataset path pinning",
+        "all dimension filters must match",
+        "duplicate-period rejection",
+        "period/value validation",
+        "non-empty mapped result requirement"
+      ],
+      "known_boundary": "Retail sales and durable-goods mappings remain disabled until the exact Census dimension combination is fixed and validated against live responses.",
+      "review_status": "adapter_reviewed_mappings_blocked"
+    },
+    {
+      "module": "DOL Open Data Adapter",
+      "code": "DOL_OPEN_DATA_API",
+      "implementation": "backend/src/macrolens_worker/providers/dol.py",
+      "enabled_series": 0,
+      "collection_modes": [
+        "incremental",
+        "backfill"
+      ],
+      "completeness_controls": [
+        "configurable JSON/CSV contract",
+        "pagination/declared-total reconciliation",
+        "duplicate-period rejection",
+        "complete-snapshot option",
+        "date/value validation"
+      ],
+      "known_boundary": "No production indicator currently uses this adapter. Initial claims is deliberately sourced from the verified FRED ICSA mapping. A DOL route must be explicitly configured and audited before enabling.",
+      "review_status": "adapter_reviewed_no_enabled_mapping"
+    },
+    {
+      "module": "BLS Release Calendar Collector",
+      "code": "BLS_RELEASE_CALENDAR",
+      "implementation": "backend/src/macrolens_worker/tasks/release_calendar.py",
+      "enabled_release_families": 5,
+      "completeness_controls": [
+        "valid iCalendar event parsing",
+        "recognized release family mapping",
+        "invalid date rejection",
+        "duplicate UID rejection",
+        "empty/unknown-only calendar rejection"
+      ],
+      "known_boundary": "This collector intentionally covers the five release families used by the enabled BLS indicators, not every event published by BLS.",
+      "review_status": "code_reviewed_mock_contract_passed_live_audit_required"
+    },
+    {
+      "module": "Federal Reserve FOMC Collector",
+      "code": "FOMC_CALENDAR",
+      "implementation": "backend/src/macrolens_worker/tasks/fomc.py",
+      "completeness_controls": [
+        "official calendar page snapshot",
+        "partial-calendar parse rejection",
+        "duplicate meeting prevention",
+        "official material link collection",
+        "failure when any discovered official material cannot be queued"
+      ],
+      "known_boundary": "Meeting dates and official materials are collected. Structured rate decisions, vote splits, SEP projections and individual dot-plot points are not machine-parsed in this version and must not be presented as complete live fields.",
+      "review_status": "calendar_and_documents_reviewed_structured_fomc_not_implemented"
+    },
+    {
+      "module": "Official Document Collector",
+      "code": "DOCUMENT_COLLECTOR",
+      "implementation": "backend/src/macrolens_worker/tasks/documents.py",
+      "completeness_controls": [
+        "allow-listed HTTP/HTTPS targets",
+        "DNS/private-network SSRF protection",
+        "redirect revalidation",
+        "download byte limits",
+        "PDF page limits",
+        "content hashing/versioning",
+        "text extraction and chunking",
+        "retry/idempotency"
+      ],
+      "known_boundary": "This is an allow-listed official-document collector, not a universal crawler. Completeness is defined by seeded/discovered official URLs and must be monitored per release family.",
+      "review_status": "code_reviewed_mock_contract_passed_live_audit_required"
+    },
+    {
+      "module": "Ingestion Merge and Publication Pipeline",
+      "code": "INGESTION_CORE",
+      "implementation": "backend/src/macrolens_worker/tasks/sync.py",
+      "completeness_controls": [
+        "append-only unique vintages",
+        "same-vintage conflict rejection",
+        "older-vintage preservation without replacing serving row",
+        "completeness quality gate before publication",
+        "provider-batch quarantine",
+        "raw response lineage",
+        "idempotent run business key"
+      ],
+      "known_boundary": "The pipeline guarantees fail-closed publication for enabled mappings. It cannot make an unsupported or legally blocked source complete.",
+      "review_status": "code_reviewed_unit_and_integration_contract_passed"
+    }
+  ],
+  "blocked_indicators": [
+    {
+      "canonical_code": "US.PCE.HEADLINE",
+      "name_en": "PCE Price Index",
+      "provider": "BEA_API",
+      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "reason": "official identity/dimensions unresolved"
+    },
+    {
+      "canonical_code": "US.PCE.CORE",
+      "name_en": "Core PCE Price Index",
+      "provider": "BEA_API",
+      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "reason": "official identity/dimensions unresolved"
+    },
+    {
+      "canonical_code": "US.PCE.CORE.GOODS",
+      "name_en": "Core Goods",
+      "provider": "BEA_API",
+      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "reason": "official identity/dimensions unresolved"
+    },
+    {
+      "canonical_code": "US.PCE.CORE.SERVICES",
+      "name_en": "Core Services",
+      "provider": "BEA_API",
+      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "reason": "official identity/dimensions unresolved"
+    },
+    {
+      "canonical_code": "US.PCE.HOUSING",
+      "name_en": "Housing Services",
+      "provider": "BEA_API",
+      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "reason": "official identity/dimensions unresolved"
+    },
+    {
+      "canonical_code": "US.PCE.NONHOUSING",
+      "name_en": "Core Services Excluding Housing",
+      "provider": "BEA_API",
+      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "reason": "official identity/dimensions unresolved"
+    },
+    {
+      "canonical_code": "US.PCE.MEDICAL",
+      "name_en": "Health Care Services",
+      "provider": "BEA_API",
+      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "reason": "official identity/dimensions unresolved"
+    },
+    {
+      "canonical_code": "US.PCE.HOSPITAL",
+      "name_en": "Hospital Services",
+      "provider": "BEA_API",
+      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "reason": "official identity/dimensions unresolved"
+    },
+    {
+      "canonical_code": "US.PCE.PHYSICIAN",
+      "name_en": "Physician & Clinical Services",
+      "provider": "BEA_API",
+      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "reason": "official identity/dimensions unresolved"
+    },
+    {
+      "canonical_code": "US.PCE.OTHER.PROFESSIONAL",
+      "name_en": "Other Medical Professional Services",
+      "provider": "BEA_API",
+      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "reason": "official identity/dimensions unresolved"
+    },
+    {
+      "canonical_code": "US.PCE.DENTAL",
+      "name_en": "Dental Services",
+      "provider": "BEA_API",
+      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "reason": "official identity/dimensions unresolved"
+    },
+    {
+      "canonical_code": "US.PCE.MEDICAL.EQUIPMENT",
+      "name_en": "Medical Equipment & Supplies",
+      "provider": "BEA_API",
+      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "reason": "official identity/dimensions unresolved"
+    },
+    {
+      "canonical_code": "US.PCE.PRESCRIPTION",
+      "name_en": "Prescription Drugs",
+      "provider": "BEA_API",
+      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "reason": "official identity/dimensions unresolved"
+    },
+    {
+      "canonical_code": "US.PCE.HEALTH.INSURANCE",
+      "name_en": "Health Insurance Services",
+      "provider": "BEA_API",
+      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "reason": "official identity/dimensions unresolved"
+    },
+    {
+      "canonical_code": "US.PCE.LONGTERM.CARE",
+      "name_en": "Long-Term Care Services",
+      "provider": "BEA_API",
+      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "reason": "official identity/dimensions unresolved"
+    },
+    {
+      "canonical_code": "US.PCE.TRANSPORT",
+      "name_en": "Transportation Services",
+      "provider": "BEA_API",
+      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "reason": "official identity/dimensions unresolved"
+    },
+    {
+      "canonical_code": "US.PCE.RECREATION",
+      "name_en": "Recreation Services",
+      "provider": "BEA_API",
+      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "reason": "official identity/dimensions unresolved"
+    },
+    {
+      "canonical_code": "US.PCE.FOOD.SERVICES",
+      "name_en": "Food Services & Accommodation",
+      "provider": "BEA_API",
+      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "reason": "official identity/dimensions unresolved"
+    },
+    {
+      "canonical_code": "US.PCE.FINANCE",
+      "name_en": "Financial Services & Insurance",
+      "provider": "BEA_API",
+      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "reason": "official identity/dimensions unresolved"
+    },
+    {
+      "canonical_code": "US.PCE.OTHER.SERVICES",
+      "name_en": "Other Core Services",
+      "provider": "BEA_API",
+      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "reason": "official identity/dimensions unresolved"
+    },
+    {
+      "canonical_code": "US.PCE.DURABLES",
+      "name_en": "Durable Goods Price Index",
+      "provider": "BEA_API",
+      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "reason": "official identity/dimensions unresolved"
+    },
+    {
+      "canonical_code": "US.PCE.NONDURABLES",
+      "name_en": "Nondurable Goods Price Index",
+      "provider": "BEA_API",
+      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "reason": "official identity/dimensions unresolved"
+    },
+    {
+      "canonical_code": "US.MICHIGAN.1Y",
+      "name_en": "University of Michigan 1-Year Inflation Expectations",
+      "provider": "UMICH_SURVEYS_OF_CONSUMERS",
+      "mapping_status": "LEGAL_REVIEW_REQUIRED",
+      "reason": "license or legal approval required"
+    },
+    {
+      "canonical_code": "US.REAL.GDP",
+      "name_en": "Real Gross Domestic Product",
+      "provider": "BEA_API",
+      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "reason": "official identity/dimensions unresolved"
+    },
+    {
+      "canonical_code": "US.RETAIL.SALES",
+      "name_en": "Advance Retail Sales",
+      "provider": "CENSUS_EITS_API",
+      "mapping_status": "NEEDS_DIMENSION_MAPPING",
+      "reason": "official identity/dimensions unresolved"
+    },
+    {
+      "canonical_code": "US.PERSONAL.CONSUMPTION",
+      "name_en": "Real Personal Consumption Expenditures",
+      "provider": "BEA_API",
+      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "reason": "official identity/dimensions unresolved"
+    },
+    {
+      "canonical_code": "US.DURABLE.ORDERS",
+      "name_en": "Manufacturers New Orders: Durable Goods",
+      "provider": "CENSUS_EITS_API",
+      "mapping_status": "NEEDS_DIMENSION_MAPPING",
+      "reason": "official identity/dimensions unresolved"
+    },
+    {
+      "canonical_code": "US.MORTGAGE.30Y",
+      "name_en": "30-Year Fixed Rate Mortgage Average",
+      "provider": "FREDDIE_MAC_PMMS",
+      "mapping_status": "LEGAL_REVIEW_REQUIRED",
+      "reason": "license or legal approval required"
+    },
+    {
+      "canonical_code": "US.SP500",
+      "name_en": "S&P 500 Index",
+      "provider": "LICENSED_MARKET_DATA_VENDOR",
+      "mapping_status": "LICENSE_REQUIRED",
+      "reason": "license or legal approval required"
+    },
+    {
+      "canonical_code": "US.CORPORATE.SPREAD",
+      "name_en": "ICE BofA U.S. High Yield Option-Adjusted Spread",
+      "provider": "ICE_DATA_LICENSED_FEED",
+      "mapping_status": "LICENSE_REQUIRED",
+      "reason": "license or legal approval required"
+    }
+  ],
+  "release_gates": [
+    "structural readiness must report enabled_blocked_count=0",
+    "weekly live incremental audit must pass for every enabled provider",
+    "monthly full backfill audit must reconcile first period, row count, duplicates and latest period",
+    "FRED vintage_backfill audit must pass before claiming point-in-time history completeness",
+    "no quarantined provider batch may be activated",
+    "commercial/legal-gated indicators require recorded license policy before enablement"
+  ]
+}

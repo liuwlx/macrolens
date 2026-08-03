@@ -1,0 +1,69 @@
+name: Deploy API and workers to Google Cloud
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Deployment environment
+        required: true
+        type: choice
+        options: [staging, production]
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: deploy-${{ inputs.environment }}
+  cancel-in-progress: false
+
+env:
+  PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+  REGION: ${{ vars.GCP_REGION }}
+  REPOSITORY: ${{ vars.GCP_ARTIFACT_REPOSITORY }}
+  IMAGE: macrolens-backend
+
+jobs:
+  deploy:
+    environment: ${{ inputs.environment }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_DEPLOY_SERVICE_ACCOUNT }}
+      - uses: google-github-actions/setup-gcloud@v2
+      - run: gcloud auth configure-docker "${REGION}-docker.pkg.dev" --quiet
+      - name: Build and push backend image
+        run: |
+          IMAGE_URI="${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/${IMAGE}:${GITHUB_SHA}"
+          docker build -f backend/Dockerfile -t "$IMAGE_URI" .
+          docker push "$IMAGE_URI"
+          echo "IMAGE_URI=$IMAGE_URI" >> "$GITHUB_ENV"
+      - name: Run migrations
+        run: |
+          gcloud run jobs update macrolens-${{ inputs.environment }}-migrate \
+            --region "$REGION" --image "$IMAGE_URI" \
+            --command alembic --args upgrade,head --quiet
+          gcloud run jobs execute macrolens-${{ inputs.environment }}-migrate --region "$REGION" --wait
+      - name: Seed catalog and bootstrap administrator
+        run: |
+          gcloud run jobs update macrolens-${{ inputs.environment }}-seed \
+            --region "$REGION" --image "$IMAGE_URI" \
+            --command python --args=-m,macrolens_api.cli,seed --quiet
+          gcloud run jobs execute macrolens-${{ inputs.environment }}-seed --region "$REGION" --wait
+      - name: Deploy API
+        run: |
+          gcloud run services update macrolens-${{ inputs.environment }}-api \
+            --region "$REGION" --image "$IMAGE_URI" --quiet
+      - name: Deploy Worker
+        run: |
+          gcloud run services update macrolens-${{ inputs.environment }}-worker \
+            --region "$REGION" --image "$IMAGE_URI" \
+            --command python --args=-m,macrolens_worker.main,run --quiet
+      - name: Deploy Scheduler
+        run: |
+          gcloud run services update macrolens-${{ inputs.environment }}-scheduler \
+            --region "$REGION" --image "$IMAGE_URI" \
+            --command python --args=-m,macrolens_worker.main,schedule --quiet

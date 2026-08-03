@@ -1,0 +1,84 @@
+{
+  "generated_at": "2026-08-02T05:37:57Z",
+  "version": "1.0.2",
+  "overall": "passed_with_live_external_gate_pending",
+  "tests": {
+    "python_tests": {
+      "status": "passed",
+      "count": 86,
+      "coverage_percent": 56.96,
+      "coverage_gate_percent": 35
+    },
+    "provider_module_contracts": {
+      "status": "passed",
+      "modules": [
+        "FRED_API",
+        "BLS_API_V2",
+        "BEA_API",
+        "CENSUS_EITS_API",
+        "DOL_OPEN_DATA_API",
+        "EIA_API_V2",
+        "NYFED_MARKETS_API",
+        "US_TREASURY_XML"
+      ]
+    },
+    "release_document_collectors": {
+      "status": "passed",
+      "modules": [
+        "BLS_RELEASE_CALENDAR",
+        "FOMC_CALENDAR_AND_MATERIALS",
+        "DOCUMENT_COLLECTOR"
+      ]
+    },
+    "python_compileall": {
+      "status": "passed"
+    },
+    "repository_contract": {
+      "status": "passed",
+      "source_registry_entries": 61,
+      "openapi_paths": 62
+    },
+    "structural_readiness": {
+      "status": "passed",
+      "enabled_ready": 31,
+      "blocked": 30,
+      "all_enabled_ready": true,
+      "all_registry_ready": false
+    },
+    "api_process_smoke": {
+      "status": "passed",
+      "live": 200,
+      "health": 200,
+      "ready_without_database": 503,
+      "openapi": 200,
+      "metrics": 200
+    },
+    "alembic_offline": {
+      "status": "passed",
+      "upgrade_sql_lines": 864,
+      "downgrade_sql_lines": 122
+    },
+    "typescript_syntax": {
+      "status": "passed",
+      "file_count": 33
+    },
+    "typescript_sdk_typecheck": {
+      "status": "passed"
+    },
+    "json_yaml_parse": {
+      "status": "passed"
+    },
+    "live_official_backfill": {
+      "status": "not_executed_in_sandbox",
+      "reason": "external DNS, official API credentials and PostgreSQL are unavailable",
+      "production_gate_workflow": ".github/workflows/live-ingestion-audit.yml"
+    }
+  },
+  "production_release_requirements": [
+    "weekly incremental live audit passes for every enabled provider",
+    "monthly full-history backfill audit passes for every enabled provider",
+    "FRED vintage_backfill passes before point-in-time completeness is claimed",
+    "blocked BEA/Census mappings are not enabled before official identity/dimension approval",
+    "licensed series are not enabled before license_policy approval"
+  ]
+}

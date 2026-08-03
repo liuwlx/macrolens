@@ -1,0 +1,22 @@
+{
+  "name": "macrolens-production",
+  "private": true,
+  "version": "1.0.2",
+  "workspaces": [
+    "apps/web",
+    "packages/sdk-typescript"
+  ],
+  "scripts": {
+    "dev": "npm --workspace apps/web run dev",
+    "build": "npm --workspace apps/web run build",
+    "lint": "npm --workspace apps/web run lint",
+    "test": "npm --workspace apps/web run test",
+    "typecheck": "npm --workspace apps/web run typecheck",
+    "e2e": "npm --workspace apps/web run e2e",
+    "build:sdk": "npm --workspace packages/sdk-typescript run build",
+    "typecheck:sdk": "npm --workspace packages/sdk-typescript run typecheck"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

@@ -1,0 +1,551 @@
+{
+  "registry_generated_at": "2026-08-02T05:21:31.945775Z",
+  "credential_checks_enabled": false,
+  "indicator_count": 61,
+  "ready_count": 31,
+  "blocked_count": 30,
+  "enabled_indicator_count": 31,
+  "enabled_ready_count": 31,
+  "enabled_blocked_count": 0,
+  "all_enabled_ready": true,
+  "all_production_ready": false,
+  "status_counts": {
+    "blocked_license": 4,
+    "blocked_mapping": 26,
+    "ready": 31
+  },
+  "provider_counts": {
+    "BEA_API": {
+      "blocked_mapping": 24
+    },
+    "BLS_API_V2": {
+      "ready": 12
+    },
+    "CENSUS_EITS_API": {
+      "blocked_mapping": 2
+    },
+    "EIA_API_V2": {
+      "ready": 1
+    },
+    "FREDDIE_MAC_PMMS": {
+      "blocked_license": 1
+    },
+    "FRED_API": {
+      "ready": 12
+    },
+    "ICE_DATA_LICENSED_FEED": {
+      "blocked_license": 1
+    },
+    "LICENSED_MARKET_DATA_VENDOR": {
+      "blocked_license": 1
+    },
+    "NYFED_MARKETS_API": {
+      "ready": 3
+    },
+    "UMICH_SURVEYS_OF_CONSUMERS": {
+      "blocked_license": 1
+    },
+    "US_TREASURY_XML": {
+      "ready": 3
+    }
+  },
+  "indicators": [
+    {
+      "canonical_code": "US.PCE.HEADLINE",
+      "provider": "BEA_API",
+      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "status": "blocked_mapping",
+      "blockers": [
+        "mapping_status:NEEDS_METADATA_MAPPING"
+      ]
+    },
+    {
+      "canonical_code": "US.PCE.CORE",
+      "provider": "BEA_API",
+      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "status": "blocked_mapping",
+      "blockers": [
+        "mapping_status:NEEDS_METADATA_MAPPING"
+      ]
+    },
+    {
+      "canonical_code": "US.PCE.CORE.GOODS",
+      "provider": "BEA_API",
+      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "status": "blocked_mapping",
+      "blockers": [
+        "mapping_status:NEEDS_METADATA_MAPPING"
+      ]
+    },
+    {
+      "canonical_code": "US.PCE.CORE.SERVICES",
+      "provider": "BEA_API",
+      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "status": "blocked_mapping",
+      "blockers": [
+        "mapping_status:NEEDS_METADATA_MAPPING"
+      ]
+    },
+    {
+      "canonical_code": "US.PCE.HOUSING",
+      "provider": "BEA_API",
+      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "status": "blocked_mapping",
+      "blockers": [
+        "mapping_status:NEEDS_METADATA_MAPPING"
+      ]
+    },
+    {
+      "canonical_code": "US.PCE.NONHOUSING",
+      "provider": "BEA_API",
+      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "status": "blocked_mapping",
+      "blockers": [
+        "mapping_status:NEEDS_METADATA_MAPPING"
+      ]
+    },
+    {
+      "canonical_code": "US.PCE.MEDICAL",
+      "provider": "BEA_API",
+      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "status": "blocked_mapping",
+      "blockers": [
+        "mapping_status:NEEDS_METADATA_MAPPING"
+      ]
+    },
+    {
+      "canonical_code": "US.PCE.HOSPITAL",
+      "provider": "BEA_API",
+      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "status": "blocked_mapping",
+      "blockers": [
+        "mapping_status:NEEDS_METADATA_MAPPING"
+      ]
+    },
+    {
+      "canonical_code": "US.PCE.PHYSICIAN",
+      "provider": "BEA_API",
+      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "status": "blocked_mapping",
+      "blockers": [
+        "mapping_status:NEEDS_METADATA_MAPPING"
+      ]
+    },
+    {
+      "canonical_code": "US.PCE.OTHER.PROFESSIONAL",
+      "provider": "BEA_API",
+      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "status": "blocked_mapping",
+      "blockers": [
+        "mapping_status:NEEDS_METADATA_MAPPING"
+      ]
+    },
+    {
+      "canonical_code": "US.PCE.DENTAL",
+      "provider": "BEA_API",
+      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "status": "blocked_mapping",
+      "blockers": [
+        "mapping_status:NEEDS_METADATA_MAPPING"
+      ]
+    },
+    {
+      "canonical_code": "US.PCE.MEDICAL.EQUIPMENT",
+      "provider": "BEA_API",
+      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "status": "blocked_mapping",
+      "blockers": [
+        "mapping_status:NEEDS_METADATA_MAPPING"
+      ]
+    },
+    {
+      "canonical_code": "US.PCE.PRESCRIPTION",
+      "provider": "BEA_API",
+      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "status": "blocked_mapping",
+      "blockers": [
+        "mapping_status:NEEDS_METADATA_MAPPING"
+      ]
+    },
+    {
+      "canonical_code": "US.PCE.HEALTH.INSURANCE",
+      "provider": "BEA_API",
+      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "status": "blocked_mapping",
+      "blockers": [
+        "mapping_status:NEEDS_METADATA_MAPPING"
+      ]
+    },
+    {
+      "canonical_code": "US.PCE.LONGTERM.CARE",
+      "provider": "BEA_API",
+      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "status": "blocked_mapping",
+      "blockers": [
+        "mapping_status:NEEDS_METADATA_MAPPING"
+      ]
+    },
+    {
+      "canonical_code": "US.PCE.TRANSPORT",
+      "provider": "BEA_API",
+      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "status": "blocked_mapping",
+      "blockers": [
+        "mapping_status:NEEDS_METADATA_MAPPING"
+      ]
+    },
+    {
+      "canonical_code": "US.PCE.RECREATION",
+      "provider": "BEA_API",
+      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "status": "blocked_mapping",
+      "blockers": [
+        "mapping_status:NEEDS_METADATA_MAPPING"
+      ]
+    },
+    {
+      "canonical_code": "US.PCE.FOOD.SERVICES",
+      "provider": "BEA_API",
+      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "status": "blocked_mapping",
+      "blockers": [
+        "mapping_status:NEEDS_METADATA_MAPPING"
+      ]
+    },
+    {
+      "canonical_code": "US.PCE.FINANCE",
+      "provider": "BEA_API",
+      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "status": "blocked_mapping",
+      "blockers": [
+        "mapping_status:NEEDS_METADATA_MAPPING"
+      ]
+    },
+    {
+      "canonical_code": "US.PCE.OTHER.SERVICES",
+      "provider": "BEA_API",
+      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "status": "blocked_mapping",
+      "blockers": [
+        "mapping_status:NEEDS_METADATA_MAPPING"
+      ]
+    },
+    {
+      "canonical_code": "US.PCE.DURABLES",
+      "provider": "BEA_API",
+      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "status": "blocked_mapping",
+      "blockers": [
+        "mapping_status:NEEDS_METADATA_MAPPING"
+      ]
+    },
+    {
+      "canonical_code": "US.PCE.NONDURABLES",
+      "provider": "BEA_API",
+      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "status": "blocked_mapping",
+      "blockers": [
+        "mapping_status:NEEDS_METADATA_MAPPING"
+      ]
+    },
+    {
+      "canonical_code": "US.CPI.HEADLINE",
+      "provider": "BLS_API_V2",
+      "mapping_status": "READY",
+      "status": "ready",
+      "blockers": []
+    },
+    {
+      "canonical_code": "US.CPI.CORE",
+      "provider": "BLS_API_V2",
+      "mapping_status": "READY",
+      "status": "ready",
+      "blockers": []
+    },
+    {
+      "canonical_code": "US.CPI.SHELTER",
+      "provider": "BLS_API_V2",
+      "mapping_status": "READY",
+      "status": "ready",
+      "blockers": []
+    },
+    {
+      "canonical_code": "US.CPI.MEDICAL",
+      "provider": "BLS_API_V2",
+      "mapping_status": "READY",
+      "status": "ready",
+      "blockers": []
+    },
+    {
+      "canonical_code": "US.PPI.FINAL",
+      "provider": "BLS_API_V2",
+      "mapping_status": "READY",
+      "status": "ready",
+      "blockers": []
+    },
+    {
+      "canonical_code": "US.PPI.CORE",
+      "provider": "BLS_API_V2",
+      "mapping_status": "READY",
+      "status": "ready",
+      "blockers": []
+    },
+    {
+      "canonical_code": "US.BREAKEVEN.5Y5Y",
+      "provider": "FRED_API",
+      "mapping_status": "READY",
+      "status": "ready",
+      "blockers": []
+    },
+    {
+      "canonical_code": "US.MICHIGAN.1Y",
+      "provider": "UMICH_SURVEYS_OF_CONSUMERS",
+      "mapping_status": "LEGAL_REVIEW_REQUIRED",
+      "status": "blocked_license",
+      "blockers": [
+        "license_or_legal_approval_required",
+        "mapping_status:LEGAL_REVIEW_REQUIRED",
+        "no_production_adapter"
+      ]
+    },
+    {
+      "canonical_code": "US.PAYROLLS",
+      "provider": "BLS_API_V2",
+      "mapping_status": "READY",
+      "status": "ready",
+      "blockers": []
+    },
+    {
+      "canonical_code": "US.UNEMPLOYMENT",
+      "provider": "BLS_API_V2",
+      "mapping_status": "READY",
+      "status": "ready",
+      "blockers": []
+    },
+    {
+      "canonical_code": "US.PARTICIPATION",
+      "provider": "BLS_API_V2",
+      "mapping_status": "READY",
+      "status": "ready",
+      "blockers": []
+    },
+    {
+      "canonical_code": "US.AVERAGE.HOURLY",
+      "provider": "BLS_API_V2",
+      "mapping_status": "READY",
+      "status": "ready",
+      "blockers": []
+    },
+    {
+      "canonical_code": "US.ECI",
+      "provider": "BLS_API_V2",
+      "mapping_status": "READY",
+      "status": "ready",
+      "blockers": []
+    },
+    {
+      "canonical_code": "US.JOB.OPENINGS",
+      "provider": "BLS_API_V2",
+      "mapping_status": "READY",
+      "status": "ready",
+      "blockers": []
+    },
+    {
+      "canonical_code": "US.INITIAL.CLAIMS",
+      "provider": "FRED_API",
+      "mapping_status": "READY",
+      "status": "ready",
+      "blockers": []
+    },
+    {
+      "canonical_code": "US.REAL.GDP",
+      "provider": "BEA_API",
+      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "status": "blocked_mapping",
+      "blockers": [
+        "mapping_status:NEEDS_METADATA_MAPPING"
+      ]
+    },
+    {
+      "canonical_code": "US.INDUSTRIAL.PRODUCTION",
+      "provider": "FRED_API",
+      "mapping_status": "READY",
+      "status": "ready",
+      "blockers": []
+    },
+    {
+      "canonical_code": "US.RETAIL.SALES",
+      "provider": "CENSUS_EITS_API",
+      "mapping_status": "NEEDS_DIMENSION_MAPPING",
+      "status": "blocked_mapping",
+      "blockers": [
+        "locator:approved_dimensions",
+        "mapping_status:NEEDS_DIMENSION_MAPPING"
+      ]
+    },
+    {
+      "canonical_code": "US.PERSONAL.CONSUMPTION",
+      "provider": "BEA_API",
+      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "status": "blocked_mapping",
+      "blockers": [
+        "mapping_status:NEEDS_METADATA_MAPPING"
+      ]
+    },
+    {
+      "canonical_code": "US.DURABLE.ORDERS",
+      "provider": "CENSUS_EITS_API",
+      "mapping_status": "NEEDS_DIMENSION_MAPPING",
+      "status": "blocked_mapping",
+      "blockers": [
+        "locator:approved_dimensions",
+        "mapping_status:NEEDS_DIMENSION_MAPPING"
+      ]
+    },
+    {
+      "canonical_code": "US.FED.FUNDS",
+      "provider": "NYFED_MARKETS_API",
+      "mapping_status": "READY",
+      "status": "ready",
+      "blockers": []
+    },
+    {
+      "canonical_code": "US.SOFR",
+      "provider": "NYFED_MARKETS_API",
+      "mapping_status": "READY",
+      "status": "ready",
+      "blockers": []
+    },
+    {
+      "canonical_code": "US.TREASURY.2Y",
+      "provider": "US_TREASURY_XML",
+      "mapping_status": "READY",
+      "status": "ready",
+      "blockers": []
+    },
+    {
+      "canonical_code": "US.TREASURY.10Y",
+      "provider": "US_TREASURY_XML",
+      "mapping_status": "READY",
+      "status": "ready",
+      "blockers": []
+    },
+    {
+      "canonical_code": "US.REAL.10Y",
+      "provider": "US_TREASURY_XML",
+      "mapping_status": "READY",
+      "status": "ready",
+      "blockers": []
+    },
+    {
+      "canonical_code": "US.MORTGAGE.30Y",
+      "provider": "FREDDIE_MAC_PMMS",
+      "mapping_status": "LEGAL_REVIEW_REQUIRED",
+      "status": "blocked_license",
+      "blockers": [
+        "license_or_legal_approval_required",
+        "mapping_status:LEGAL_REVIEW_REQUIRED",
+        "no_production_adapter"
+      ]
+    },
+    {
+      "canonical_code": "US.FED.ASSETS",
+      "provider": "FRED_API",
+      "mapping_status": "READY",
+      "status": "ready",
+      "blockers": []
+    },
+    {
+      "canonical_code": "US.BANK.RESERVES",
+      "provider": "FRED_API",
+      "mapping_status": "READY",
+      "status": "ready",
+      "blockers": []
+    },
+    {
+      "canonical_code": "US.REVERSE.REPO",
+      "provider": "NYFED_MARKETS_API",
+      "mapping_status": "READY",
+      "status": "ready",
+      "blockers": []
+    },
+    {
+      "canonical_code": "US.FED.MBS",
+      "provider": "FRED_API",
+      "mapping_status": "READY",
+      "status": "ready",
+      "blockers": []
+    },
+    {
+      "canonical_code": "US.SP500",
+      "provider": "LICENSED_MARKET_DATA_VENDOR",
+      "mapping_status": "LICENSE_REQUIRED",
+      "status": "blocked_license",
+      "blockers": [
+        "license_or_legal_approval_required",
+        "mapping_status:LICENSE_REQUIRED",
+        "no_production_adapter"
+      ]
+    },
+    {
+      "canonical_code": "US.DOLLAR.INDEX",
+      "provider": "FRED_API",
+      "mapping_status": "READY",
+      "status": "ready",
+      "blockers": []
+    },
+    {
+      "canonical_code": "US.WTI",
+      "provider": "EIA_API_V2",
+      "mapping_status": "READY",
+      "status": "ready",
+      "blockers": []
+    },
+    {
+      "canonical_code": "US.FINANCIAL.CONDITIONS",
+      "provider": "FRED_API",
+      "mapping_status": "READY",
+      "status": "ready",
+      "blockers": []
+    },
+    {
+      "canonical_code": "US.BANK.CREDIT",
+      "provider": "FRED_API",
+      "mapping_status": "READY",
+      "status": "ready",
+      "blockers": []
+    },
+    {
+      "canonical_code": "US.CONSUMER.CREDIT",
+      "provider": "FRED_API",
+      "mapping_status": "READY",
+      "status": "ready",
+      "blockers": []
+    },
+    {
+      "canonical_code": "US.CARD.DELINQUENCY",
+      "provider": "FRED_API",
+      "mapping_status": "READY",
+      "status": "ready",
+      "blockers": []
+    },
+    {
+      "canonical_code": "US.SLOOS",
+      "provider": "FRED_API",
+      "mapping_status": "READY",
+      "status": "ready",
+      "blockers": []
+    },
+    {
+      "canonical_code": "US.CORPORATE.SPREAD",
+      "provider": "ICE_DATA_LICENSED_FEED",
+      "mapping_status": "LICENSE_REQUIRED",
+      "status": "blocked_license",
+      "blockers": [
+        "license_or_legal_approval_required",
+        "mapping_status:LICENSE_REQUIRED",
+        "no_production_adapter"
+      ]
+    }
+  ]
+}

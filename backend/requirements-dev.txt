@@ -1,0 +1,9 @@
+-r requirements.txt
+pytest>=8.4,<9
+pytest-asyncio>=1.1,<2
+pytest-cov>=6.2,<7
+respx>=0.22,<1
+ruff>=0.12,<1
+mypy>=1.17,<2
+types-PyJWT>=1.7,<2
+testcontainers[postgres]>=4.12,<5

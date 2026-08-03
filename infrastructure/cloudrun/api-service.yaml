@@ -1,0 +1,27 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: macrolens-api
+spec:
+  template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/minScale: "1"
+        autoscaling.knative.dev/maxScale: "10"
+        run.googleapis.com/startup-cpu-boost: "true"
+    spec:
+      containerConcurrency: 80
+      timeoutSeconds: 300
+      containers:
+        - image: BACKEND_IMAGE
+          command: ["uvicorn"]
+          args: ["macrolens_api.main:app", "--host", "0.0.0.0", "--port", "8080", "--proxy-headers"]
+          ports: [{ containerPort: 8080 }]
+          resources:
+            limits: { cpu: "2", memory: "2Gi" }
+          env:
+            - { name: ENVIRONMENT, value: production }
+            - { name: WEB_ORIGIN, value: "https://app.example.com" }
+            - { name: COOKIE_SECURE, value: "true" }
+            - { name: COOKIE_SAMESITE, value: "none" }
+            - { name: OPENAI_BASE_URL, value: "" }

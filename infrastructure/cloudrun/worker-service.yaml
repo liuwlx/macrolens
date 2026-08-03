@@ -1,0 +1,21 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: macrolens-worker
+spec:
+  template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/minScale: "1"
+        autoscaling.knative.dev/maxScale: "1"
+        run.googleapis.com/cpu-throttling: "false"
+    spec:
+      containerConcurrency: 1
+      timeoutSeconds: 3600
+      containers:
+        - image: BACKEND_IMAGE
+          command: ["python"]
+          args: ["-m", "macrolens_worker.main", "run"]
+          ports: [{ containerPort: 8080 }]
+          resources:
+            limits: { cpu: "2", memory: "4Gi" }
