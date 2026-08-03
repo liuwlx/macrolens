@@ -55,8 +55,11 @@ def _license_from_policy(policy: LicensePolicy | None, provider: Provider) -> Li
     )
 
 
-async def get_primary_source(session: AsyncSession, series_id: UUID) -> tuple[SourceSeries, Dataset, Provider]:
-    row = (
+async def get_primary_source(
+    session: AsyncSession,
+    series_id: UUID,
+) -> tuple[SourceSeries, Dataset, Provider]:
+    rows = (
         await session.execute(
             select(SourceSeries, Dataset, Provider)
             .join(Dataset, Dataset.id == SourceSeries.dataset_id)
@@ -66,15 +69,24 @@ async def get_primary_source(session: AsyncSession, series_id: UUID) -> tuple[So
                 SourceSeries.is_primary.is_(True),
                 SourceSeries.mapping_status == "verified",
             )
+            .limit(2)
         )
-    ).first()
-    if row is None:
+    ).all()
+    if not rows:
         raise AppError(
             404,
             "指标数据源尚未就绪",
             "该指标没有已验证的主数据源映射。",
             "source_mapping_not_ready",
         )
+    if len(rows) > 1:
+        raise AppError(
+            409,
+            "指标主数据源冲突",
+            "该指标存在多个已验证的主数据源映射，无法确定统一口径。",
+            "source_mapping_conflict",
+        )
+    row = rows[0]
     return row[0], row[1], row[2]
 
 

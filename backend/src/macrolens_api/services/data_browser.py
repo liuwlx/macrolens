@@ -8,10 +8,11 @@ from dataclasses import dataclass, field
 from datetime import UTC, date, datetime
 from decimal import Decimal, InvalidOperation
 from statistics import median, pstdev
-from typing import Literal
+from typing import Any, Literal
 from uuid import UUID
 
-from sqlalchemy import case, func, or_, select
+from sqlalchemy import Date as SQLDate
+from sqlalchemy import and_, case, cast, func, or_, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..errors import AppError
@@ -620,43 +621,168 @@ async def _latest_publications_by_source(
     return {int(source_id): published_at for source_id, published_at in rows}
 
 
-def _sort_items(
-    items: list[SeriesBrowserItem],
+async def _sort_points_by_source(
+    session: AsyncSession,
+    candidates: list[BrowserCandidate],
+    *,
+    data_as_of: datetime,
+) -> dict[int, list[Point]]:
+    """Load only current, previous and calendar-lag points needed by browser sort metrics."""
+    bindings = [
+        binding for candidate in candidates if (binding := candidate.binding) is not None
+    ]
+    if not bindings:
+        return {}
+    source_ids = {binding.source.id for binding in bindings}
+    versioned = (
+        select(
+            ObservationVintage.source_series_id.label("source_id"),
+            ObservationVintage.period_start,
+            ObservationVintage.period_end,
+            ObservationVintage.value,
+            ObservationVintage.value_text,
+            ObservationVintage.observation_status,
+            ObservationVintage.published_at,
+            ObservationVintage.vintage_at,
+            func.row_number()
+            .over(
+                partition_by=(
+                    ObservationVintage.source_series_id,
+                    ObservationVintage.period_start,
+                ),
+                order_by=ObservationVintage.vintage_at.desc(),
+            )
+            .label("vintage_rank"),
+        )
+        .where(
+            ObservationVintage.source_series_id.in_(source_ids),
+            ObservationVintage.vintage_at <= data_as_of,
+        )
+        .subquery()
+    )
+    ranked = (
+        select(
+            versioned.c.source_id,
+            versioned.c.period_start,
+            versioned.c.period_end,
+            versioned.c.value,
+            versioned.c.value_text,
+            versioned.c.observation_status,
+            versioned.c.published_at,
+            versioned.c.vintage_at,
+            func.row_number()
+            .over(
+                partition_by=versioned.c.source_id,
+                order_by=versioned.c.period_start.desc(),
+            )
+            .label("period_rank"),
+        )
+        .where(versioned.c.vintage_rank == 1, versioned.c.value.is_not(None))
+        .subquery()
+    )
+    current = (
+        select(
+            ranked.c.source_id,
+            ranked.c.period_start.label("current_period"),
+        )
+        .where(ranked.c.period_rank == 1)
+        .subquery()
+    )
+    conditions = [ranked.c.period_rank <= 2]
+
+    def add_calendar_target(
+        selected_ids: set[int],
+        *,
+        months: int,
+        tolerance_days: int = 0,
+    ) -> None:
+        if not selected_ids:
+            return
+        interval_unit = "month" if months == 1 else "months"
+        target = cast(
+            current.c.current_period - text(f"INTERVAL '{months} {interval_unit}'"),
+            SQLDate,
+        )
+        period_match = (
+            ranked.c.period_start == target
+            if tolerance_days == 0
+            else and_(
+                ranked.c.period_start <= target,
+                ranked.c.period_start >= target - tolerance_days,
+            )
+        )
+        conditions.append(and_(ranked.c.source_id.in_(selected_ids), period_match))
+
+    by_frequency: dict[str, set[int]] = defaultdict(set)
+    for candidate in candidates:
+        if candidate.binding is not None:
+            by_frequency[candidate.series.frequency].add(candidate.binding.source.id)
+    add_calendar_target(by_frequency["monthly"], months=1)
+    add_calendar_target(by_frequency["quarterly"], months=3)
+    add_calendar_target(source_ids - by_frequency["daily"] - by_frequency["weekly"], months=12)
+    add_calendar_target(by_frequency["daily"], months=12, tolerance_days=7)
+    add_calendar_target(by_frequency["weekly"], months=12, tolerance_days=14)
+
+    rows = (
+        await session.execute(
+            select(ranked)
+            .join(current, current.c.source_id == ranked.c.source_id)
+            .where(or_(*conditions))
+            .order_by(ranked.c.source_id, ranked.c.period_start)
+        )
+    ).mappings()
+    grouped: dict[int, list[Point]] = defaultdict(list)
+    for row in rows:
+        grouped[int(row["source_id"])].append(
+            Point(
+                period_start=row["period_start"],
+                period_end=row["period_end"],
+                value=row["value"],
+                value_text=row["value_text"],
+                status=row["observation_status"],
+                published_at=row["published_at"],
+                vintage_at=row["vintage_at"],
+            )
+        )
+    return dict(grouped)
+
+
+def _sort_candidates_by_metric(
+    candidates: list[BrowserCandidate],
+    points_by_source: dict[int, list[Point]],
+    license_by_source: dict[int, LicenseInfo],
     sort: BrowserSort,
     order: BrowserOrder,
-) -> list[SeriesBrowserItem]:
-    reverse = order == "desc"
-    if sort == "taxonomy":
-        return sorted(
-            items,
-            key=lambda item: (
-                item.taxonomy_order,
-                item.series.name_zh.casefold(),
-                item.series.canonical_code,
-            ),
-            reverse=reverse,
-        )
-    if sort == "name":
-        return sorted(
-            items,
-            key=lambda item: (item.series.name_zh.casefold(), item.series.canonical_code),
-            reverse=reverse,
-        )
-    values: dict[str, Callable[[SeriesBrowserItem], object | None]] = {
+) -> list[BrowserCandidate]:
+    getter: dict[str, Callable[[SeriesBrowserItem], Any]] = {
         "current_period": lambda item: item.current.period_start if item.current else None,
         "current": lambda item: item.current.value if item.current else None,
         "change": lambda item: item.change.value,
         "period_change": lambda item: item.period_change.value,
         "yoy": lambda item: item.yoy.value,
     }
-    getter = values[sort]
-    available = [item for item in items if getter(item) is not None]
-    missing = [item for item in items if getter(item) is None]
-    available.sort(
-        key=lambda item: (getter(item), item.series.name_zh.casefold(), item.series.canonical_code),
-        reverse=reverse,
+    metric = getter[sort]
+    decorated: list[tuple[BrowserCandidate, Any]] = []
+    for candidate in candidates:
+        binding = candidate.binding
+        item = build_browser_item(
+            candidate,
+            points_by_source.get(binding.source.id, []) if binding else [],
+            license_by_source.get(binding.source.id) if binding else None,
+        )
+        decorated.append((candidate, metric(item)))
+    decorated.sort(
+        key=lambda pair: (
+            pair[0].taxonomy_order,
+            pair[0].series.name_zh.casefold(),
+            pair[0].series.canonical_code,
+            str(pair[0].series.id),
+        )
     )
-    return available + sorted(missing, key=lambda item: item.series.name_zh.casefold())
+    available = [pair for pair in decorated if pair[1] is not None]
+    missing = [pair for pair in decorated if pair[1] is None]
+    available.sort(key=lambda pair: pair[1], reverse=order == "desc")
+    return [candidate for candidate, _value in available + missing]
 
 
 async def series_browser(
@@ -675,15 +801,15 @@ async def series_browser(
     candidates = await _load_candidates(session)
     facets = build_facets(candidates, filters)
     matched = [candidate for candidate in candidates if _matches(candidate, filters)]
-    all_bindings = [
+    publication_bindings = [
         binding for candidate in matched if (binding := candidate.binding) is not None
     ]
-    all_source_ids = {binding.source.id for binding in all_bindings}
+    publication_source_ids = {binding.source.id for binding in publication_bindings}
     publications: dict[int, datetime | None] = {}
     if published_from is not None or published_to is not None:
         publications = await _latest_publications_by_source(
             session,
-            all_source_ids,
+            publication_source_ids,
             data_as_of=snapshot,
         )
         def publication_matches(candidate: BrowserCandidate) -> bool:
@@ -698,26 +824,47 @@ async def series_browser(
 
         matched = [candidate for candidate in matched if publication_matches(candidate)]
 
-    reverse = order == "desc"
-    if sort == "name":
+    all_bindings = [
+        binding for candidate in matched if (binding := candidate.binding) is not None
+    ]
+    all_license_by_source: dict[int, LicenseInfo] | None = None
+    if sort in {"current_period", "current", "change", "period_change", "yoy"}:
+        all_license_by_source = await _license_map(session, all_bindings)
+        sort_points = await _sort_points_by_source(
+            session,
+            matched,
+            data_as_of=snapshot,
+        )
+        matched = _sort_candidates_by_metric(
+            matched,
+            sort_points,
+            all_license_by_source,
+            sort,
+            order,
+        )
+    elif sort == "name":
         matched.sort(
             key=lambda candidate: (
                 candidate.series.name_zh.casefold(),
                 candidate.series.canonical_code,
                 str(candidate.series.id),
             ),
-            reverse=reverse,
+            reverse=order == "desc",
         )
     else:
         matched.sort(
             key=lambda candidate: (*_search_rank(candidate, filters.q), str(candidate.series.id)),
-            reverse=reverse if sort == "taxonomy" else False,
+            reverse=order == "desc",
         )
 
     total = len(matched)
     page = matched[offset : offset + limit]
     bindings = [binding for candidate in page if (binding := candidate.binding) is not None]
-    license_by_source = await _license_map(session, bindings)
+    license_by_source = (
+        all_license_by_source
+        if all_license_by_source is not None
+        else await _license_map(session, bindings)
+    )
     page_source_ids = {binding.source.id for binding in bindings}
     points = await _points_by_source(session, page_source_ids, data_as_of=snapshot)
     items = [
@@ -728,8 +875,6 @@ async def series_browser(
         )
         for candidate in page
     ]
-    if sort in {"current", "change", "period_change", "yoy"}:
-        items = _sort_items(items, sort, order)
     if data_as_of is not None and page_source_ids and not any(item.current for item in items):
         raise AppError(
             409,

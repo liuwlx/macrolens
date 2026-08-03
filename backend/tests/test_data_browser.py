@@ -10,6 +10,7 @@ from uuid import uuid4
 import pytest
 from fastapi import Request
 from fastapi.exceptions import RequestValidationError
+from sqlalchemy.dialects import postgresql
 
 from macrolens_api.errors import AppError, request_validation_error_handler
 from macrolens_api.schemas import AIRunCreate, BrowserPagination, LicenseInfo, SeriesBrowserResponse
@@ -32,7 +33,12 @@ def _license(*, display: bool = True, download: bool = True, ai: bool = True) ->
     )
 
 
-def _candidate(*, source_id: int = 3, name: str = "测试指标") -> BrowserCandidate:
+def _candidate(
+    *,
+    source_id: int = 3,
+    name: str = "测试指标",
+    frequency: str = "monthly",
+) -> BrowserCandidate:
     series_id = uuid4()
     series = SimpleNamespace(
         id=series_id,
@@ -40,7 +46,7 @@ def _candidate(*, source_id: int = 3, name: str = "测试指标") -> BrowserCand
         name_zh=name,
         name_en="Test series",
         theme="activity",
-        frequency="monthly",
+        frequency=frequency,
         unit_code="index",
         unit_label_zh="指数",
         default_transform="level",
@@ -341,6 +347,194 @@ async def test_browser_loads_histories_only_for_the_selected_page(
     assert result.pagination.total == 5
     assert [item.series.name_zh for item in result.items] == ["B", "C"]
     assert loaded == {2, 3}
+
+
+@pytest.mark.parametrize("operation", ["observations", "revisions"])
+@pytest.mark.parametrize(
+    ("rows", "expected_status", "expected_code"),
+    [
+        ([], 404, "source_mapping_not_ready"),
+        (
+            [(object(), object(), object()), (object(), object(), object())],
+            409,
+            "source_mapping_conflict",
+        ),
+    ],
+)
+async def test_observations_and_revisions_fail_closed_for_invalid_primary_mapping(
+    operation: str,
+    rows: list[tuple[object, object, object]],
+    expected_status: int,
+    expected_code: str,
+) -> None:
+    candidate = _candidate()
+
+    class Result:
+        def all(self) -> list[tuple[object, object, object]]:
+            return rows
+
+    class FakeSession:
+        async def get(self, _model: object, _object_id: object) -> object:
+            return candidate.series
+
+        async def execute(self, _statement: object) -> Result:
+            return Result()
+
+    with pytest.raises(AppError) as captured:
+        if operation == "observations":
+            await series_service.get_observations(
+                FakeSession(),  # type: ignore[arg-type]
+                series_id=candidate.series.id,
+                start=None,
+                end=None,
+                transform="level",
+                data_as_of=datetime(2026, 7, 1, tzinfo=UTC),
+            )
+        else:
+            await series_service.get_revisions(
+                FakeSession(),  # type: ignore[arg-type]
+                series_id=candidate.series.id,
+                start=None,
+                end=None,
+                data_as_of=datetime(2026, 7, 1, tzinfo=UTC),
+            )
+    assert captured.value.status_code == expected_status
+    assert captured.value.code == expected_code
+
+
+@pytest.mark.parametrize(
+    "sort",
+    ["current_period", "current", "change", "period_change", "yoy"],
+)
+async def test_dynamic_browser_sort_is_global_before_pagination(
+    monkeypatch: pytest.MonkeyPatch,
+    sort: str,
+) -> None:
+    candidates = [
+        _candidate(source_id=index, name=name)
+        for index, name in enumerate(["A", "B", "C"], start=1)
+    ]
+    observed_at = datetime(2026, 8, 1, tzinfo=UTC)
+
+    def point(period: date, value: str) -> Point:
+        return Point(
+            period_start=period,
+            period_end=period,
+            value=Decimal(value),
+            status="normal",
+            published_at=observed_at,
+            vintage_at=observed_at,
+        )
+
+    histories = {
+        1: [
+            point(date(2025, 6, 1), "50"),
+            point(date(2026, 5, 1), "90"),
+            point(date(2026, 6, 1), "100"),
+        ],
+        2: [
+            point(date(2025, 6, 1), "50"),
+            point(date(2026, 5, 1), "90"),
+            point(date(2026, 6, 1), "100"),
+        ],
+        3: [
+            point(date(2025, 7, 1), "50"),
+            point(date(2026, 6, 1), "100"),
+            point(date(2026, 7, 1), "200"),
+        ],
+    }
+    loaded_page_sources: set[int] = set()
+
+    async def load_candidates(_session: object) -> list[BrowserCandidate]:
+        return candidates
+
+    async def license_map(
+        _session: object,
+        bindings: list[SourceBinding],
+    ) -> dict[int, LicenseInfo]:
+        return {binding.source.id: _license() for binding in bindings}
+
+    async def sort_points(
+        _session: object,
+        selected: list[BrowserCandidate],
+        *,
+        data_as_of: datetime,
+    ) -> dict[int, list[Point]]:
+        del data_as_of
+        assert [candidate.binding.source.id for candidate in selected if candidate.binding] == [
+            1,
+            2,
+            3,
+        ]
+        return histories
+
+    async def page_points(
+        _session: object,
+        source_ids: set[int],
+        *,
+        data_as_of: datetime,
+        max_points: int = 420,
+    ) -> dict[int, list[Point]]:
+        del data_as_of
+        assert max_points == 420
+        loaded_page_sources.update(source_ids)
+        return {source_id: histories[source_id] for source_id in source_ids}
+
+    monkeypatch.setattr(data_browser, "_load_candidates", load_candidates)
+    monkeypatch.setattr(data_browser, "_license_map", license_map)
+    monkeypatch.setattr(data_browser, "_sort_points_by_source", sort_points)
+    monkeypatch.setattr(data_browser, "_points_by_source", page_points)
+    result = await data_browser.series_browser(
+        object(),  # type: ignore[arg-type]
+        filters=BrowserFilters(),
+        sort=sort,  # type: ignore[arg-type]
+        order="desc",
+        limit=2,
+        offset=0,
+        data_as_of=None,
+        published_from=None,
+        published_to=None,
+    )
+    assert [item.series.name_zh for item in result.items] == ["C", "A"]
+    assert loaded_page_sources == {1, 3}
+
+
+async def test_sort_window_query_compiles_daily_and_weekly_yoy_targets_only() -> None:
+    candidates = [
+        _candidate(source_id=1, name="Daily", frequency="daily"),
+        _candidate(source_id=2, name="Weekly", frequency="weekly"),
+    ]
+    compiled_statements: list[str] = []
+
+    class EmptyResult:
+        def mappings(self) -> list[object]:
+            return []
+
+    class FakeSession:
+        async def execute(self, statement: object) -> EmptyResult:
+            compiled_statements.append(
+                str(
+                    statement.compile(  # type: ignore[union-attr]
+                        dialect=postgresql.dialect(),
+                        compile_kwargs={"literal_binds": True},
+                    )
+                )
+            )
+            return EmptyResult()
+
+    result = await data_browser._sort_points_by_source(
+        FakeSession(),  # type: ignore[arg-type]
+        candidates,
+        data_as_of=datetime(2026, 8, 1, tzinfo=UTC),
+    )
+    assert result == {}
+    assert len(compiled_statements) == 1
+    statement = compiled_statements[0]
+    assert "INTERVAL '1 month'" not in statement
+    assert "INTERVAL '12 months'" in statement
+    assert "- 7" in statement
+    assert "- 14" in statement
+    assert "420" not in statement
 
 
 async def test_historical_non_series_ai_context_fails_closed() -> None:
