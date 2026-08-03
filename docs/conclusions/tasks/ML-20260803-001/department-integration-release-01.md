@@ -483,6 +483,10 @@ Integration assignment，没有覆盖当前“Engineering SUCCEEDED + Integratio
 - `py -3.12 -X utf8 scripts/validate_repository.py`：Python 3.12 默认环境缺少 `yaml`；仅对该只读进程设置 `PYTHONPATH=D:\开发环境\运行时\Python\Python311\Lib\site-packages` 后通过，输出 `Repository contract valid: 61 source series, 62 API paths`。
 - 候选 `git diff --check`：通过。
 - 范围检查：`12766ea0` 仅修改六个授权文件；必需 task-card mapping 不在六个 direct commits 中。
+- BLOCKED 报告提交 `c14ac6e7f68a394a21135e4df0b70181a662d332` 后在实际 main 原样运行
+  organization validator、direct tests、unittest 和 compile：因 fail-closed 未集成候选、两个脚本
+  在 main 不存在，四项均退出 `1`，不能声明 main `STATIC_CONSISTENT`。同一 main 上 repository
+  validator 使用上述只读 `PYTHONPATH` 后通过，`git diff --check` 通过，工作区干净。
 - 最终判断：`BLOCKED`。候选自审的两个轴虽然报告 0 P1/P2，但没有以最新 main 的真实多部门任务证据完成集成前兼容验证。
 
 ### 风险与恢复条件
