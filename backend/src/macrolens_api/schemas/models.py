@@ -309,6 +309,7 @@ class RevisionItem(BaseModel):
 class RevisionResponse(BaseModel):
     series_id: UUID
     items: list[RevisionItem]
+    data_as_of: datetime
 
 
 class CompareSeriesSpec(BaseModel):

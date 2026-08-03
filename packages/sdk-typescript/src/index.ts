@@ -16,7 +16,7 @@ export type ObservationQuery = {
   start?: string;
   end?: string;
   transform?: "level" | "difference" | "mom" | "qoq" | "yoy" | "annualized_3m" | "annualized_6m" | "rebased_100" | "zscore";
-  vintage?: "latest" | "first_release" | string;
+  data_as_of?: string;
   include_lineage?: boolean;
 };
 
@@ -276,10 +276,10 @@ export class MacroLensClient {
     return this.request<TaxonomyChildrenResponse>(withQuery(`/taxonomies/${encodeURIComponent(treeCode)}/children`, query));
   }
   seriesBrowser(query: SeriesBrowserQuery = {}) {
-    return this.request<SeriesBrowserResponse>(withQuery("/series/browser", query));
+    return this.request<SeriesBrowserResponse>(withQuery("/series/browser", { tree_code: "macro-default", ...query }));
   }
   exportSeriesBrowser(query: Omit<SeriesBrowserQuery, "limit" | "offset"> = {}) {
-    return this.requestBlob(withQuery("/series/browser/export", query));
+    return this.requestBlob(withQuery("/series/browser/export", { tree_code: "macro-default", ...query }));
   }
   seriesAnalytics(seriesId: string, query: SeriesAnalyticsQuery = {}) {
     return this.request<SeriesAnalyticsResponse>(withQuery(`/series/${seriesId}/analytics`, query));
@@ -290,7 +290,9 @@ export class MacroLensClient {
   aiCapabilities(seriesId: string) {
     return this.request<AICapabilityResponse>(withQuery("/ai/capabilities", { series_id: seriesId }));
   }
-  revisions<T = unknown>(seriesId: string) { return this.request<T>(`/series/${seriesId}/revisions`); }
+  revisions<T = unknown>(seriesId: string, query: Pick<ObservationQuery, "start" | "end" | "data_as_of"> = {}) {
+    return this.request<T>(withQuery(`/series/${seriesId}/revisions`, query));
+  }
   releaseEvents<T = unknown>(query = "") { return this.request<T>(`/release-events${query}`); }
   releaseEvent<T = unknown>(eventId: string) { return this.request<T>(`/release-events/${eventId}`); }
   fomcMeetings<T = unknown>(query = "") { return this.request<T>(`/fomc/meetings${query}`); }
@@ -299,7 +301,7 @@ export class MacroLensClient {
   compare<T = unknown>(payload: unknown) {
     return this.request<T>("/compare/query", { method: "POST", body: JSON.stringify(payload) });
   }
-  createAiRun<T = unknown>(payload: AIRunCreate, idempotencyKey?: string) {
+  createAiRun<T = unknown>(payload: AIRunCreate, idempotencyKey: string) {
     return this.request<T>("/ai/runs", { method: "POST", body: JSON.stringify(payload), idempotencyKey });
   }
   aiRun<T = unknown>(runId: string) { return this.request<T>(`/ai/runs/${runId}`); }

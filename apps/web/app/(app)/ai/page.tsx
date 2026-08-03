@@ -45,7 +45,7 @@ function AiContent() {
   const attachedCapabilityQuery = useQuery({ queryKey:["ai-capability","attached",user?.id,attachedSeriesId,attachedDataAsOf],queryFn:({signal})=>apiFetch<AICapabilitiesResponse>(`/ai/capabilities?series_id=${encodeURIComponent(attachedSeriesId)}${attachedDataAsOf?`&data_as_of=${encodeURIComponent(attachedDataAsOf)}`:""}`,{signal}),enabled:Boolean(attachedSeriesId),staleTime:5*60_000,retry:false });
 
   const createRun = useMutation({
-    mutationFn:()=>apiFetch<AIRun>("/ai/runs",{method:"POST",body:JSON.stringify({prompt,mode,data_as_of:attachedDataAsOf||null,contexts:contexts.map(({context_type,context_id})=>({context_type,context_id}))})}),
+    mutationFn:()=>apiFetch<AIRun>("/ai/runs",{method:"POST",headers:{"Idempotency-Key":crypto.randomUUID()},body:JSON.stringify({prompt,mode,data_as_of:attachedDataAsOf||null,contexts:contexts.map(({context_type,context_id})=>({context_type,context_id}))})}),
     onSuccess:(run)=>{setSelectedRunId(run.id);void queryClient.invalidateQueries({queryKey:["ai-runs"]});},
   });
   const cancelRun = useMutation({ mutationFn:(id:string)=>apiFetch(`/ai/runs/${id}`,{method:"DELETE"}),onSuccess:()=>void queryClient.invalidateQueries({queryKey:["ai-runs"]}) });

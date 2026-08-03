@@ -21,7 +21,7 @@ from ..models import (
     SavedView,
 )
 from .data_browser import _license_map, _load_candidates, _points_by_source, normalize_data_as_of
-from .licenses import get_license_for_provider
+from .licenses import get_strict_license_for_provider
 
 
 async def _document_chunks(
@@ -62,6 +62,7 @@ async def snapshot_context(
     workspace_id: UUID | None = None,
     user_id: UUID | None = None,
     data_as_of: datetime | None = None,
+    historical_cutoff: bool = False,
 ) -> dict[str, Any]:
     if context_type == "series":
         if workspace_id is None or user_id is None:
@@ -159,13 +160,32 @@ async def snapshot_context(
             "license": license_info.model_dump(mode="json"),
             "workspace_id": str(workspace_id),
         }
+    if historical_cutoff:
+        cutoff = normalize_data_as_of(data_as_of)
+        raise AppError(
+            409,
+            "历史上下文不可复现",
+            f"{context_type} 上下文没有可证明的历史版本边界，不能加入历史 AI 快照。",
+            "historical_context_unavailable",
+            {"context_type": context_type, "data_as_of": cutoff.isoformat()},
+        )
     if context_type == "document":
         document = await session.get(Document, context_id)
         if document is None:
-            raise AppError(404, "文档不存在", "AI 上下文中的文档不存在。", "context_document_not_found")
-        license_info = await get_license_for_provider(session, document.provider_id)
+            raise AppError(
+                404,
+                "文档不存在",
+                "AI 上下文中的文档不存在。",
+                "context_document_not_found",
+            )
+        license_info = await get_strict_license_for_provider(session, document.provider_id)
         if not license_info.ai_context_allowed:
-            raise AppError(403, "文档许可限制", "该文档来源不允许用于 AI 上下文。", "ai_license_forbidden")
+            raise AppError(
+                403,
+                "文档许可限制",
+                "该文档来源不允许用于 AI 上下文。",
+                "ai_license_forbidden",
+            )
         version = await session.scalar(
             select(DocumentVersion)
             .where(DocumentVersion.document_id == document.id)
@@ -279,6 +299,7 @@ async def persist_contexts(
     workspace_id: UUID | None = None,
     user_id: UUID | None = None,
     data_as_of: datetime | None = None,
+    historical_cutoff: bool = False,
 ) -> None:
     total_chars = 0
     for context_type, context_id in contexts:
@@ -290,6 +311,7 @@ async def persist_contexts(
             workspace_id=workspace_id,
             user_id=user_id,
             data_as_of=data_as_of,
+            historical_cutoff=historical_cutoff,
         )
         total_chars += len(json.dumps(snapshot, ensure_ascii=False, default=str))
         if total_chars > 180_000:

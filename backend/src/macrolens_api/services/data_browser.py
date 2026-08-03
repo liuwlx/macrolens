@@ -584,19 +584,40 @@ async def _points_by_source(
     return dict(grouped)
 
 
-def _published_matches(
-    item: SeriesBrowserItem,
-    published_from: date | None,
-    published_to: date | None,
-) -> bool:
-    if published_from is None and published_to is None:
-        return True
-    if item.current is None or item.current.published_at is None:
-        return False
-    published = item.current.published_at.date()
-    return (published_from is None or published >= published_from) and (
-        published_to is None or published <= published_to
+async def _latest_publications_by_source(
+    session: AsyncSession,
+    source_ids: set[int],
+    *,
+    data_as_of: datetime,
+) -> dict[int, datetime | None]:
+    if not source_ids:
+        return {}
+    ranked = (
+        select(
+            ObservationVintage.source_series_id.label("source_id"),
+            ObservationVintage.published_at,
+            func.row_number()
+            .over(
+                partition_by=ObservationVintage.source_series_id,
+                order_by=(
+                    ObservationVintage.period_start.desc(),
+                    ObservationVintage.vintage_at.desc(),
+                ),
+            )
+            .label("rank"),
+        )
+        .where(
+            ObservationVintage.source_series_id.in_(source_ids),
+            ObservationVintage.vintage_at <= data_as_of,
+        )
+        .subquery()
     )
+    rows = (
+        await session.execute(
+            select(ranked.c.source_id, ranked.c.published_at).where(ranked.c.rank == 1)
+        )
+    ).all()
+    return {int(source_id): published_at for source_id, published_at in rows}
 
 
 def _sort_items(
@@ -654,21 +675,62 @@ async def series_browser(
     candidates = await _load_candidates(session)
     facets = build_facets(candidates, filters)
     matched = [candidate for candidate in candidates if _matches(candidate, filters)]
-    matched.sort(key=lambda candidate: _search_rank(candidate, filters.q))
-    bindings = [candidate.binding for candidate in matched if candidate.binding is not None]
+    all_bindings = [
+        binding for candidate in matched if (binding := candidate.binding) is not None
+    ]
+    all_source_ids = {binding.source.id for binding in all_bindings}
+    publications: dict[int, datetime | None] = {}
+    if published_from is not None or published_to is not None:
+        publications = await _latest_publications_by_source(
+            session,
+            all_source_ids,
+            data_as_of=snapshot,
+        )
+        def publication_matches(candidate: BrowserCandidate) -> bool:
+            binding = candidate.binding
+            published = publications.get(binding.source.id) if binding is not None else None
+            if published is None:
+                return False
+            published_date = published.date()
+            return (published_from is None or published_date >= published_from) and (
+                published_to is None or published_date <= published_to
+            )
+
+        matched = [candidate for candidate in matched if publication_matches(candidate)]
+
+    reverse = order == "desc"
+    if sort == "name":
+        matched.sort(
+            key=lambda candidate: (
+                candidate.series.name_zh.casefold(),
+                candidate.series.canonical_code,
+                str(candidate.series.id),
+            ),
+            reverse=reverse,
+        )
+    else:
+        matched.sort(
+            key=lambda candidate: (*_search_rank(candidate, filters.q), str(candidate.series.id)),
+            reverse=reverse if sort == "taxonomy" else False,
+        )
+
+    total = len(matched)
+    page = matched[offset : offset + limit]
+    bindings = [binding for candidate in page if (binding := candidate.binding) is not None]
     license_by_source = await _license_map(session, bindings)
-    source_ids = {binding.source.id for binding in bindings}
-    points = await _points_by_source(session, source_ids, data_as_of=snapshot)
+    page_source_ids = {binding.source.id for binding in bindings}
+    points = await _points_by_source(session, page_source_ids, data_as_of=snapshot)
     items = [
         build_browser_item(
             candidate,
             points.get(candidate.binding.source.id, []) if candidate.binding else [],
             license_by_source.get(candidate.binding.source.id) if candidate.binding else None,
         )
-        for candidate in matched
+        for candidate in page
     ]
-    items = [item for item in items if _published_matches(item, published_from, published_to)]
-    if data_as_of is not None and source_ids and not any(item.current for item in items):
+    if sort in {"current", "change", "period_change", "yoy"}:
+        items = _sort_items(items, sort, order)
+    if data_as_of is not None and page_source_ids and not any(item.current for item in items):
         raise AppError(
             409,
             "快照不可用",
@@ -676,10 +738,8 @@ async def series_browser(
             "snapshot_unavailable",
             {"data_as_of": snapshot.isoformat()},
         )
-    ordered = _sort_items(items, sort, order)
-    total = len(ordered)
     return SeriesBrowserResponse(
-        items=ordered[offset : offset + limit],
+        items=items,
         facets=facets,
         pagination=BrowserPagination(total=total, limit=limit, offset=offset),
         data_as_of=snapshot,

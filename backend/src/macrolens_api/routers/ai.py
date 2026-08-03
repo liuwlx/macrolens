@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+import hashlib
+import json
 from datetime import UTC, datetime
-from uuid import UUID
+from typing import Annotated
+from uuid import UUID, uuid4
 
-from fastapi import APIRouter, Response
+from fastapi import APIRouter, Header, Response
 from sqlalchemy import select
 
 from ..config import get_settings
@@ -12,8 +15,9 @@ from ..errors import AppError
 from ..models import AICitation, AIRun, Project
 from ..schemas import AICapabilityResponse, AICitationPublic, AIRunCreate, AIRunPublic
 from ..services.ai_context import persist_contexts
+from ..services.ai_runtime import ai_runtime_configured
 from ..services.data_browser import ai_capability, normalize_data_as_of
-from ..services.jobs import enqueue_job
+from ..services.jobs import reserve_job
 
 router = APIRouter(prefix="/ai", tags=["AI"])
 settings = get_settings()
@@ -37,7 +41,7 @@ async def get_ai_capability(
     return await ai_capability(
         session,
         series_id=series_id,
-        configured=bool(settings.openai_api_key),
+        configured=ai_runtime_configured(settings),
     )
 
 
@@ -47,7 +51,18 @@ async def create_ai_run(
     session: SessionDep,
     user: CurrentUser,
     workspace: CurrentWorkspace,
+    idempotency_key: Annotated[
+        str,
+        Header(alias="Idempotency-Key", min_length=4, max_length=300),
+    ],
 ) -> AIRunPublic:
+    if not ai_runtime_configured(settings):
+        raise AppError(
+            503,
+            "AI 服务尚未配置",
+            "服务端没有可用的 AI API 密钥或模型配置。",
+            "ai_not_configured",
+        )
     request_started_at = datetime.now(UTC)
     cutoff = normalize_data_as_of(payload.data_as_of)
     if cutoff > request_started_at:
@@ -57,6 +72,50 @@ async def create_ai_run(
             "data_as_of 不能晚于请求开始时间。",
             "invalid_data_as_of",
         )
+    request_hash = hashlib.sha256(
+        json.dumps(
+            payload.model_dump(mode="json"),
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+        ).encode("utf-8")
+    ).hexdigest()
+    run_id = uuid4()
+    reservation_key = (
+        f"ai-run-request:{workspace.id}:{user.id}:"
+        f"{hashlib.sha256(idempotency_key.encode('utf-8')).hexdigest()}"
+    )
+    job, created = await reserve_job(
+        session,
+        job_type="run_ai_analysis",
+        payload={"ai_run_id": str(run_id), "request_hash": request_hash},
+        idempotency_key=reservation_key,
+        priority=20 if payload.mode == "deep_research" else 10,
+        max_attempts=3,
+    )
+    if not created:
+        if job.payload.get("request_hash") != request_hash:
+            raise AppError(
+                409,
+                "幂等键已被使用",
+                "同一 Idempotency-Key 不能用于不同的 AI 请求。",
+                "idempotency_key_reused",
+            )
+        existing_run_id = job.payload.get("ai_run_id")
+        existing = (
+            await session.get(AIRun, UUID(str(existing_run_id)))
+            if existing_run_id is not None
+            else None
+        )
+        if existing is None:
+            raise AppError(
+                409,
+                "幂等请求尚未完成",
+                "先前请求仍在提交中，请稍后使用同一幂等键重试。",
+                "idempotency_request_incomplete",
+            )
+        return AIRunPublic.model_validate(existing)
+
     if payload.project_id is not None:
         project = await session.scalar(
             select(Project.id).where(
@@ -66,9 +125,15 @@ async def create_ai_run(
             )
         )
         if project is None:
-            raise AppError(404, "研究项目不存在", "不能把AI分析保存到该项目。", "project_not_found")
+            raise AppError(
+                404,
+                "研究项目不存在",
+                "不能把AI分析保存到该项目。",
+                "project_not_found",
+            )
 
     run = AIRun(
+        id=run_id,
         workspace_id=workspace.id,
         user_id=user.id,
         project_id=payload.project_id,
@@ -93,15 +158,9 @@ async def create_ai_run(
         workspace_id=workspace.id,
         user_id=user.id,
         data_as_of=cutoff,
+        historical_cutoff=payload.data_as_of is not None,
     )
-    await enqueue_job(
-        session,
-        job_type="run_ai_analysis",
-        payload={"ai_run_id": str(run.id)},
-        idempotency_key=f"ai-run:{run.id}",
-        priority=20 if payload.mode == "deep_research" else 10,
-        max_attempts=3,
-    )
+    await session.commit()
     await session.refresh(run)
     return AIRunPublic.model_validate(run)
 

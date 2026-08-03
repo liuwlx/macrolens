@@ -5,6 +5,7 @@ from typing import AsyncIterator
 
 import sentry_sdk
 from fastapi import FastAPI
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import ORJSONResponse
 from prometheus_client import make_asgi_app
@@ -26,7 +27,7 @@ except ModuleNotFoundError:  # Optional for local schema tooling; installed in p
 
 from .config import get_settings
 from .db import dispose_engine
-from .errors import AppError, app_error_handler
+from .errors import AppError, app_error_handler, request_validation_error_handler
 from .logging import configure_logging, get_logger
 from .middleware import AuditMiddleware, CsrfOriginMiddleware, LocalRateLimitMiddleware, RequestContextMiddleware
 from .routers import admin, ai, auth, compare, documents, fomc, health, releases, reports, series, sharing, taxonomies, workspace
@@ -63,6 +64,10 @@ app = FastAPI(
     openapi_url="/openapi.json",
 )
 app.add_exception_handler(AppError, app_error_handler)  # type: ignore[arg-type]
+app.add_exception_handler(
+    RequestValidationError,
+    request_validation_error_handler,
+)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[settings.web_origin],

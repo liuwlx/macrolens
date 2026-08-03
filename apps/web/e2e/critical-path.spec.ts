@@ -31,16 +31,17 @@ async function login(page: Page) {
 async function api<T extends Json>(
   page: Page,
   path: string,
-  init: { method?: string; body?: unknown } = {},
+  init: { method?: string; body?: unknown; headers?: Record<string, string> } = {},
 ): Promise<T> {
   return page.evaluate(
     async ({ base, path, init }) => {
       const response = await fetch(`${base}${path}`, {
         method: init.method ?? "GET",
         credentials: "include",
-        headers: init.body === undefined ? { Accept: "application/json" } : {
+        headers: init.body === undefined ? { Accept: "application/json", ...init.headers } : {
           Accept: "application/json",
           "Content-Type": "application/json",
+          ...init.headers,
         },
         body: init.body === undefined ? undefined : JSON.stringify(init.body),
       });
@@ -225,6 +226,7 @@ test("AI worker produces citations and report lifecycle completes", async ({ pag
   const document = documents.items[0];
   const run = await api<any>(page, "/ai/runs", {
     method: "POST",
+    headers: { "Idempotency-Key": crypto.randomUUID() },
     body: {
       prompt: "请基于官方文档分析核心PCE变化及政策风险，并给出可核验引用。",
       mode: "quick",

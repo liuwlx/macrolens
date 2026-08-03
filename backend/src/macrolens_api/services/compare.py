@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from uuid import UUID
 
@@ -19,8 +19,14 @@ from .transforms import correlation
 
 async def compare_series(session: AsyncSession, request: CompareRequest) -> CompareResponse:
     results: list[CompareSeriesResult] = []
-    aligned: dict[UUID, dict[object, Decimal | None]] = {}
+    aligned: dict[UUID, dict[date, Decimal | None]] = {}
     data_as_of = datetime.now(UTC)
+    if request.vintage not in {"latest", "first_release"}:
+        data_as_of = datetime.fromisoformat(request.vintage.replace("Z", "+00:00"))
+        if data_as_of.tzinfo is None:
+            data_as_of = data_as_of.replace(tzinfo=UTC)
+        else:
+            data_as_of = data_as_of.astimezone(UTC)
 
     for spec in request.series:
         response = await get_observations(
@@ -29,7 +35,8 @@ async def compare_series(session: AsyncSession, request: CompareRequest) -> Comp
             start=request.start,
             end=request.end,
             transform=spec.transform,
-            vintage=request.vintage,
+            data_as_of=data_as_of,
+            first_release=request.vintage == "first_release",
         )
         data = response.data
         if spec.lag_periods:
@@ -51,7 +58,6 @@ async def compare_series(session: AsyncSession, request: CompareRequest) -> Comp
             )
         )
         aligned[spec.series_id] = {point.period_start: point.value for point in data}
-        data_as_of = max(data_as_of, response.meta.data_as_of)
 
     correlations: list[CorrelationCell] = []
     if request.include_correlation:

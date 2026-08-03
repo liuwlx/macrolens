@@ -1,13 +1,12 @@
 from __future__ import annotations
 
-from datetime import UTC, date, datetime
+from datetime import date, datetime
 from decimal import Decimal
 from typing import Any
 from uuid import UUID
 
-from sqlalchemy import Select, and_, desc, func, or_, select
+from sqlalchemy import Select, and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import joinedload
 
 from ..errors import AppError
 from ..models import (
@@ -245,20 +244,6 @@ async def get_series_detail(session: AsyncSession, series_id: UUID) -> SeriesDet
     )
 
 
-async def _query_latest_points(
-    session: AsyncSession,
-    source_id: int,
-    start: date | None,
-    end: date | None,
-) -> list[ObservationLatest]:
-    stmt = select(ObservationLatest).where(ObservationLatest.source_series_id == source_id)
-    if start:
-        stmt = stmt.where(ObservationLatest.period_start >= start)
-    if end:
-        stmt = stmt.where(ObservationLatest.period_start <= end)
-    return list((await session.scalars(stmt.order_by(ObservationLatest.period_start))).all())
-
-
 async def _query_vintage_points(
     session: AsyncSession,
     source_id: int,
@@ -297,7 +282,8 @@ async def get_observations(
     start: date | None,
     end: date | None,
     transform: str,
-    vintage: str,
+    data_as_of: datetime,
+    first_release: bool = False,
 ) -> ObservationResponse:
     series = await session.get(Series, series_id)
     if series is None:
@@ -307,10 +293,13 @@ async def get_observations(
     if not license_info.display_allowed:
         raise AppError(403, "数据许可限制", "该数据源当前不允许在产品中展示。", "license_display_denied")
 
-    if vintage == "latest":
-        rows: list[Any] = await _query_latest_points(session, source.id, start, end)
-    else:
-        rows = await _query_vintage_points(session, source.id, start, end, vintage)
+    rows: list[Any] = await _query_vintage_points(
+        session,
+        source.id,
+        start,
+        end,
+        "first_release" if first_release else data_as_of.isoformat(),
+    )
 
     points = [
         Point(
@@ -325,8 +314,26 @@ async def get_observations(
         for row in rows
     ]
     transformed = transform_points(points, transform, series.frequency)
-    summary = await build_series_summary(session, series, source, provider, license_info)
-    data_as_of = max((point.vintage_at for point in transformed), default=datetime.now(UTC))
+    latest_point = next((point for point in reversed(points) if point.value is not None), None)
+    summary = SeriesSummary(
+        id=series.id,
+        canonical_code=series.canonical_code,
+        name_zh=series.name_zh,
+        name_en=series.name_en,
+        theme=series.theme,
+        frequency=series.frequency,
+        unit_code=series.unit_code,
+        unit_label_zh=series.unit_label_zh,
+        default_transform=series.default_transform,
+        latest_period=latest_point.period_start if latest_point else None,
+        latest_value=latest_point.value if latest_point else None,
+        latest_vintage_at=(
+            latest_point.vintage_at
+            if latest_point and isinstance(latest_point.vintage_at, datetime)
+            else None
+        ),
+        provider=_provider_info(provider),
+    )
     return ObservationResponse(
         series=summary,
         data=[
@@ -343,7 +350,7 @@ async def get_observations(
         ],
         meta=ObservationMeta(
             data_as_of=data_as_of,  # type: ignore[arg-type]
-            vintage=vintage,
+            vintage="first_release" if first_release else data_as_of.isoformat(),
             transform=transform,
             frequency=series.frequency,
             unit=_transformed_unit(transform, series.unit_label_zh),
@@ -365,12 +372,16 @@ async def get_revisions(
     series_id: UUID,
     start: date | None,
     end: date | None,
+    data_as_of: datetime,
 ) -> RevisionResponse:
     source, dataset, provider = await get_primary_source(session, series_id)
     license_info = await get_license(session, provider, dataset)
     if not license_info.display_allowed:
         raise AppError(403, "数据许可限制", "该数据源当前不允许在产品中展示修订历史。", "license_display_denied")
-    stmt = select(ObservationVintage).where(ObservationVintage.source_series_id == source.id)
+    stmt = select(ObservationVintage).where(
+        ObservationVintage.source_series_id == source.id,
+        ObservationVintage.vintage_at <= data_as_of,
+    )
     if start:
         stmt = stmt.where(ObservationVintage.period_start >= start)
     if end:
@@ -403,4 +414,4 @@ async def get_revisions(
                 versions=len(versions),
             )
         )
-    return RevisionResponse(series_id=series_id, items=items)
+    return RevisionResponse(series_id=series_id, items=items, data_as_of=data_as_of)

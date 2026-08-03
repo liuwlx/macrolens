@@ -18,6 +18,7 @@ from ..schemas import (
 from ..services.data_browser import (
     BrowserFilters,
     browser_csv,
+    normalize_data_as_of,
     series_analytics,
     series_browser,
     series_csv,
@@ -66,7 +67,7 @@ async def browse_series(
     _workspace: CurrentWorkspace,
     q: str | None = Query(default=None, max_length=200),
     node_id: UUID | None = None,
-    tree_code: str = Query(default="macro", max_length=80),
+    tree_code: str = Query(default="macro-default", max_length=80),
     provider: str | None = None,
     theme: str | None = None,
     frequency: str | None = None,
@@ -115,7 +116,7 @@ async def export_series_browser(
     _workspace: CurrentWorkspace,
     q: str | None = Query(default=None, max_length=200),
     node_id: UUID | None = None,
-    tree_code: str = Query(default="macro", max_length=80),
+    tree_code: str = Query(default="macro-default", max_length=80),
     provider: str | None = None,
     theme: str | None = None,
     frequency: str | None = None,
@@ -258,22 +259,25 @@ async def series_detail(series_id: UUID, session: SessionDep) -> SeriesDetail:
 async def series_observations(
     series_id: UUID,
     session: SessionDep,
+    _user: CurrentUser,
+    _workspace: CurrentWorkspace,
     start: date | None = None,
     end: date | None = None,
     transform: str = Query(
         default="level",
         pattern="^(level|difference|mom|qoq|yoy|annualized_3m|annualized_6m|rebased_100|zscore)$",
     ),
-    vintage: str = "latest",
+    data_as_of: datetime | None = None,
 ) -> ObservationResponse:
     _validate_date_range(start, end)
+    snapshot = normalize_data_as_of(data_as_of)
     return await get_observations(
         session,
         series_id=series_id,
         start=start,
         end=end,
         transform=transform,
-        vintage=vintage,
+        data_as_of=snapshot,
     )
 
 
@@ -281,8 +285,17 @@ async def series_observations(
 async def series_revisions(
     series_id: UUID,
     session: SessionDep,
+    _user: CurrentUser,
+    _workspace: CurrentWorkspace,
     start: date | None = None,
     end: date | None = None,
+    data_as_of: datetime | None = None,
 ) -> RevisionResponse:
     _validate_date_range(start, end)
-    return await get_revisions(session, series_id=series_id, start=start, end=end)
+    return await get_revisions(
+        session,
+        series_id=series_id,
+        start=start,
+        end=end,
+        data_as_of=normalize_data_as_of(data_as_of),
+    )

@@ -25,6 +25,28 @@ async def enqueue_job(
     The insert is atomic under concurrent API/scheduler instances. The prior select-then-insert
     implementation could raise a unique-key error when two callers raced.
     """
+    job, _created = await reserve_job(
+        session,
+        job_type=job_type,
+        payload=payload,
+        idempotency_key=idempotency_key,
+        priority=priority,
+        max_attempts=max_attempts,
+    )
+    await session.commit()
+    return job
+
+
+async def reserve_job(
+    session: AsyncSession,
+    *,
+    job_type: str,
+    payload: dict[str, Any],
+    idempotency_key: str,
+    priority: int = 0,
+    max_attempts: int = 5,
+) -> tuple[Job, bool]:
+    """Atomically reserve an idempotency key without committing the caller's transaction."""
     job_id = uuid4()
     statement = (
         insert(Job)
@@ -41,7 +63,6 @@ async def enqueue_job(
         .returning(Job.id)
     )
     created_id = await session.scalar(statement)
-    await session.commit()
     resolved_id = created_id or await session.scalar(
         select(Job.id).where(Job.idempotency_key == idempotency_key)
     )
@@ -50,4 +71,4 @@ async def enqueue_job(
     job = await session.get(Job, resolved_id)
     if job is None:
         raise RuntimeError("Durable job disappeared after insertion")
-    return job
+    return job, created_id is not None
