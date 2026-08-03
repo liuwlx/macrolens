@@ -10,17 +10,17 @@
 - 线程 ID：`019fc533-b3a2-7be2-96ce-f4990bda6d6e`
 - 来源主线程：`ML | 项目统筹部 | 主线程 | 01`
 - 来源线程 ID：`019fc3a3-d0a0-7f13-b660-2010e36c7138`
-- 当前接受的任务卡 revision：`459efbf`
-- 当前接受范围：`复审 3c343b44 的成功生命周期修复与 9 正例加 51 负例；通过后依次集成五个研发提交，更新 contract v2 集成报告并返回 integration commit 与 report commit。`
-- 当前回执证据：`docs/conclusions/tasks/ML-20260803-001/receipts/department-integration-release-01-remediation-05.md`
-- 实际范围：复审 `3c343b44` 的成功生命周期、正式状态迁移和最终 summary，在候选 worktree 验证 9 正例、51 负例及指定门禁；发现三类硬缺陷后停止，未扩展产品范围。
-- 审查基线：`42d9b484b0d01bf6324936f5c34f77549f8221ae`
-- 研发候选提交：`d1e5b40804805e67681893af63cffd83fd0000e5`、`c9353fd1ed639bd84f0668dd57c50283435b65f7`、`6a0b5b6d71b95140eaf1da524ba59befb63c20cd`、`c1bcdac55a7b0238fbea0d3cafe391c0bf22bf64`、`3c343b44a063f780afc16adccb96eb92758d3076`
+- 当前接受的任务卡 revision：`bc77335`
+- 当前接受范围：`复审 12766ea0 与研发双轴自审，验证真实 cherry-pick 拓扑、正式 REVIEW/summary、非集成成功映射和 11 正例加 65 负例；通过后依次集成六个研发提交并更新报告。`
+- 当前回执证据：`docs/conclusions/tasks/ML-20260803-001/receipts/department-integration-release-01-remediation-06.md`
+- 实际范围：复审 `12766ea0` 与研发双轴自审，验证真实 cherry-pick patch-id、receipt→source→integrated、main 祖先、正式 REVIEW/SUCCEEDED、RUNNING fallback 和 final summary；发现两个 Standards P1 与一个 Spec P1 后停止。
+- 审查基线：`a517ba7add2f51ab9f347984b9520afa5a11a343`
+- 研发候选提交：`d1e5b40804805e67681893af63cffd83fd0000e5`、`c9353fd1ed639bd84f0668dd57c50283435b65f7`、`6a0b5b6d71b95140eaf1da524ba59befb63c20cd`、`c1bcdac55a7b0238fbea0d3cafe391c0bf22bf64`、`3c343b44a063f780afc16adccb96eb92758d3076`、`12766ea0f6bb1ae967b0c98525025bef4dace60a`
 - 明确排除的同步 merge：`0e353ac26547d9b25affc0eb13c86e3621a4357b`、`4ba5f82282e0617015f00880ea4beb49dad8b0f4`、`431023d0fa55455e3ac2ddfe2f462f7c13deafbb`
-- 集成方式：五个候选提交均未 cherry-pick；成功生命周期门禁 fail closed
+- 集成方式：六个候选提交均未 cherry-pick；最新 main 兼容门禁 fail closed
 - 集成提交：`N/A`
 - Git 冲突：未进入 cherry-pick，因此无 Git 冲突
-- 合同冲突：存在，详见“集成复审轮次 05”
+- 合同冲突：存在，详见“集成复审轮次 06”
 - 最终席位状态：`BLOCKED`
 - 部门结果：`BLOCKED`
 
@@ -411,6 +411,90 @@ direct patch 只涉及六个授权文件，无范围扩张发现。
   fallback 严格限制到规则声明的 `RUNNING/FAILED/BLOCKED`；增加真实 Git 仓库的 REVIEW→最终
   summary 正例，以及每个非法状态、cherry-pick 拓扑和 SUCCEEDED fallback 的负例。
 
+## 集成复审轮次 06（remediation-06）
+
+### v2 报告身份与执行元数据
+
+- 任务 ID：`ML-20260803-001`
+- 角色：`SUPPORTING`
+- 部门代码：`integration_release`
+- 线程标题：`ML｜集成发布部｜席位｜01`
+- 线程 ID：`019fc533-b3a2-7be2-96ce-f4990bda6d6e`
+- 来源主线程：`ML | 项目统筹部 | 主线程 | 01`
+- 来源线程 ID：`019fc3a3-d0a0-7f13-b660-2010e36c7138`
+- 当前接受的任务卡 revision：`bc77335`
+- 当前接受范围：`复审 12766ea0 与研发双轴自审，验证真实 cherry-pick 拓扑、正式 REVIEW/summary、非集成成功映射和 11 正例加 65 负例；通过后依次集成六个研发提交并更新报告。`
+- 当前回执证据：`docs/conclusions/tasks/ML-20260803-001/receipts/department-integration-release-01-remediation-06.md`
+- 报告路径：`docs/conclusions/tasks/ML-20260803-001/department-integration-release-01.md`
+- 复审开始 main：`a517ba7add2f51ab9f347984b9520afa5a11a343`
+- ACTIVE 回执 commit：`5d2a6cec16bf77953ae1c98319c75bd9e4cc6f84`
+- 审查候选：`d1e5b408`、`c9353fd1`、`6a0b5b6d`、`c1bcdac5`、`3c343b44`、`12766ea0`
+- 明确排除：全部同步 merge，包括 `0e353ac`、`4ba5f82`、`431023d`、`6cf81f8`、`d4217dc`
+- 实际范围：固定复审 `12766ea0^..12766ea0` 的六个授权文件，并以候选 validator 对最新 main 任务证据执行只读兼容预检。
+- 六个 cherry-pick 新 SHA：全部 `N/A`（存在 P1，未进入集成）
+- Integration commit：`N/A`
+- Integration report commit：本文件不能自引用；本轮 BLOCKED 报告的准确 SHA 记录在交付回复
+- Git 冲突：未开始 cherry-pick，因此无 Git 冲突
+- 最终席位状态：`BLOCKED`
+- 部门结果：`BLOCKED`
+
+### Standards 轴
+
+Standards Agent 报告 2 个 P1，Fowler 判断项 0：
+
+1. **最新 main 与新门禁确定性不兼容。** `main@a517ba7` 的 Engineering 结果为 `SUCCEEDED`，
+   但 task-card 没有 `Assignment execution mapping`。候选禁止成功部门使用 report fallback，要求
+   每份 ACTIVE receipt 有显式 mapping；六个 direct commit 均不修改 task-card。候选 validator
+   对最新 main 只读预检时，Engineering remediation-02～05 四份 ACTIVE receipt 全部报
+   `ACTIVE receipt has no assignment execution commit mapping`。
+2. **“只有 integrated SHA 可成为 summary 祖先”未执行。** 文档和 TOML 明确 source worktree
+   commit 不应成为 final summary 祖先，但 validator 只正向要求 integrated/report commits 是祖先，
+   没有反向拒绝 source candidate 已通过误 merge 进入 main。真实 cherry-pick 正例只由测试代码
+   自行断言 source 非祖先，没有让 validator 执行该性质。
+
+### Spec 轴
+
+Spec Agent 报告 1 个 P1：派单要求报告提交后、task/result 仍为 `RUNNING` 且不修改 task-card 时
+必须 `STATIC_CONSISTENT`；但候选只从 task-card mapping 表读取成功非集成部门映射，最新 main
+不存在该表。候选 11 正例 + 65 负例虽然全部通过，但完整 Git 正例删除真实任务目录并仅构造单一
+Integration assignment，没有覆盖当前“Engineering SUCCEEDED + Integration RUNNING”的真实拓扑。
+
+### 最新 main 兼容预检
+
+直接加载候选 `12766ea0` validator 与候选 TOML department 定义，对
+`main@a517ba7` 的真实任务目录执行 `verify_git=True` 只读预检，得到 10 个错误：
+
+- 4 个持久错误：Engineering remediation-02、03、04、05 ACTIVE receipts 均缺 assignment
+  execution mapping。六个 direct commits 和本部门报告都不能消除这些错误。
+- 1 个候选尚未进入 main 的瞬时错误：Engineering terminal report 缺失，cherry-pick 可消除。
+- 5 个本轮报告尚未更新产生的瞬时错误：remediation-06 receipt 晚于旧报告，以及旧报告 revision、
+  scope、receipt path 不匹配；本报告提交可消除。
+
+由于仍有 4 个不可由授权范围消除的 P1 级持久错误，不启动 cherry-pick。
+
+### 候选检查与最终判断
+
+- 候选 worktree：`codex/ml-20260803-001-engineering-04@12766ea0f6bb1ae967b0c98525025bef4dace60a`，检查前后干净。
+- Python：`3.12.9`。
+- `py -3.12 -X utf8 scripts/validate_organization.py`：候选分支通过，输出 `STATIC_CONSISTENT`；该分支 task-card 使用 Engineering=`RUNNING`、Integration=`BLOCKED`，不是最新 main 状态。
+- `py -3.12 -X utf8 scripts/test_validate_organization.py`：通过，`11` 正例、`65` 负例、共 `76` 项。
+- `py -3.12 -X utf8 -m unittest scripts.test_validate_organization`：通过，`Ran 76 tests`。
+- `py -3.12 -X utf8 -m py_compile scripts/validate_organization.py scripts/test_validate_organization.py`：通过。
+- `py -3.12 -X utf8 scripts/validate_repository.py`：Python 3.12 默认环境缺少 `yaml`；仅对该只读进程设置 `PYTHONPATH=D:\开发环境\运行时\Python\Python311\Lib\site-packages` 后通过，输出 `Repository contract valid: 61 source series, 62 API paths`。
+- 候选 `git diff --check`：通过。
+- 范围检查：`12766ea0` 仅修改六个授权文件；必需 task-card mapping 不在六个 direct commits 中。
+- 最终判断：`BLOCKED`。候选自审的两个轴虽然报告 0 P1/P2，但没有以最新 main 的真实多部门任务证据完成集成前兼容验证。
+
+### 风险与恢复条件
+
+- 风险：若现在 cherry-pick，报告提交后仍会因四份 Engineering ACTIVE receipt 缺 mapping 而无法
+  达到 `STATIC_CONSISTENT`；若 source candidate 通过误 merge 成为 summary 祖先，validator 也
+  不会执行文档声明的反向禁止规则。
+- 恢复条件：来源主线程先在正式新 revision 中为所有已 `SUCCEEDED` 非集成部门保存完整、真实且
+  可验证的 receipt→source→integrated mapping，或由合同定义不需要追溯改造的明确迁移方案；候选
+  必须在最新 main 多部门任务目录上跑通 `validate(verify_git=True)`，并增加 source candidate
+  已成为 main/summary 祖先时必失败的 validator 负例。重新派发前不得靠集成部门改 task-card。
+
 ## 1. 本次遇到的问题以及场景
 
 本席位负责把研发治理合同提交集成到 `main`，同时守住变更范围、合同同步和发布门禁。候选提交
@@ -433,6 +517,10 @@ fallback 通过，一旦正常收口为 `SUCCEEDED` 即失败，因此仍不能�
 remediation-05 引入双 SHA 成功映射并扩充到 9 正例 + 51 负例，但状态检查只排除 `RUNNING` 而未
 强制 `REVIEW`；真实 cherry-pick 后的原候选提交也不满足 final summary 的祖先断言，且 report
 fallback 对成功部门过宽。第五轮因此继续 fail closed。
+
+remediation-06 引入 source→integrated patch-id 映射并扩充到 11 正例 + 65 负例，但候选自测所用
+task-card 状态与最新 main 不同。最新 main 的成功研发席位没有新合同要求的 mapping，六个 direct
+commits 又不修改 task-card；因此集成后 RUNNING 过渡态仍会确定性失败。
 
 ## 2. 分析这个问题的过程
 
@@ -458,6 +546,10 @@ merge 分开。除再次运行两轴审查和候选门禁外，还直接加载�
 第五轮将 `3c343b44^..3c343b44` 固定为 direct patch，并同时执行函数级状态矩阵与真实 Git 祖先
 检查。状态矩阵证明除 `RUNNING` 外的非法状态没有被拒绝；祖先检查证明五个原候选 SHA 均不是
 main 祖先，从而暴露 verify_git=False 正例没有证明最终 summary 可收口。
+
+第六轮除固定 `12766ea0^..12766ea0` direct patch 和运行候选门禁外，还直接加载候选 validator，
+以 `verify_git=True` 校验最新 main 的真实任务目录。该步骤把候选自洽与可集成性分离，定位出
+四个不会由 cherry-pick 或报告提交消失的 execution mapping 错误。
 
 ## 3. 解决这个问题的工作流程
 
@@ -485,6 +577,10 @@ cherry-pick，只更新本报告并给出最小恢复条件。
 缺陷使正式 REVIEW、SUCCEEDED 和 summary 链路不能稳定闭合，因此不执行五笔 cherry-pick，只
 更新本报告并交还最小恢复条件。
 
+第六轮先验证 76 项候选测试、研发自审结论和六文件范围，再执行独立双轴复审与最新 main 兼容
+预检。发现持久 P1 后不执行六笔 cherry-pick，只更新本报告，并把 task-card mapping 修复交还
+来源主线程调度。
+
 ## 4. 使用的 Agents、skills、tools 以及阅读文档
 
 ### Agents
@@ -500,6 +596,8 @@ cherry-pick，只更新本报告并给出最小恢复条件。
 - `spec_review_04` 子 Agent：第四轮固定 direct patch 复核第三轮恢复条件、测试计数与范围，报告 zero findings。
 - `standards_review_05` 子 Agent：第五轮复核正式状态、真实 cherry-pick/summary 祖先和 report fallback。
 - `spec_review_05` 子 Agent：第五轮按任务卡核验双 SHA 后必须 REVIEW 的状态迁移规则。
+- `standards_review_06` 子 Agent：第六轮复核最新 main 兼容性、source/integrated 祖先合同和代码规范。
+- `spec_review_06` 子 Agent：第六轮核验派单要求的 RUNNING 过渡态及真实多部门任务拓扑。
 
 ### Skills
 
@@ -532,6 +630,9 @@ cherry-pick，只更新本报告并给出最小恢复条件。
 - 候选提交 `c1bcdac55a7b0238fbea0d3cafe391c0bf22bf64` 中第三轮整改后的全部 6 个文件
 - `docs/conclusions/tasks/ML-20260803-001/receipts/department-integration-release-01-remediation-05.md`
 - 候选提交 `3c343b44a063f780afc16adccb96eb92758d3076` 中成功生命周期整改后的全部 6 个文件
+- `docs/conclusions/tasks/ML-20260803-001/receipts/department-integration-release-01-remediation-06.md`
+- 候选提交 `12766ea0f6bb1ae967b0c98525025bef4dace60a` 中集成证据生命周期整改后的全部 6 个文件
+- 研发报告中的 remediation-05 双轴自审、真实 Git 测试与交接声明
 
 ## 5. 本次执行值得沉淀的经验或者模式
 
@@ -554,6 +655,10 @@ cherry-pick，只更新本报告并给出最小恢复条件。
     每个非法状态建立参数化负例。
 14. cherry-pick 会改变提交身份。凡 summary 以 Git 祖先关系证明“已集成”，必须验证 main 新 SHA，
     或显式保存原候选到新 SHA 的映射，不能对原候选 SHA 直接做祖先断言。
+15. 合成仓库正例不能替代最新 main 兼容预检；治理合同改变既有证据要求时，必须在真实多部门任务
+    目录上运行 `verify_git=True`，确认迁移所需证据已经存在或有明确兼容规则。
+16. 同步 merge 中的任务状态不能成为 direct commit 自测的隐含前提；集成审查必须以目标 main 的
+    task-card 和 receipts 为准，排除 merge 后重新验证所有硬门禁。
 
 ## 6. 问题解决后反推的一条更好初始提示词
 
