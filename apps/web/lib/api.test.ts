@@ -32,6 +32,6 @@ describe("apiFetch", () => {
         }),
       ),
     );
-    await expect(apiFetch("/missing")).rejects.toEqual(expect.objectContaining<ApiError>({ status: 404, code: "missing" }));
+    await expect(apiFetch("/missing")).rejects.toMatchObject({ status: 404, code: "missing" } satisfies Partial<ApiError>);
   });
 });

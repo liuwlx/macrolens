@@ -1,9 +1,11 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+/* eslint-disable react-hooks/set-state-in-effect, react-hooks/exhaustive-deps -- existing saved-view restoration remains effect-driven */
+
+import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "next/navigation";
 import { Download, LineChart, Plus, Save, Search, Trash2 } from "lucide-react";
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { SetStateAction, Suspense, useEffect, useState } from "react";
 
 import { TimeSeriesChart } from "@/components/chart";
 import { PageHeader } from "@/components/page-header";
@@ -18,10 +20,15 @@ function CompareContent(){
   const queryClient=useQueryClient();
   const searchParams=useSearchParams();
   const [query,setQuery]=useState("");
-  const [selected,setSelected]=useState<Selected[]>([]);
+  const [selectedOverride,setSelectedOverride]=useState<Selected[]|null>(null);
   const [start,setStart]=useState("2019-01-01");
   const [end,setEnd]=useState("");
   const seriesQuery=useQuery({queryKey:["series","compare",query],queryFn:()=>apiFetch<{items:SeriesSummary[]}>(`/series?q=${encodeURIComponent(query)}&limit=100`)});
+  const preselectedIds=searchParams.getAll("series").slice(0,8);
+  const preselectedQueries=useQueries({queries:preselectedIds.map((id)=>({queryKey:["series-detail","compare-preselected",id],queryFn:()=>apiFetch<SeriesSummary>(`/series/${id}`),staleTime:5*60_000,retry:false}))});
+  const preselected=preselectedQueries.flatMap((result)=>result.data?[{series:result.data,transform:result.data.default_transform||"level",axis:"left" as const,lag_periods:0}]:[]);
+  const selected=selectedOverride??preselected;
+  function setSelected(value:SetStateAction<Selected[]>){setSelectedOverride((current)=>typeof value==="function"?value(current??preselected):value);}
   const viewsQuery=useQuery({queryKey:["saved-views","compare"],queryFn:()=>apiFetch<SavedView[]>("/me/saved-views?view_type=compare")});
   const compare=useMutation({mutationFn:()=>apiFetch<CompareResponse>("/compare/query",{method:"POST",body:JSON.stringify({series:selected.map((item)=>({series_id:item.series.id,transform:item.transform,axis:item.axis,lag_periods:item.lag_periods})),start:start||null,end:end||null,vintage:"latest",include_correlation:true})})});
   const save=useMutation({mutationFn:()=>{
@@ -32,7 +39,7 @@ function CompareContent(){
   },onSuccess:async()=>{await queryClient.invalidateQueries({queryKey:["saved-views","compare"]});}});
   const removeView=useMutation({mutationFn:(id:string)=>apiFetch(`/me/saved-views/${id}`,{method:"DELETE"}),onSuccess:async()=>{await queryClient.invalidateQueries({queryKey:["saved-views","compare"]});}});
 
-  const selectedIds=useMemo(()=>new Set(selected.map((item)=>item.series.id)),[selected]);
+  const selectedIds=new Set(selected.map((item)=>item.series.id));
   function add(item:SeriesSummary){if(selected.length>=8||selectedIds.has(item.id))return;setSelected((prev)=>[...prev,{series:item,transform:item.default_transform||"level",axis:prev.length>2?"right":"left",lag_periods:0}]);}
   function update(id:string,patch:Partial<Selected>){setSelected((prev)=>prev.map((item)=>item.series.id===id?{...item,...patch}:item));}
   function restoreView(view:SavedView){

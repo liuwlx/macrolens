@@ -8,7 +8,9 @@ RUN npm install --no-audit --no-fund
 FROM node:22-alpine AS builder
 WORKDIR /app
 ARG NEXT_PUBLIC_API_URL
+ARG NEXT_PUBLIC_DATA_BROWSER_V2=false
 ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+ENV NEXT_PUBLIC_DATA_BROWSER_V2=${NEXT_PUBLIC_DATA_BROWSER_V2}
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN npm --workspace packages/sdk-typescript run build \

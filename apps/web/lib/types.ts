@@ -348,3 +348,182 @@ export type Report = {
   created_at: string;
   updated_at: string;
 };
+
+export type ProblemDetails = {
+  type?: string;
+  title?: string;
+  status: number;
+  detail?: string;
+  instance?: string;
+  code?: string;
+  errors?: Record<string, string[]>;
+};
+
+export type TaxonomyBrowserNode = {
+  id: string;
+  code: string;
+  name_zh: string;
+  name_en?: string | null;
+  node_type: string;
+  icon_key?: string | null;
+  has_children: boolean;
+  direct_series_count: number;
+  descendant_series_count: number;
+};
+
+export type TaxonomyBrowserSeries = Pick<
+  SeriesSummary,
+  "id" | "canonical_code" | "name_zh" | "name_en" | "frequency" | "unit_code" | "unit_label_zh"
+>;
+
+export type TaxonomyChildrenResponse = {
+  tree_code: string;
+  parent_id: string | null;
+  nodes: TaxonomyBrowserNode[];
+  series: TaxonomyBrowserSeries[];
+};
+
+export type BrowserMetricStatus = "available" | "unavailable" | "restricted";
+
+export type BrowserMetricValue = {
+  value: number | string | null;
+  unit?: string | null;
+  status: BrowserMetricStatus;
+  reason_code?: string | null;
+  reason?: string | null;
+  basis?: "daily" | "weekly" | "mom" | "qoq" | "yoy" | string | null;
+};
+
+export type BrowserObservation = {
+  period_start: string;
+  period_end?: string | null;
+  value: number | string | null;
+  published_at?: string | null;
+  vintage_at?: string | null;
+};
+
+export type SeriesBrowserItem = {
+  series: SeriesSummary & {
+    decimal_places?: number;
+    seasonal_adjustment?: string;
+    description?: string | null;
+  };
+  current: BrowserObservation | null;
+  previous: BrowserObservation | null;
+  change: BrowserMetricValue;
+  period_change: BrowserMetricValue;
+  yoy: BrowserMetricValue;
+  license?: LicenseInfo | null;
+  display_denied: boolean;
+  source_status?: string | null;
+  unavailable_reason_code?: string | null;
+  taxonomy_order?: number | null;
+};
+
+export type BrowserFacetItem = {
+  value: string;
+  label: string;
+  count: number;
+};
+
+export type SeriesBrowserFacets = {
+  provider: BrowserFacetItem[];
+  theme: BrowserFacetItem[];
+  frequency: BrowserFacetItem[];
+  unit: BrowserFacetItem[];
+  seasonal_adjustment: BrowserFacetItem[];
+};
+
+export type SeriesBrowserResponse = {
+  items: SeriesBrowserItem[];
+  facets: SeriesBrowserFacets;
+  pagination: { total: number; limit: number; offset: number };
+  data_as_of: string;
+};
+
+export type AnalyticsCapability = {
+  allowed: boolean;
+  reason_code?: string | null;
+  reason?: string | null;
+};
+
+export type SeriesAnalyticsCapabilities = {
+  display: AnalyticsCapability;
+  download: AnalyticsCapability;
+  ai: AnalyticsCapability;
+  trend: AnalyticsCapability;
+  history: AnalyticsCapability;
+  revisions: AnalyticsCapability;
+  documents: AnalyticsCapability;
+  contributions: AnalyticsCapability;
+};
+
+export type SeriesStatistics = {
+  count: number;
+  mean: number | null;
+  median: number | null;
+  min: number | null;
+  max: number | null;
+  stddev: number | null;
+  current_percentile: number | null;
+};
+
+export type NextSeriesRelease = {
+  id: string;
+  title_zh: string;
+  scheduled_at: string;
+  source_timezone: string;
+  status: string;
+  role: "headline" | "component" | "reference" | string;
+};
+
+export type ContributionPeriod = {
+  period_start: string;
+  target_value?: number | null;
+};
+
+export type ContributionComponent = {
+  series_id: string;
+  name_zh: string;
+  values: Array<number | null>;
+};
+
+export type ContributionAnalysis = {
+  available: boolean;
+  reason_code?: string | null;
+  reason?: string | null;
+  target_unit?: string | null;
+  periods: ContributionPeriod[];
+  components: ContributionComponent[];
+  reconciliation?: {
+    passed: boolean;
+    tolerance?: number | null;
+    difference?: number | null;
+    reason?: string | null;
+  } | null;
+};
+
+export type SeriesAnalyticsResponse = {
+  statistics: SeriesStatistics;
+  next_release: NextSeriesRelease | null;
+  contributions: ContributionAnalysis;
+  capabilities: SeriesAnalyticsCapabilities;
+  data_as_of: string;
+};
+
+export type AICapabilitiesResponse = {
+  configured: boolean;
+  allowed: boolean;
+  reason_code?: string | null;
+  reason?: string | null;
+};
+
+export type RevisionItem = {
+  period_start: string;
+  versions: number;
+  latest_value?: number | string | null;
+  previous_value?: number | string | null;
+  absolute_revision?: number | string | null;
+};
+
+export type RevisionResponse = { items: RevisionItem[] };

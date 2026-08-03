@@ -23,3 +23,17 @@ export function BarChart({ labels, values, height = 260 }: { labels: string[]; v
   const option = { animation: false, tooltip: { trigger: "axis" }, grid: { left: 42, right: 15, top: 20, bottom: 42 }, xAxis: { type: "category", data: labels, axisLabel: { color: "#8290a5", hideOverlap: true } }, yAxis: { type: "value", axisLabel: { color: "#8290a5" }, splitLine: { lineStyle: { color: "#edf0f5" } } }, series: [{ type: "bar", data: values, itemStyle: { color: "#356be3", borderRadius: [5, 5, 0, 0] }, barMaxWidth: 38 }] };
   return <ReactECharts option={option} style={{ height }} notMerge lazyUpdate />;
 }
+
+export function ContributionChart({ labels, components, height = 250 }: { labels: string[]; components: Array<{ name: string; values: Array<number | null> }>; height?: number }) {
+  const option = {
+    animation: false,
+    color: ["#1c9bd1", "#2068d4", "#19a85b", "#83d36c", "#f05252", "#f5a23a", "#7767d8", "#8b9aae", "#c6ced8"],
+    tooltip: { trigger: "axis", axisPointer: { type: "shadow" }, valueFormatter: (value: number) => Number(value).toLocaleString(undefined, { maximumFractionDigits: 3 }) },
+    legend: { top: 0, left: 0, type: "scroll", textStyle: { color: "#5f6d82", fontSize: 11 } },
+    grid: { left: 42, right: 15, top: 48, bottom: 38 },
+    xAxis: { type: "category", data: labels, axisLabel: { color: "#8290a5", hideOverlap: true } },
+    yAxis: { type: "value", scale: true, axisLabel: { color: "#8290a5" }, splitLine: { lineStyle: { color: "#edf0f5" } } },
+    series: components.map((component) => ({ name: component.name, type: "bar", stack: "contribution", barMaxWidth: 22, emphasis: { focus: "series" }, data: component.values })),
+  };
+  return <ReactECharts option={option} style={{ height }} notMerge lazyUpdate />;
+}
