@@ -10,17 +10,17 @@
 - 线程 ID：`019fc533-b3a2-7be2-96ce-f4990bda6d6e`
 - 来源主线程：`ML | 项目统筹部 | 主线程 | 01`
 - 来源线程 ID：`019fc3a3-d0a0-7f13-b660-2010e36c7138`
-- 当前接受的任务卡 revision：`4d77158`
-- 当前接受范围：`复审 direct candidate 363354ee 的幂等 RUNNING fixture、动态活动证据集合和 13 正例加 83 负例；通过后依次集成九个研发 direct commit 并更新 contract v2 集成报告。`
-- 当前回执证据：`docs/conclusions/tasks/ML-20260803-001/receipts/department-integration-release-01-remediation-08.md`
-- 实际范围：复审 `363354ee` direct patch、BLOCKED/PENDING/RUNNING 幂等 fixture、动态 ACTIVE/LEGACY 集合、九轮 patch-id 与报告后重跑语义；发现报告后阶段相关 P1 后停止。
-- 审查基线：`8c88fb7376060d17cee4a2ad87d29fbe4944ab68`
-- 研发候选提交：`d1e5b40804805e67681893af63cffd83fd0000e5`、`c9353fd1ed639bd84f0668dd57c50283435b65f7`、`6a0b5b6d71b95140eaf1da524ba59befb63c20cd`、`c1bcdac55a7b0238fbea0d3cafe391c0bf22bf64`、`3c343b44a063f780afc16adccb96eb92758d3076`、`12766ea0f6bb1ae967b0c98525025bef4dace60a`、`bac5d0883d59d8ff7244e34a89631a3b05d7478a`、`b05bfac2344d0816ecb2a85dfa38976e3096a0a6`、`363354ee84e307594746d4093572ebcdbf784fd6`
-- 明确排除的同步 merge：`0e353ac26547d9b25affc0eb13c86e3621a4357b`、`4ba5f82282e0617015f00880ea4beb49dad8b0f4`、`431023d0fa55455e3ac2ddfe2f462f7c13deafbb`
-- 集成方式：九个候选提交均未 cherry-pick；报告后测试生命周期门禁 fail closed
+- 当前接受的任务卡 revision：`82459dc`
+- 当前接受范围：`复审 86572b61 的十源显式映射、pre-integration 与 post-integration 零重复集成重入证明和 96 项门禁；通过后依次集成十个研发 direct commit 并更新 contract v2 集成报告。`
+- 当前回执证据：`docs/conclusions/tasks/ML-20260803-001/receipts/department-integration-release-01-remediation-09.md`
+- 实际范围：复审 `86572b61` direct patch、十源显式映射、source/main 祖先语义、首次十次集成与第二次零新增重入及 96 项门禁；在最新 main 上复现 P1 后停止。
+- 审查基线：`7e54f252fab1fce0f87ce04fb0b32c8e9cba8d1b`
+- 研发候选提交：`d1e5b40804805e67681893af63cffd83fd0000e5`、`c9353fd1ed639bd84f0668dd57c50283435b65f7`、`6a0b5b6d71b95140eaf1da524ba59befb63c20cd`、`c1bcdac55a7b0238fbea0d3cafe391c0bf22bf64`、`3c343b44a063f780afc16adccb96eb92758d3076`、`12766ea0f6bb1ae967b0c98525025bef4dace60a`、`bac5d0883d59d8ff7244e34a89631a3b05d7478a`、`b05bfac2344d0816ecb2a85dfa38976e3096a0a6`、`363354ee84e307594746d4093572ebcdbf784fd6`、`86572b61442aae11b57bb50c5055c15ba62b1025`
+- 明确排除的同步 merge：`18ef5a4`、`fa486e0` 及此前全部同步提交
+- 集成方式：十个候选提交均未 cherry-pick；候选前 96 项测试门禁 fail closed
 - 集成提交：`N/A`
 - Git 冲突：未进入 cherry-pick，因此无 Git 冲突
-- 合同冲突：存在，详见“集成复审轮次 08”
+- 合同冲突：存在，详见“集成复审轮次 09”
 - 最终席位状态：`BLOCKED`
 - 部门结果：`BLOCKED`
 
@@ -628,6 +628,70 @@ clone 初始 HEAD 已是 main/report commit，测试会错误重写第九个 sou
   source→integrated patch-id/祖先证据。增加 post-integration main 运行的显式正例，并保证候选前与
   报告后两个阶段均 96/96 通过。
 
+## 集成复审轮次 09（remediation-09）
+
+### v2 报告身份与执行元数据
+
+- 任务 ID：`ML-20260803-001`
+- 角色：`SUPPORTING`
+- 部门代码：`integration_release`
+- 线程标题：`ML｜集成发布部｜席位｜01`
+- 线程 ID：`019fc533-b3a2-7be2-96ce-f4990bda6d6e`
+- 来源主线程：`ML | 项目统筹部 | 主线程 | 01`
+- 来源线程 ID：`019fc3a3-d0a0-7f13-b660-2010e36c7138`
+- 当前接受的任务卡 revision：`82459dc`
+- 当前接受范围：`复审 86572b61 的十源显式映射、pre-integration 与 post-integration 零重复集成重入证明和 96 项门禁；通过后依次集成十个研发 direct commit 并更新 contract v2 集成报告。`
+- 当前回执证据：`docs/conclusions/tasks/ML-20260803-001/receipts/department-integration-release-01-remediation-09.md`
+- 报告路径：`docs/conclusions/tasks/ML-20260803-001/department-integration-release-01.md`
+- 复审开始 main：`7e54f252fab1fce0f87ce04fb0b32c8e9cba8d1b`
+- ACTIVE 回执当前内容 commit：`7e54f252fab1fce0f87ce04fb0b32c8e9cba8d1b`
+- 审查候选：十个 direct commits，最后一笔 `86572b61442aae11b57bb50c5055c15ba62b1025`
+- 明确排除：全部同步 merge，包括 `18ef5a4`、`fa486e0` 及此前列出的同步提交
+- 实际范围：固定复审 `86572b61^..86572b61`，验证十源显式映射、source !→ main、main → source、首次十次集成、第二次零新增重入及最新 main 的 96 项门禁。
+- 十个 cherry-pick 新 SHA：全部 `N/A`（存在 P1，未进入集成）
+- Integration commit candidate：`N/A`
+- Integration report commit candidate：`N/A`；本轮 BLOCKED 报告准确 SHA 记录在交付回复
+- Git 冲突：未开始 cherry-pick，因此无 Git 冲突
+- 最终席位状态：`BLOCKED`
+- 部门结果：`BLOCKED`
+
+### Standards 轴
+
+Standards Agent 报告 `P1=1, P2=0, P3=0`：真实生命周期测试从最新 main 解析出的
+`declared_source_baseline` 已含 order 0..9，但 `scripts/test_validate_organization.py:1271-1288`
+仍断言只能是 order 0..8。定向测试在第 1275 行失败，尚未执行十次 patch-id 集成、第二次零新增
+重入、source/main 祖先关系与最终 summary 断言。direct patch 只改测试脚本和研发报告，
+`git diff --check` 通过，未发现额外 Fowler smell。
+
+### Spec 轴
+
+Spec Agent 报告 `P1=1, P2=0, P3=0`：当前 `main@7e54f25` 的任务卡已经显式声明
+order 9=`86572b61`，而候选测试仍按旧阶段基线期待 0..8，再合成第十项。direct 96 项实跑
+虽输出 `13` 正例、`83` 负例和总数 `96`，但有 1 个 failure；所谓 post-integration 零新增重入
+未在真实 ten-source/latest-main 输入上得到证明，不能满足报告后同一门禁重跑要求。
+
+### 候选检查与最终判断
+
+- 候选 worktree：`codex/ml-20260803-001-engineering-04@86572b61442aae11b57bb50c5055c15ba62b1025`，检查前后干净。
+- Python：`3.12.9`。
+- `py -3.12 -X utf8 scripts/validate_organization.py`：通过，输出 `STATIC_CONSISTENT`。
+- `py -3.12 -X utf8 scripts/test_validate_organization.py`：失败；`Ran 96 tests`，`13` 正例、`83` 负例，`failures=1`。
+- `py -3.12 -X utf8 -m unittest scripts.test_validate_organization`：失败；`Ran 96 tests`，同一正例 `failures=1`。
+- `py -3.12 -m py_compile scripts/validate_organization.py scripts/test_validate_organization.py`：通过。
+- `py -3.12 -X utf8 scripts/validate_repository.py`：Python 3.12 默认环境缺少 `yaml`；仅对该只读进程设置 `PYTHONPATH=D:\开发环境\运行时\Python\Python311\Lib\site-packages` 后通过，输出 `Repository contract valid: 61 source series, 62 API paths`。
+- 候选 `git diff --check`：通过。
+- 范围检查：`86572b61` 只修改研发报告与测试脚本；同步 merge 未纳入候选集成序列。
+- 最终判断：`BLOCKED`。候选前正式 96 项门禁已经失败，故十个研发提交均未写入 main。
+
+### 风险与恢复条件
+
+- 风险：若忽略失败继续集成，会把未证明的十源拓扑与重入路径写入 main；报告后的相同测试仍会
+  在 fixture 初始化阶段失败，无法作为集成完成证据。
+- 恢复条件：测试必须以显式阶段模型处理任务卡已声明当前 source 的正式输入；pre-integration
+  阶段应验证十个固定 source 尚未成为 main 祖先，post-integration 阶段应从显式 source→integrated
+  映射验证 patch-id、main 祖先关系和零新增，而不能要求浮动任务卡回退到九源集合。direct 与
+  unittest 两个入口均须在最新 main 上 96/96 全绿后再派发。
+
 ## 1. 本次遇到的问题以及场景
 
 本席位负责把研发治理合同提交集成到 `main`，同时守住变更范围、合同同步和发布门禁。候选提交
@@ -662,6 +726,10 @@ RUNNING，导致 direct 与 unittest 都出现 1 个 failure，第七轮按硬�
 remediation-08 修复了 RUNNING fixture 对 BLOCKED 字符串的依赖，候选前 96 项全绿；但测试仍从
 当前 ROOT/HEAD 推导第九个 source 并重复 cherry-pick。报告提交后的 main 已含九笔集成，此时同一
 测试不能重入，因此第八轮继续 fail closed。
+
+remediation-09 引入十源显式映射与零新增重入路径，但正式 main 的任务卡在开工前已经声明第十个
+source。测试仍断言运行时来源集合只能包含前九项，导致 direct 与 unittest 的 96 项门禁各有
+1 个 failure，且在真正的十次集成与重入断言前退出。第九轮因此继续 fail closed。
 
 ## 2. 分析这个问题的过程
 
@@ -700,6 +768,10 @@ LOCAL_REPORT 和 summary 的端到端断言，不能以计数行代替 suite 成
 候选前 96/96 通过。随后按派单要求反推报告后再次运行的输入状态，发现测试会把 main/report HEAD
 当 source 并重复集成，从而识别阶段相关假阳性。
 
+第九轮固定 `86572b61^..86572b61` direct patch，并直接以最新 `main@7e54f25` 的任务证据运行
+96 项门禁。两条入口均在 source map 等值断言处稳定失败；Standards/Spec 两轴独立确认这是最新
+main 兼容性的 P1，而非环境波动或测试计数误差。
+
 ## 3. 解决这个问题的工作流程
 
 1. 固定基线 `8c52c63` 和候选 `d1e5b40`，验证工作区与提交关系。
@@ -736,6 +808,10 @@ cherry-pick，只更新本报告并给出最小恢复条件。
 第八轮候选前门禁通过后继续完成双轴复审；两个轴独立确认报告后重跑必失败的 P1。为避免先污染
 main 再发现失败，不执行九笔 cherry-pick，只提交本部门 BLOCKED 报告。
 
+第九轮在任何 cherry-pick 前先运行候选正式门禁；direct 和 unittest 均为 96 项、1 个 failure。
+两个审查轴各报告 1 个 P1 后立即停止，不执行十笔 cherry-pick，只更新并提交本部门 BLOCKED
+报告。
+
 ## 4. 使用的 Agents、skills、tools 以及阅读文档
 
 ### Agents
@@ -757,6 +833,8 @@ main 再发现失败，不执行九笔 cherry-pick，只提交本部门 BLOCKED 
 - `spec_review_07` 子 Agent：第七轮核验 remediation-07 RUNNING 任务卡与指定验收条件。
 - `standards_review_08` 子 Agent：第八轮复核候选前与报告后测试重入性及 Fowler smells。
 - `spec_review_08` 子 Agent：第八轮核验派单要求的 post-integration 96 项门禁和九轮 source 身份。
+- `standards_review_09` 子 Agent：第九轮复核最新 main 兼容性、十源真实拓扑和 Fowler smells。
+- `spec_review_09` 子 Agent：第九轮核验十源显式映射、pre/post integration 重入与 96 项门禁。
 
 ### Skills
 
@@ -796,6 +874,8 @@ main 再发现失败，不执行九笔 cherry-pick，只提交本部门 BLOCKED 
 - 候选提交 `bac5d0883d59d8ff7244e34a89631a3b05d7478a` 与 `b05bfac2344d0816ecb2a85dfa38976e3096a0a6` 的全部 direct patch
 - `docs/conclusions/tasks/ML-20260803-001/receipts/department-integration-release-01-remediation-08.md`
 - 候选提交 `363354ee84e307594746d4093572ebcdbf784fd6` 的测试与研发报告 direct patch
+- `docs/conclusions/tasks/ML-20260803-001/receipts/department-integration-release-01-remediation-09.md`
+- 候选提交 `86572b61442aae11b57bb50c5055c15ba62b1025` 的测试与研发报告 direct patch
 
 ## 5. 本次执行值得沉淀的经验或者模式
 
@@ -829,6 +909,8 @@ main 再发现失败，不执行九笔 cherry-pick，只提交本部门 BLOCKED 
     identity 会在阶段切换后失真，source 集合应由固定任务卡字段或显式参数提供。
 20. 测试“可重复运行”不仅是状态归一化幂等，还包括 Git 操作幂等；baseline 已含目标 patch 时不能
     再 cherry-pick，应切换为验证既有 patch-id 和祖先关系。
+21. 显式 source 列表仍需显式阶段语义；正式任务卡已声明当前候选时，测试不能把“已声明”误判为
+    “已集成”，应分别用祖先关系和 source→integrated 映射区分 pre/post integration。
 
 ## 6. 问题解决后反推的一条更好初始提示词
 
@@ -855,3 +937,10 @@ main 再发现失败，不执行九笔 cherry-pick，只提交本部门 BLOCKED 
 > 回执字段、状态与路径模板；task 层验证一个 PRIMARY、所有 SUPPORTING、回执 revision/hash、
 > report/summary 身份、Git 祖先和终态；online 层只验证真实线程事件。只有前两层全绿才允许集成，
 > 最终 summary 只有在线层通过才可声明 `THREAD_EVIDENCE_VERIFIED`。
+
+针对本轮，更优的首次提示词还应明确：
+
+> 请让真实 Git 生命周期测试以任务卡显式声明的全部 source 为固定输入，并区分“source 已声明”与
+> “source 已集成”。pre-integration 必须证明全部 source 不是 main 祖先；首次集成必须按固定顺序
+> 产生 source→integrated patch-id 映射；post-integration 必须只验证该映射、main 祖先关系和零新增，
+> 不得再次 cherry-pick。测试必须在最新正式 main 上通过 direct 与 unittest 两个 96 项入口。
