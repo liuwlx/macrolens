@@ -14,6 +14,22 @@ MacroLens 是一个面向宏观研究员的美国宏观数据平台。项目采�
 - Docker、Alembic、CI、Cloud Run/Vercel 部署样例
 
 
+## Windows: local API/Web with the remote database
+
+The helper below runs the API and Web app locally while reaching the existing PostgreSQL container on `111.229.152.122` through an SSH tunnel. PostgreSQL remains private: only `127.0.0.1:15432` is opened locally. The server login is fixed to `ubuntu`.
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/remote-dev.ps1 Provision
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/remote-dev.ps1 Start
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/remote-dev.ps1 Status
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/remote-dev.ps1 Stop
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/remote-dev.ps1 Deprovision
+```
+
+`Provision` requires a trusted SSH host key, passwordless `sudo docker`, Python 3.12, and Node.js 22 (set `MACROLENS_NODE22` to an absolute `node.exe` path if discovery cannot find it). It creates the dedicated least-privilege database role and the ignored, ACL-protected `.env.remote`. `Start` creates/uses the project `.venv`, checks the remote `alembic_version` against the local head, and does not run migrations, seeds, workers, or schedulers. A known design-QA preview on ports 3000/4010 is replaced only after remote validation succeeds; unknown listeners are never stopped.
+
+After `Start`, use `http://localhost:3000` for Web and `http://localhost:8000/docs` for the API. Run `Deprovision` only when the local-development database role should be removed.
+
 ## Production v1.0.2 ingestion-reviewed scope
 
 This repository is the production implementation rather than the earlier single-file prototype. It includes:

@@ -1,0 +1,61 @@
+$ErrorActionPreference = 'Stop'
+$scriptPath = Join-Path (Split-Path -Parent $PSScriptRoot) 'remote-dev.ps1'
+$repoRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
+
+$tokens = $null
+$errors = $null
+[Management.Automation.Language.Parser]::ParseFile($scriptPath, [ref]$tokens, [ref]$errors) | Out-Null
+if ($errors.Count) { throw ($errors | ForEach-Object Message | Out-String) }
+
+$source = [IO.File]::ReadAllText($scriptPath)
+@(
+    'Provision', 'Start', 'Status', 'Stop', 'Deprovision',
+    'BatchMode=yes', 'StrictHostKeyChecking=yes', 'ExitOnForwardFailure=yes',
+    'ServerAliveInterval=30', "'-N', '-T', '-L'", '127.0.0.1:',
+    'sudo docker ps', 'sudo docker inspect', 'sudo docker exec',
+    'com.docker.compose.project=macrolens', 'com.docker.compose.service=postgres',
+    'health=healthy', 'macrolens_default', 'LOCAL_JWT_SECRET', '$env:JWT_SECRET',
+    "Join-Path `$Root '.venv'", 'Node.js 22', '.cache\codex-runtimes', 'local-preview-server\.mjs',
+    'commandLineSha256', 'Get-CimInstance Win32_Process', 'WindowStyle Hidden',
+    'CONNECTION LIMIT 20', 'NOSUPERUSER', 'NOCREATEDB', 'NOCREATEROLE',
+    'NOINHERIT', 'NOREPLICATION', 'NOBYPASSRLS',
+    'GRANT INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA app',
+    'GRANT SELECT, INSERT ON TABLE audit.audit_log',
+    'REVOKE INSERT, UPDATE, DELETE ON TABLE data.observation_vintage',
+    'pg_auth_members', 'pg_database', 'pg_namespace', 'pg_proc',
+    'Remove-KnownPreviewServer -ValidateOnly'
+) | ForEach-Object {
+    if (-not $source.Contains($_)) { throw "Missing contract: $_" }
+}
+
+if ($source.Contains('5432:5432')) { throw 'Public PostgreSQL mapping forbidden.' }
+if ($source -match '(?im)^\s*ALTER\s+DEFAULT\s+PRIVILEGES') { throw 'Default privilege mutation forbidden.' }
+if ($source -match '(?im)^\s*GRANT\s+ALL') { throw 'GRANT ALL forbidden.' }
+if ($source -match '(?im)^\s*GRANT[^;]*\bTRUNCATE\b') { throw 'TRUNCATE grant forbidden.' }
+if ($source -match '(?im)^\s*GRANT[^;]*data\.observation_vintage') { throw 'observation_vintage write grant forbidden.' }
+
+& git.exe -C $repoRoot check-ignore --quiet .env.remote
+if ($LASTEXITCODE -ne 0) { throw '.env.remote must be gitignored.' }
+& git.exe -C $repoRoot check-ignore --quiet .env.remote.state.json
+if ($LASTEXITCODE -ne 0) { throw '.env.remote.state.json must be gitignored.' }
+
+# Load functions through the read-only Status action, then exercise local-only discovery and PID identity checks.
+. $scriptPath Status
+$node22 = Find-Node22
+if (-not [IO.Path]::IsPathRooted($node22)) { throw 'Node 22 discovery must return an absolute path.' }
+$python312 = Find-Python312Bootstrap
+if (-not [IO.Path]::IsPathRooted($python312)) { throw 'Python 3.12 discovery must return an absolute path.' }
+
+$probe = $null
+try {
+    $probe = Start-Process -FilePath powershell.exe -ArgumentList @('-NoProfile', '-Command', 'Start-Sleep -Seconds 30; # macrolens-process-record-test') -PassThru -WindowStyle Hidden
+    Start-Sleep -Milliseconds 300
+    $record = New-ProcessRecord $probe 'test' 'macrolens-process-record-test'
+    if (-not (Test-ProcessRecord $record)) { throw 'Exact process identity should match.' }
+    $record.commandLineSha256 = ('0' * 64)
+    if (Test-ProcessRecord $record) { throw 'Tampered command-line hash must not match.' }
+} finally {
+    if ($probe -and -not $probe.HasExited) { Stop-Process -Id $probe.Id -Force }
+}
+
+Write-Host 'remote-dev static and local process-safety contract: PASS'
