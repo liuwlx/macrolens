@@ -45,6 +45,7 @@ from .schemas import (
 from .services.transforms import PERIODS_PER_YEAR, Point, transform_points
 
 DEMO_AS_OF = datetime(2026, 8, 1, tzinfo=UTC)
+DEMO_POINT_COUNTS = {"daily": 260, "weekly": 156, "monthly": 120, "quarterly": 40}
 DEMO_NAMESPACE = UUID("d14fd59d-843c-5eb4-b39f-e571950ebcf0")
 DEMO_PROVIDER = ProviderInfo(
     code="DEMO_SYNTHETIC",
@@ -317,37 +318,39 @@ def _series_or_404(series_id: UUID) -> DemoSeries:
 
 
 def _period_starts(frequency: str) -> list[date]:
-    start = date(2014, 1, 1)
-    end = DEMO_AS_OF.date()
-    result: list[date] = []
+    current = DEMO_AS_OF.date()
     if frequency == "daily":
-        current = start
-        while current <= end:
-            if current.weekday() < 5:
-                result.append(current)
-            current += timedelta(days=1)
+        pass
     elif frequency == "weekly":
-        current = start + timedelta(days=(4 - start.weekday()) % 7)
-        while current <= end:
-            result.append(current)
-            current += timedelta(days=7)
+        current -= timedelta(days=(current.weekday() - 4) % 7)
     elif frequency == "monthly":
-        year, month = start.year, start.month
-        while date(year, month, 1) <= end:
-            result.append(date(year, month, 1))
-            month += 1
-            if month == 13:
-                year += 1
-                month = 1
+        current = current.replace(day=1)
     else:
-        year, month = start.year, 1
-        while date(year, month, 1) <= end:
-            result.append(date(year, month, 1))
-            month += 3
-            if month > 12:
-                year += 1
-                month = 1
-    return result
+        quarter_month = ((current.month - 1) // 3) * 3 + 1
+        current = date(current.year, quarter_month, 1)
+
+    def previous_month(value: date, months: int) -> date:
+        month_index = value.year * 12 + value.month - 1 - months
+        return date(month_index // 12, month_index % 12 + 1, 1)
+
+    descending: list[date] = []
+    target_count = DEMO_POINT_COUNTS[frequency]
+    while len(descending) < target_count:
+        is_period_start = frequency != "daily" or current.weekday() < 5
+        if (
+            is_period_start
+            and _published_at(_period_end(current, frequency), frequency) <= DEMO_AS_OF
+        ):
+            descending.append(current)
+        if frequency == "daily":
+            current -= timedelta(days=1)
+        elif frequency == "weekly":
+            current -= timedelta(days=7)
+        elif frequency == "monthly":
+            current = previous_month(current, 1)
+        else:
+            current = previous_month(current, 3)
+    return list(reversed(descending))
 
 
 def _period_end(period_start: date, frequency: str) -> date:
@@ -496,6 +499,11 @@ def demo_taxonomy_children(
     parent_id: UUID | None,
     q: str | None,
     scope: str,
+    provider: str | None,
+    theme: str | None,
+    frequency: str | None,
+    unit: str | None,
+    seasonal_adjustment: str | None,
 ) -> TaxonomyChildrenResponse:
     registry = get_demo_registry()
     if tree_code != registry.tree_code:
@@ -503,20 +511,63 @@ def demo_taxonomy_children(
     parent = registry.nodes_by_id.get(parent_id) if parent_id is not None else None
     if parent_id is not None and parent is None:
         raise AppError(404, "分类节点不存在", "没有找到指定父节点。", "taxonomy_node_not_found")
-    visible = (
-        registry.nodes
-        if scope == "all"
-        else registry.children_by_code.get(parent.code if parent else None, ())
-    )
-    if q and q.strip():
-        needle = q.strip().casefold()
-        visible = tuple(
-            node
-            for node in visible
-            if needle in node.code.casefold()
-            or needle in node.name_zh.casefold()
-            or needle in (node.name_en or "").casefold()
+
+    def matches_filters(series: DemoSeries) -> bool:
+        return (
+            (provider is None or provider == DEMO_PROVIDER.code)
+            and (theme is None or series.theme == theme)
+            and (frequency is None or series.frequency == frequency)
+            and (unit is None or series.unit_code == unit)
+            and (seasonal_adjustment is None or series.seasonal_adjustment == seasonal_adjustment)
         )
+
+    eligible_codes = {
+        series.canonical_code for series in registry.series if matches_filters(series)
+    }
+    needle = q.strip().casefold() if q and q.strip() else None
+
+    def node_matches(node: DemoTaxonomyNode) -> bool:
+        return bool(
+            needle
+            and (
+                needle in node.code.casefold()
+                or needle in node.name_zh.casefold()
+                or needle in (node.name_en or "").casefold()
+            )
+        )
+
+    def series_matches(series: DemoSeries) -> bool:
+        return bool(
+            needle
+            and (
+                needle in series.canonical_code.casefold()
+                or needle in series.name_zh.casefold()
+                or needle in (series.name_en or "").casefold()
+            )
+        )
+
+    active_codes = set(eligible_codes)
+    if needle:
+        active_codes = {
+            code for code in eligible_codes if series_matches(registry.series_by_code[code])
+        }
+        search_nodes = (
+            registry.nodes
+            if scope == "all"
+            else (registry.children_by_code.get(parent.code if parent else None, ()))
+        )
+        for node in search_nodes:
+            if node_matches(node):
+                active_codes.update(
+                    code for code in registry.leaf_series_codes(node.code) if code in eligible_codes
+                )
+
+    direct_children = registry.children_by_code.get(parent.code if parent else None, ())
+    visible = tuple(
+        node
+        for node in direct_children
+        if active_codes.intersection(registry.leaf_series_codes(node.code))
+    )
     nodes = [
         TaxonomyChildNode(
             id=node.id,
@@ -526,16 +577,20 @@ def demo_taxonomy_children(
             node_type=node.node_type,
             icon_key=node.icon_key,
             has_children=bool(registry.children_by_code.get(node.code)),
-            direct_series_count=len(node.series_codes),
-            descendant_series_count=len(registry.leaf_series_codes(node.code)),
+            direct_series_count=len(active_codes.intersection(node.series_codes)),
+            descendant_series_count=len(
+                active_codes.intersection(registry.leaf_series_codes(node.code))
+            ),
         )
         for node in visible
     ]
-    direct_series = (
-        [_summary(registry.series_by_code[code]) for code in parent.series_codes]
-        if parent is not None
-        else []
-    )
+    direct_codes = set(parent.series_codes) if parent is not None else set()
+    direct_codes.intersection_update(active_codes)
+    direct_series = [
+        _summary(registry.series_by_code[code])
+        for code in (parent.series_codes if parent is not None else ())
+        if code in direct_codes
+    ]
     return TaxonomyChildrenResponse(
         tree_code=tree_code,
         parent_id=parent_id,

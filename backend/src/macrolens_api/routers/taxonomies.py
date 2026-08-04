@@ -38,6 +38,11 @@ async def taxonomy_children(
             parent_id=parent_id,
             q=q,
             scope=scope,
+            provider=provider,
+            theme=theme,
+            frequency=frequency,
+            unit=unit,
+            seasonal_adjustment=seasonal_adjustment,
         )
     assert session is not None
     parsed_parent = parent_id

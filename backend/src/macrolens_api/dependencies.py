@@ -1,13 +1,12 @@
 from __future__ import annotations
 
 from typing import Annotated
-from uuid import UUID, uuid5
+from uuid import UUID
 
 from fastapi import Cookie, Depends
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from .config import get_settings
 from .db import get_read_session, get_session
 from .errors import AppError
 from .models import RefreshSession, User, Workspace
@@ -15,24 +14,12 @@ from .security import TokenType, decode_token
 
 SessionDep = Annotated[AsyncSession, Depends(get_session)]
 ReadSessionDep = Annotated[AsyncSession | None, Depends(get_read_session)]
-settings = get_settings()
-DEMO_PRINCIPAL_NAMESPACE = UUID("7e598f15-2388-588c-9c28-a70c2c15daf4")
 
 
 async def get_current_user(
-    session: ReadSessionDep,
+    session: SessionDep,
     macrolens_access: Annotated[str | None, Cookie()] = None,
 ) -> User:
-    if settings.data_mode == "demo":
-        return User(
-            id=uuid5(DEMO_PRINCIPAL_NAMESPACE, "user"),
-            email="demo@macrolens.local",
-            display_name="MacroLens Demo",
-            password_hash="demo-read-only",  # noqa: S106 - never accepted by authentication
-            role="researcher",
-            active=True,
-        )
-    assert session is not None
     if not macrolens_access:
         raise AppError(401, "需要登录", "请先登录后再继续。", "authentication_required")
     token = decode_token(macrolens_access, TokenType.ACCESS)
@@ -52,14 +39,7 @@ async def get_current_user(
 CurrentUser = Annotated[User, Depends(get_current_user)]
 
 
-async def get_current_workspace(session: ReadSessionDep, user: CurrentUser) -> Workspace:
-    if settings.data_mode == "demo":
-        return Workspace(
-            id=uuid5(DEMO_PRINCIPAL_NAMESPACE, "workspace"),
-            name="MacroLens Demo Workspace",
-            owner_user_id=user.id,
-        )
-    assert session is not None
+async def get_current_workspace(session: SessionDep, user: CurrentUser) -> Workspace:
     workspace = await session.scalar(
         select(Workspace).where(Workspace.owner_user_id == user.id).order_by(Workspace.created_at)
     )

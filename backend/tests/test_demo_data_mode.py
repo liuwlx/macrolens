@@ -65,6 +65,257 @@ def test_demo_taxonomy_registry_preserves_utf8_chinese_names() -> None:
     assert names["pce-medical"] == "医疗服务"
 
 
+def test_demo_catalog_reads_skip_data_session_but_browser_uses_real_auth_session() -> None:
+    probe = r"""
+import asyncio
+import httpx
+
+from macrolens_api import db
+from macrolens_api.demo_data import get_demo_registry
+from macrolens_api.main import app
+
+
+class ExplodingSessionFactory:
+    def __call__(self, **kwargs):
+        raise AssertionError("demo catalog read attempted to construct a database session")
+
+
+async def main():
+    db.SessionLocal = ExplodingSessionFactory()
+    transport = httpx.ASGITransport(app=app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://testserver") as client:
+        taxonomy = await client.get("/api/v1/taxonomies/macro-default")
+        assert taxonomy.status_code == 200, taxonomy.text
+        series_id = get_demo_registry().series[0].id
+        detail = await client.get(f"/api/v1/series/{series_id}")
+        assert detail.status_code == 200, detail.text
+
+        auth_session_calls = 0
+
+        async def fake_auth_session():
+            nonlocal auth_session_calls
+            auth_session_calls += 1
+            yield object()
+
+        app.dependency_overrides[db.get_session] = fake_auth_session
+        try:
+            browser = await client.get("/api/v1/series/browser")
+        finally:
+            app.dependency_overrides.clear()
+        assert browser.status_code == 401, browser.text
+        assert browser.json()["code"] == "authentication_required"
+        assert auth_session_calls == 1
+
+
+asyncio.run(main())
+"""
+    env = os.environ.copy()
+    env.update(
+        {
+            "MACROLENS_DATA_MODE": "demo",
+            "DATABASE_URL": "postgresql+asyncpg://demo:demo@127.0.0.1:1/unreachable",
+            "DATABASE_URL_SYNC": "postgresql+psycopg://demo:demo@127.0.0.1:1/unreachable",
+            "PYTHONPATH": str(ROOT / "backend" / "src"),
+            "ENVIRONMENT": "test",
+        }
+    )
+    result = subprocess.run(
+        [sys.executable, "-c", probe],
+        cwd=ROOT,
+        env=env,
+        capture_output=True,
+        text=True,
+        timeout=30,
+        check=False,
+    )
+    assert result.returncode == 0, json.dumps(
+        {"stdout": result.stdout, "stderr": result.stderr}, ensure_ascii=False
+    )
+
+
+def test_demo_taxonomy_search_and_filters_keep_only_matching_direct_child_branches() -> None:
+    probe = r"""
+import asyncio
+import httpx
+
+from macrolens_api.demo_data import DEMO_PROVIDER, get_demo_registry
+from macrolens_api.main import app
+
+
+async def main():
+    registry = get_demo_registry()
+    transport = httpx.ASGITransport(app=app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://testserver") as client:
+        parent_id = None
+        expected_path = (
+            "root",
+            "inflation",
+            "pce",
+            "pce-core",
+            "pce-core-services",
+            "pce-core-services-nonhousing",
+            "pce-medical",
+            "pce-medical-hospital",
+        )
+        for expected_code in expected_path:
+            params = {"scope": "all", "q": "医院服务"}
+            if parent_id is not None:
+                params["parent_id"] = parent_id
+            response = await client.get(
+                "/api/v1/taxonomies/macro-default/children", params=params
+            )
+            assert response.status_code == 200, response.text
+            body = response.json()
+            assert [node["code"] for node in body["nodes"]] == [expected_code]
+            node = body["nodes"][0]
+            assert node["direct_series_count"] == (
+                1 if expected_code == "pce-medical-hospital" else 0
+            )
+            assert node["descendant_series_count"] == 1
+            assert body["series"] == []
+            parent_id = node["id"]
+
+        terminal = await client.get(
+            "/api/v1/taxonomies/macro-default/children",
+            params={"parent_id": parent_id, "scope": "all", "q": "医院服务"},
+        )
+        assert terminal.status_code == 200, terminal.text
+        assert terminal.json()["nodes"] == []
+        assert [item["canonical_code"] for item in terminal.json()["series"]] == [
+            "US.PCE.HOSPITAL"
+        ]
+
+        target = registry.series_by_code["US.INITIAL.CLAIMS"]
+        employment = registry.nodes_by_code["employment"]
+        filters = {
+            "parent_id": str(employment.id),
+            "scope": "all",
+            "provider": DEMO_PROVIDER.code,
+            "theme": target.theme,
+            "frequency": target.frequency,
+            "unit": target.unit_code,
+            "seasonal_adjustment": target.seasonal_adjustment,
+        }
+        filtered = await client.get(
+            "/api/v1/taxonomies/macro-default/children", params=filters
+        )
+        assert filtered.status_code == 200, filtered.text
+        filtered_body = filtered.json()
+        assert [node["code"] for node in filtered_body["nodes"]] == ["employment-claims"]
+        assert filtered_body["nodes"][0]["direct_series_count"] == 1
+        assert filtered_body["nodes"][0]["descendant_series_count"] == 1
+
+        filters["parent_id"] = filtered_body["nodes"][0]["id"]
+        terminal_filtered = await client.get(
+            "/api/v1/taxonomies/macro-default/children", params=filters
+        )
+        assert terminal_filtered.status_code == 200, terminal_filtered.text
+        assert terminal_filtered.json()["nodes"] == []
+        assert [item["canonical_code"] for item in terminal_filtered.json()["series"]] == [
+            "US.INITIAL.CLAIMS"
+        ]
+
+
+asyncio.run(main())
+"""
+    env = os.environ.copy()
+    env.update(
+        {
+            "MACROLENS_DATA_MODE": "demo",
+            "DATABASE_URL": "postgresql+asyncpg://demo:demo@127.0.0.1:1/unreachable",
+            "DATABASE_URL_SYNC": "postgresql+psycopg://demo:demo@127.0.0.1:1/unreachable",
+            "PYTHONPATH": str(ROOT / "backend" / "src"),
+            "ENVIRONMENT": "test",
+        }
+    )
+    result = subprocess.run(
+        [sys.executable, "-c", probe],
+        cwd=ROOT,
+        env=env,
+        capture_output=True,
+        text=True,
+        timeout=30,
+        check=False,
+    )
+    assert result.returncode == 0, json.dumps(
+        {"stdout": result.stdout, "stderr": result.stderr}, ensure_ascii=False
+    )
+
+
+def test_demo_observation_windows_have_exact_frequency_counts_from_fixed_as_of() -> None:
+    probe = r"""
+import asyncio
+from datetime import datetime
+
+import httpx
+
+from macrolens_api.demo_data import get_demo_registry
+from macrolens_api.dependencies import get_current_user, get_current_workspace
+from macrolens_api.main import app
+
+
+async def authenticated_principal():
+    return object()
+
+
+async def main():
+    expected_counts = {"daily": 260, "weekly": 156, "monthly": 120, "quarterly": 40}
+    registry = get_demo_registry()
+    representatives = {
+        frequency: next(item for item in registry.series if item.frequency == frequency)
+        for frequency in expected_counts
+    }
+    app.dependency_overrides[get_current_user] = authenticated_principal
+    app.dependency_overrides[get_current_workspace] = authenticated_principal
+    transport = httpx.ASGITransport(app=app)
+    try:
+        async with httpx.AsyncClient(transport=transport, base_url="http://testserver") as client:
+            for frequency, expected_count in expected_counts.items():
+                response = await client.get(
+                    f"/api/v1/series/{representatives[frequency].id}/observations"
+                )
+                assert response.status_code == 200, response.text
+                body = response.json()
+                assert body["meta"]["frequency"] == frequency
+                assert len(body["data"]) == expected_count
+                periods = [item["period_start"] for item in body["data"]]
+                assert periods == sorted(periods)
+                assert len(set(periods)) == expected_count
+                published = [
+                    datetime.fromisoformat(item["published_at"].replace("Z", "+00:00"))
+                    for item in body["data"]
+                ]
+                assert max(published).isoformat() <= "2026-08-01T00:00:00+00:00"
+    finally:
+        app.dependency_overrides.clear()
+
+
+asyncio.run(main())
+"""
+    env = os.environ.copy()
+    env.update(
+        {
+            "MACROLENS_DATA_MODE": "demo",
+            "DATABASE_URL": "postgresql+asyncpg://demo:demo@127.0.0.1:1/unreachable",
+            "DATABASE_URL_SYNC": "postgresql+psycopg://demo:demo@127.0.0.1:1/unreachable",
+            "PYTHONPATH": str(ROOT / "backend" / "src"),
+            "ENVIRONMENT": "test",
+        }
+    )
+    result = subprocess.run(
+        [sys.executable, "-c", probe],
+        cwd=ROOT,
+        env=env,
+        capture_output=True,
+        text=True,
+        timeout=30,
+        check=False,
+    )
+    assert result.returncode == 0, json.dumps(
+        {"stdout": result.stdout, "stderr": result.stderr}, ensure_ascii=False
+    )
+
+
 def test_demo_http_reads_are_deterministic_without_a_database_and_mutations_fail_closed() -> None:
     probe = r"""
 import asyncio
@@ -73,6 +324,7 @@ import httpx
 
 from macrolens_api.main import app
 from macrolens_api import db
+from macrolens_api.dependencies import get_current_user, get_current_workspace
 
 
 class ExplodingSessionFactory:
@@ -81,6 +333,14 @@ class ExplodingSessionFactory:
 
 
 db.SessionLocal = ExplodingSessionFactory()
+
+
+async def authenticated_principal():
+    return object()
+
+
+app.dependency_overrides[get_current_user] = authenticated_principal
+app.dependency_overrides[get_current_workspace] = authenticated_principal
 
 
 async def main():

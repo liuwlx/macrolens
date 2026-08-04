@@ -47,6 +47,19 @@ if ($source -match '(?im)^\s*GRANT[^;]*data\.observation_vintage') { throw 'obse
 if ($source -match '(?im)^\s*GRANT\s+(INSERT|UPDATE|DELETE|TRUNCATE)[^;]*public\.alembic_version') { throw 'alembic_version must remain read-only.' }
 if ($source.Contains('& $python -c ''import asyncpg, psycopg, uvicorn''')) { throw 'Direct native dependency import probe is forbidden under global EAP Stop.' }
 
+$startBegin = $source.IndexOf('function Start-RemoteDevelopment')
+$startEnd = $source.IndexOf('function Stop-RemoteDevelopment', $startBegin)
+$startSource = $source.Substring($startBegin, $startEnd - $startBegin)
+if ($startSource -match "if\s*\(\`$mode\s*-eq\s*'live'\)") {
+    throw 'Demo and Live Start must both reserve the database port, open the SSH tunnel, and probe Alembic.'
+}
+if ($startSource -notmatch 'Get-RemotePostgres' -or $startSource -notmatch 'MACROLENS_ALEMBIC_PROBE_URL') {
+    throw 'Start must discover remote PostgreSQL and probe Alembic in every data mode.'
+}
+if ($source -match "\`$tunnelStatus\s*=\s*if\s*\(\`$mode\s*-eq\s*'demo'\)") {
+    throw 'Demo status must report the real SSH tunnel instead of disabled.'
+}
+
 & git.exe -C $repoRoot check-ignore --quiet .env.remote
 if ($LASTEXITCODE -ne 0) { throw '.env.remote must be gitignored.' }
 & git.exe -C $repoRoot check-ignore --quiet .env.remote.state.json
