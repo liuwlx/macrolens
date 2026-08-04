@@ -21,6 +21,8 @@ export type LicenseInfo = {
   attribution_text?: string | null;
 };
 
+export type DataMode = "live" | "demo";
+
 export type SeriesSummary = {
   id: string;
   canonical_code: string;
@@ -61,6 +63,7 @@ export type ObservationResponse = {
   series: SeriesSummary;
   data: ObservationPoint[];
   meta: {
+    data_mode: DataMode;
     data_as_of: string;
     vintage: string;
     transform: string;
@@ -377,6 +380,7 @@ export type TaxonomyBrowserSeries = Pick<
 >;
 
 export type TaxonomyChildrenResponse = {
+  data_mode: DataMode;
   tree_code: string;
   parent_id: string | null;
   nodes: TaxonomyBrowserNode[];
@@ -384,6 +388,7 @@ export type TaxonomyChildrenResponse = {
 };
 
 export type BrowserMetricStatus = "available" | "unavailable" | "restricted";
+export type BrowserSeriesAvailability = "available" | "not_ingested" | "not_available_as_of";
 
 export type BrowserMetricValue = {
   value: number | string | null;
@@ -403,6 +408,7 @@ export type BrowserObservation = {
 };
 
 export type SeriesBrowserItem = {
+  availability: BrowserSeriesAvailability;
   series: SeriesSummary & {
     decimal_places?: number;
     seasonal_adjustment?: string;
@@ -435,6 +441,7 @@ export type SeriesBrowserFacets = {
 };
 
 export type SeriesBrowserResponse = {
+  data_mode: DataMode;
   items: SeriesBrowserItem[];
   facets: SeriesBrowserFacets;
   pagination: { total: number; limit: number; offset: number };
@@ -504,6 +511,7 @@ export type ContributionAnalysis = {
 };
 
 export type SeriesAnalyticsResponse = {
+  data_mode: DataMode;
   statistics: SeriesStatistics;
   next_release: NextSeriesRelease | null;
   contributions: ContributionAnalysis;

@@ -33,6 +33,10 @@ function saveBlob(blob: Blob, filename: string) {
   URL.revokeObjectURL(url);
 }
 
+function markDemoFilename(filename: string) {
+  return filename.endsWith(".demo.csv") ? filename : filename.replace(/\.csv$/i, ".demo.csv");
+}
+
 export function DataBrowserPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -57,13 +61,18 @@ export function DataBrowserPage() {
     staleTime: 5 * 60_000,
     retry: shouldRetry,
   });
+  const isDemo = browserQuery.data?.data_mode === "demo";
+  const demoReadOnlyReason = isDemo ? "DEMO 演示数据为只读，不能收藏、写入工作台或加入 AI 上下文" : undefined;
 
   useEffect(() => {
     if (!browserQuery.data || browserQuery.isPlaceholderData) return;
     const items = browserQuery.data.items;
     const selectedExists = state.series && items.some((item) => item.series.id === state.series);
     const nextSeries = selectedExists ? state.series : items[0]?.series.id ?? "";
-    const nextSnapshot = state.data_as_of || browserQuery.data.data_as_of;
+    const hasObservations = items.some((item) => item.availability === "available" && item.current !== null);
+    const nextSnapshot = hasObservations
+      ? browserQuery.data.data_mode === "demo" ? browserQuery.data.data_as_of : state.data_as_of || browserQuery.data.data_as_of
+      : state.data_as_of;
     if (nextSeries !== state.series || nextSnapshot !== state.data_as_of) updateState({ series: nextSeries, data_as_of: nextSnapshot });
   }, [browserQuery.data, browserQuery.isPlaceholderData, state.series, state.data_as_of, updateState]);
 
@@ -81,7 +90,7 @@ export function DataBrowserPage() {
   }
   function selectSeries(series: TaxonomyBrowserSeries, node: string | null) { updateState({ series: series.id, node: node ?? "", q: series.canonical_code, page: 1 }, "push"); }
   function sort(sort: BrowserSort) { updateState({ sort, order: state.sort === sort && state.order === "asc" ? "desc" : "asc" }); }
-  function exportPath(path: string, fallback: string) { void apiDownload(path).then(({ blob, filename }) => saveBlob(blob, filename ?? fallback)); }
+  function exportPath(path: string, fallback: string) { void apiDownload(path).then(({ blob, filename }) => saveBlob(blob, isDemo ? markDemoFilename(filename ?? fallback) : filename ?? fallback)); }
   function exportBrowser() { exportPath(`/series/browser/export${queryString({ q: state.q, node_id: state.node, provider: state.provider, theme: state.theme, frequency: state.frequency, unit: state.unit, seasonal_adjustment: state.seasonal_adjustment, published_from: state.published_from, published_to: state.published_to, sort: state.sort, order: state.order, data_as_of: state.data_as_of })}`, "macrolens-data-browser.csv"); }
   function exportSelected() { if (state.series) exportPath(`/series/${state.series}/export${queryString({ transform: state.transform, start: state.start, end: state.end, data_as_of: state.data_as_of })}`, `${detailQuery.data?.canonical_code ?? "macrolens-series"}.csv`); }
   function showHistory() { updateState({ tab: "history" }); requestAnimationFrame(() => document.getElementById("data-browser-analysis")?.scrollIntoView({ behavior: "smooth", block: "start" })); }
@@ -96,10 +105,11 @@ export function DataBrowserPage() {
   const closeDrawer = useCallback(() => setDrawer(null), []);
 
   const filterProps = { state, facets: browserQuery.data?.facets, onChange: updateState, onReset: () => updateState(resetBrowserFilters(state)), onOpenFilters: () => setDrawer("filters"), onOpenTree: () => setDrawer("tree"), onOpenDetail: () => setDrawer("detail") };
-  const detailProps = { item: selectedItem, detail: detailQuery.data, analytics: analyticsQuery.data, ai: aiQuery.data, isLoading: detailQuery.isLoading, isFavorite: Boolean(selectedFavorite), favoritePending: favoriteMutation.isPending, onFavorite: () => favoriteMutation.mutate(), onHistory: showHistory, onCompare: () => router.push(`/compare?series=${encodeURIComponent(state.series)}`), onExport: exportSelected, onAI: () => router.push(`/ai?series=${encodeURIComponent(state.series)}&data_as_of=${encodeURIComponent(state.data_as_of)}`) };
+  const detailProps = { item: selectedItem, detail: detailQuery.data, analytics: analyticsQuery.data, ai: aiQuery.data, isLoading: detailQuery.isLoading, isFavorite: Boolean(selectedFavorite), favoritePending: favoriteMutation.isPending, readOnlyReason: demoReadOnlyReason, onFavorite: () => { if (!isDemo) favoriteMutation.mutate(); }, onHistory: showHistory, onCompare: () => router.push(`/compare?series=${encodeURIComponent(state.series)}`), onExport: exportSelected, onAI: () => { if (!isDemo) router.push(`/ai?series=${encodeURIComponent(state.series)}&data_as_of=${encodeURIComponent(state.data_as_of)}`); } };
 
   return <div className="data-browser-page">
-    <header className="data-browser-page-header"><div><div className="data-browser-title"><Database size={22} /><h1>数据浏览器 / 指标树与明细表</h1></div><p>浏览、筛选并分析宏观经济指标，支持多层级指标分类与历史修订查看。</p></div><div className="data-browser-header-actions"><span>当前位置：宏观经济数据 / {selectedItem?.series.theme ?? "全部主题"} / {selectedItem?.series.name_zh ?? "请选择指标"}</span><button className={`btn ${selectedFavorite ? "btn-primary" : ""}`} type="button" onClick={() => favoriteMutation.mutate()} disabled={!state.series || favoriteMutation.isPending}><Star size={15} fill={selectedFavorite ? "currentColor" : "none"} />{selectedFavorite ? "已收藏" : "收藏该指标"}</button></div></header>
+    {isDemo && <div className="data-browser-demo-banner" role="note"><strong>DEMO 演示数据</strong><span>当前页面使用固定演示快照；趋势、历史、修订、统计、只读比较和 CSV 导出可用，收藏、工作台与 AI 写入已禁用。</span></div>}
+    <header className="data-browser-page-header"><div><div className="data-browser-title"><Database size={22} /><h1>数据浏览器 / 指标树与明细表</h1></div><p>浏览、筛选并分析宏观经济指标，支持多层级指标分类与历史修订查看。</p></div><div className="data-browser-header-actions"><span>当前位置：宏观经济数据 / {selectedItem?.series.theme ?? "全部主题"} / {selectedItem?.series.name_zh ?? "请选择指标"}</span><button className={`btn ${selectedFavorite ? "btn-primary" : ""}`} type="button" onClick={() => { if (!isDemo) favoriteMutation.mutate(); }} disabled={!state.series || favoriteMutation.isPending || isDemo} title={demoReadOnlyReason}><Star size={15} fill={selectedFavorite ? "currentColor" : "none"} />{selectedFavorite ? "已收藏" : "收藏该指标"}</button></div></header>
     <BrowserFilterBar {...filterProps} />
     <div className="data-browser-workspace">
       <MetricTree state={state} onNode={(node) => updateState({ node })} onSeries={selectSeries} />

@@ -21,13 +21,14 @@ for (const viewport of viewports) {
         body = { id: "layout-user", email: "layout@example.test", display_name: "Layout", role: "admin" };
       } else if (path.endsWith("/series/browser")) {
         body = {
+          data_mode: "live",
           items: [],
           facets: { provider: [], theme: [], frequency: [], unit: [], seasonal_adjustment: [] },
           pagination: { total: 0, limit: 20, offset: 0 },
           data_as_of: "2026-08-04T00:00:00Z",
         };
       } else if (path.endsWith("/taxonomies/macro-default/children")) {
-        body = { tree_code: "macro-default", parent_id: null, nodes: [], series: [] };
+        body = { data_mode: "live", tree_code: "macro-default", parent_id: null, nodes: [], series: [] };
       } else if (path.endsWith("/me/favorites")) {
         body = [];
       }

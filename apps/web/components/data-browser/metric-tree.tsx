@@ -48,7 +48,8 @@ function TreeBranch({ state, parentId, depth, query, scopeAll, onNode, onSeries 
   }
 
   function keyDown(event: KeyboardEvent<HTMLButtonElement>, node: TaxonomyBrowserNode) {
-    if (event.key === "ArrowRight" && node.has_children && !expanded.has(node.id)) { event.preventDefault(); toggle(node); }
+    const expandable = node.has_children || node.direct_series_count > 0;
+    if (event.key === "ArrowRight" && expandable && !expanded.has(node.id)) { event.preventDefault(); toggle(node); }
     if (event.key === "ArrowLeft" && expanded.has(node.id)) { event.preventDefault(); toggle(node); }
     if (event.key === "Enter") { event.preventDefault(); onNode(node.id); }
     if (event.key === "Home" || event.key === "End") {
@@ -65,19 +66,20 @@ function TreeBranch({ state, parentId, depth, query, scopeAll, onNode, onSeries 
   return <div role={depth === 0 ? "tree" : "group"} aria-label={depth === 0 ? "宏观指标树" : undefined}>
     {(children.data?.nodes ?? []).map((node) => {
       const open = expanded.has(node.id);
+      const expandable = node.has_children || node.direct_series_count > 0;
       return <div key={node.id}>
         <button
           type="button"
           role="treeitem"
           aria-level={depth + 1}
-          aria-expanded={node.has_children ? open : undefined}
+          aria-expanded={expandable ? open : undefined}
           aria-selected={state.node === node.id}
           className={`data-browser-tree-row ${state.node === node.id ? "is-selected" : ""}`}
           style={{ paddingInlineStart: `${10 + depth * 18}px` }}
           onKeyDown={(event) => keyDown(event, node)}
-          onClick={() => { onNode(node.id); if (node.has_children) toggle(node); }}
+          onClick={() => { onNode(node.id); if (expandable) toggle(node); }}
         >
-          {node.has_children ? open ? <ChevronDown size={14} /> : <ChevronRight size={14} /> : <span className="size-[14px]" />}
+          {expandable ? open ? <ChevronDown size={14} /> : <ChevronRight size={14} /> : <span className="size-[14px]" />}
           <Folder size={15} className="text-amber-500" />
           <span className="truncate">{node.name_zh}</span>
           <small>{node.descendant_series_count}</small>
