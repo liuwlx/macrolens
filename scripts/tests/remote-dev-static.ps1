@@ -27,7 +27,9 @@ $source = [IO.File]::ReadAllText($scriptPath)
     'Remove-KnownPreviewServer -ValidateOnly', 'Test-PythonRuntimeDependencies',
     'Ensure-PythonRuntimeDependencies', "`$ErrorActionPreference = 'Continue'",
     'Get-PipFailureCategory', 'Invoke-PipInstall', "'--timeout', '60'",
-    "'--retries', '5'", "'--no-input'"
+    "'--retries', '5'", "'--no-input'", 'ConvertTo-PsycopgConnectionUrl',
+    'GRANT SELECT ON TABLE public.alembic_version TO $Role',
+    'REVOKE SELECT ON TABLE public.alembic_version FROM $Role'
 ) | ForEach-Object {
     if (-not $source.Contains($_)) { throw "Missing contract: $_" }
 }
@@ -40,6 +42,7 @@ if ($source -match '(?im)^\s*ALTER\s+DEFAULT\s+PRIVILEGES') { throw 'Default pri
 if ($source -match '(?im)^\s*GRANT\s+ALL') { throw 'GRANT ALL forbidden.' }
 if ($source -match '(?im)^\s*GRANT[^;]*\bTRUNCATE\b') { throw 'TRUNCATE grant forbidden.' }
 if ($source -match '(?im)^\s*GRANT[^;]*data\.observation_vintage') { throw 'observation_vintage write grant forbidden.' }
+if ($source -match '(?im)^\s*GRANT\s+(INSERT|UPDATE|DELETE|TRUNCATE)[^;]*public\.alembic_version') { throw 'alembic_version must remain read-only.' }
 if ($source.Contains('& $python -c ''import asyncpg, psycopg, uvicorn''')) { throw 'Direct native dependency import probe is forbidden under global EAP Stop.' }
 
 & git.exe -C $repoRoot check-ignore --quiet .env.remote
@@ -49,6 +52,15 @@ if ($LASTEXITCODE -ne 0) { throw '.env.remote.state.json must be gitignored.' }
 
 # Load functions through the read-only Status action, then exercise local-only discovery and PID identity checks.
 . $scriptPath Status
+$sampleSqlAlchemyUrl = 'postgresql+psycopg://user:p%40ss@127.0.0.1:15432/macrolens?sslmode=disable'
+$samplePsycopgUrl = ConvertTo-PsycopgConnectionUrl $sampleSqlAlchemyUrl
+if ($samplePsycopgUrl -ne 'postgresql://user:p%40ss@127.0.0.1:15432/macrolens?sslmode=disable') { throw 'Psycopg URL conversion must change only the scheme.' }
+try {
+    ConvertTo-PsycopgConnectionUrl 'postgresql://already-plain' | Out-Null
+    throw 'Unexpected database URL schemes must fail closed.'
+} catch {
+    if ($_.Exception.Message -eq 'Unexpected database URL schemes must fail closed.') { throw }
+}
 $validNetworkIp = Get-MacrolensNetworkIp "bridge=172.17.0.2`nmacrolens_default=172.19.0.4"
 if ($validNetworkIp -ne '172.19.0.4') { throw 'Expected exact macrolens_default IPv4 parsing.' }
 try {

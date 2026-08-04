@@ -213,6 +213,8 @@ ALTER ROLE $Role CONNECTION LIMIT 20 NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHER
 REVOKE CREATE ON SCHEMA public FROM $Role;
 GRANT CONNECT ON DATABASE macrolens TO $Role;
 $schemaGrants
+GRANT USAGE ON SCHEMA public TO $Role;
+GRANT SELECT ON TABLE public.alembic_version TO $Role;
 GRANT INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA app TO $Role;
 GRANT USAGE, SELECT, UPDATE ON ALL SEQUENCES IN SCHEMA app TO $Role;
 REVOKE UPDATE, DELETE ON TABLE audit.audit_log FROM $Role;
@@ -406,6 +408,14 @@ function Set-ChildEnvironment($Config) {
     $env:NEXT_PUBLIC_DATA_BROWSER_V2 = 'true'
 }
 
+function ConvertTo-PsycopgConnectionUrl([string]$SqlAlchemyUrl) {
+    $driverScheme = 'postgresql+psycopg://'
+    if (-not $SqlAlchemyUrl.StartsWith($driverScheme, [StringComparison]::Ordinal)) {
+        throw 'Expected a postgresql+psycopg SQLAlchemy URL.'
+    }
+    return 'postgresql://' + $SqlAlchemyUrl.Substring($driverScheme.Length)
+}
+
 function Get-CommandLineHash([string]$CommandLine) {
     $sha = [Security.Cryptography.SHA256]::Create()
     try {
@@ -452,8 +462,13 @@ function Start-RemoteDevelopment {
         $processes.Add($tunnel)
         Wait-ForPort ([int]$config.LOCAL_DB_PORT) $tunnel
         Set-ChildEnvironment $config
-        $query = "import os,psycopg;c=psycopg.connect(os.environ['DATABASE_URL_SYNC']);print(c.execute('select version_num from alembic_version').fetchone()[0]);c.close()"
-        $remoteHead = Invoke-Checked $python @('-c', $query)
+        $env:MACROLENS_ALEMBIC_PROBE_URL = ConvertTo-PsycopgConnectionUrl $env:DATABASE_URL_SYNC
+        try {
+            $query = "import os,psycopg;c=psycopg.connect(os.environ['MACROLENS_ALEMBIC_PROBE_URL']);print(c.execute('select version_num from alembic_version').fetchone()[0]);c.close()"
+            $remoteHead = Invoke-Checked $python @('-c', $query)
+        } finally {
+            Remove-Item Env:MACROLENS_ALEMBIC_PROBE_URL -ErrorAction SilentlyContinue
+        }
         $localHead = Get-LocalAlembicHead
         if ($remoteHead -ne $localHead) { throw "Alembic mismatch remote=$remoteHead local=$localHead; migrations were not run." }
         Remove-KnownPreviewServer
@@ -527,6 +542,8 @@ DO `$do`$ BEGIN
     END IF;
 END `$do`$;
 $revokes
+REVOKE SELECT ON TABLE public.alembic_version FROM $Role;
+REVOKE USAGE ON SCHEMA public FROM $Role;
 REVOKE CONNECT ON DATABASE macrolens FROM $Role;
 DROP ROLE IF EXISTS $Role;
 COMMIT;
