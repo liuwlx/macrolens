@@ -317,6 +317,19 @@ a { color: inherit; text-decoration: none; }
   .data-browser-workspace { grid-template-columns: 264px minmax(0, 1fr) 316px; }
 }
 
+@media (min-width: 1280px) {
+  .data-browser-page {
+    min-height: calc(100dvh - 124px);
+    display: flex;
+    flex-direction: column;
+  }
+  .data-browser-workspace {
+    min-height: 812px;
+    flex: 1;
+    grid-template-rows: minmax(500px, 3fr) minmax(300px, 2fr);
+  }
+}
+
 @media (max-width: 1439px) and (min-width: 1280px) {
   .data-browser-workspace { grid-template-columns: minmax(200px, 17vw) minmax(0, 1fr) minmax(260px, 19vw); }
   .data-browser-filter-grid { grid-template-columns: repeat(5, minmax(90px, .7fr)) minmax(210px, 1.2fr) auto; }
