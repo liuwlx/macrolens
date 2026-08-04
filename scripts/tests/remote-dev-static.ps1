@@ -13,6 +13,7 @@ $source = [IO.File]::ReadAllText($scriptPath)
     'BatchMode=yes', 'StrictHostKeyChecking=yes', 'ExitOnForwardFailure=yes',
     'ServerAliveInterval=30', "'-N', '-T', '-L'", '127.0.0.1:',
     'sudo docker ps', 'sudo docker inspect', 'sudo docker exec',
+    '{{range $name, $network := .NetworkSettings.Networks}}', 'Get-MacrolensNetworkIp',
     'com.docker.compose.project=macrolens', 'com.docker.compose.service=postgres',
     'health=healthy', 'macrolens_default', 'LOCAL_JWT_SECRET', '$env:JWT_SECRET',
     "Join-Path `$Root '.venv'", 'Node.js 22', '.cache\codex-runtimes', 'local-preview-server\.mjs',
@@ -29,6 +30,9 @@ $source = [IO.File]::ReadAllText($scriptPath)
 }
 
 if ($source.Contains('5432:5432')) { throw 'Public PostgreSQL mapping forbidden.' }
+if ($source -match 'index\s+\.NetworkSettings\.Networks') { throw 'Quoted network index template is forbidden on Windows OpenSSH.' }
+$templateLine = @($source -split "`n" | Where-Object { $_ -match '^\s*\$inspectTemplate\s*=' })
+if ($templateLine.Count -ne 1 -or $templateLine[0].Contains('"')) { throw 'Inspect template must not contain nested double quotes.' }
 if ($source -match '(?im)^\s*ALTER\s+DEFAULT\s+PRIVILEGES') { throw 'Default privilege mutation forbidden.' }
 if ($source -match '(?im)^\s*GRANT\s+ALL') { throw 'GRANT ALL forbidden.' }
 if ($source -match '(?im)^\s*GRANT[^;]*\bTRUNCATE\b') { throw 'TRUNCATE grant forbidden.' }
@@ -41,6 +45,20 @@ if ($LASTEXITCODE -ne 0) { throw '.env.remote.state.json must be gitignored.' }
 
 # Load functions through the read-only Status action, then exercise local-only discovery and PID identity checks.
 . $scriptPath Status
+$validNetworkIp = Get-MacrolensNetworkIp "bridge=172.17.0.2`nmacrolens_default=172.19.0.4"
+if ($validNetworkIp -ne '172.19.0.4') { throw 'Expected exact macrolens_default IPv4 parsing.' }
+try {
+    Get-MacrolensNetworkIp "macrolens_default=172.19.0.4`nmacrolens_default=172.19.0.5" | Out-Null
+    throw 'Duplicate macrolens_default rows must fail closed.'
+} catch {
+    if ($_.Exception.Message -eq 'Duplicate macrolens_default rows must fail closed.') { throw }
+}
+try {
+    Get-MacrolensNetworkIp 'macrolens_default=999.19.0.4' | Out-Null
+    throw 'Invalid IPv4 must fail closed.'
+} catch {
+    if ($_.Exception.Message -eq 'Invalid IPv4 must fail closed.') { throw }
+}
 $node22 = Find-Node22
 if (-not [IO.Path]::IsPathRooted($node22)) { throw 'Node 22 discovery must return an absolute path.' }
 $python312 = Find-Python312Bootstrap

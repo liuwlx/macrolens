@@ -83,15 +83,30 @@ function Invoke-Ssh([string]$Command, $Config, [string]$StandardInput = '') {
     return Invoke-Checked $ssh (@(Get-SshArguments $Config) + @($Command)) $StandardInput
 }
 
+function Get-MacrolensNetworkIp([string]$InspectOutput) {
+    $ips = @($InspectOutput -split "`n" | ForEach-Object {
+        $line = $_.Trim()
+        if ($line -match '^macrolens_default=(?<ip>\d{1,3}(?:\.\d{1,3}){3})$') { $matches.ip }
+    })
+    if ($ips.Count -ne 1) { throw 'Expected exactly one macrolens_default IPv4 address.' }
+    $parsed = $null
+    if (-not [Net.IPAddress]::TryParse($ips[0], [ref]$parsed) -or
+        $parsed.AddressFamily -ne [Net.Sockets.AddressFamily]::InterNetwork -or
+        $parsed.ToString() -ne $ips[0]) {
+        throw 'macrolens_default did not contain a canonical IPv4 address.'
+    }
+    return $ips[0]
+}
+
 function Get-RemotePostgres($Config) {
     $find = "sudo docker ps --filter label=com.docker.compose.project=macrolens --filter label=com.docker.compose.service=postgres --filter health=healthy --filter network=macrolens_default --format '{{.ID}}'"
     $ids = @((Invoke-Ssh $find $Config) -split "`n" | Where-Object { $_ })
     if ($ids.Count -ne 1 -or $ids[0] -notmatch '^[a-f0-9]{12,64}$') {
         throw 'Expected exactly one healthy macrolens Compose postgres container on macrolens_default.'
     }
-    $inspect = "sudo docker inspect -f '{{with index .NetworkSettings.Networks `"macrolens_default`"}}{{.IPAddress}}{{end}}' $($ids[0])"
-    $ip = Invoke-Ssh $inspect $Config
-    if ($ip -notmatch '^\d{1,3}(\.\d{1,3}){3}$') { throw 'Postgres macrolens_default IP unavailable.' }
+    $inspectTemplate = '{{range $name, $network := .NetworkSettings.Networks}}{{$name}}={{$network.IPAddress}}{{println}}{{end}}'
+    $inspect = "sudo docker inspect -f '$inspectTemplate' $($ids[0])"
+    $ip = Get-MacrolensNetworkIp (Invoke-Ssh $inspect $Config)
     return @{ Id = $ids[0]; Ip = $ip }
 }
 
