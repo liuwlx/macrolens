@@ -288,6 +288,34 @@ function Wait-ForPort([int]$Port, $Process, [int]$Seconds = 25) {
     throw "Port $Port did not open before timeout."
 }
 
+function Test-PythonRuntimeDependencies([string]$Python) {
+    $probe = "import importlib.util,sys;names=('asyncpg','psycopg','uvicorn');sys.exit(3 if any(importlib.util.find_spec(name) is None for name in names) else 0)"
+    $previousErrorActionPreference = $ErrorActionPreference
+    try {
+        # Windows PowerShell turns native stderr into ErrorRecord objects. Limit Continue to
+        # this probe so the expected missing-module result cannot terminate the whole script.
+        $ErrorActionPreference = 'Continue'
+        $probeOutput = & $Python -c $probe 2>&1
+        $exitCode = $LASTEXITCODE
+    } finally {
+        $ErrorActionPreference = $previousErrorActionPreference
+    }
+    if ($exitCode -eq 0) { return $true }
+    if ($exitCode -eq 3) { return $false }
+    $outputPresent = @($probeOutput).Count -gt 0
+    throw "Python dependency probe failed with exit code $exitCode (outputPresent=$outputPresent)."
+}
+
+function Ensure-PythonRuntimeDependencies([string]$Python, [scriptblock]$InstallAction = $null) {
+    if (Test-PythonRuntimeDependencies $Python) { return $false }
+    if ($InstallAction) {
+        & $InstallAction | Out-Null
+    } else {
+        Invoke-Checked $Python @('-m', 'pip', 'install', '--disable-pip-version-check', '-e', (Join-Path $Root 'backend')) | Out-Null
+    }
+    return $true
+}
+
 function Get-Python($Config) {
     $venvRoot = Join-Path $Root '.venv'
     $python = Join-Path $venvRoot 'Scripts\python.exe'
@@ -299,11 +327,7 @@ function Get-Python($Config) {
     }
     $version = Invoke-Checked $python @('-c', "import sys;print(f'{sys.version_info.major}.{sys.version_info.minor}')")
     if ($version -ne '3.12') { throw "Project .venv must use Python 3.12; found $version." }
-    & $python -c 'import asyncpg, psycopg, uvicorn' 2>$null
-    $dependenciesPresent = ($LASTEXITCODE -eq 0)
-    if (-not $dependenciesPresent) {
-        Invoke-Checked $python @('-m', 'pip', 'install', '--disable-pip-version-check', '-e', (Join-Path $Root 'backend')) | Out-Null
-    }
+    Ensure-PythonRuntimeDependencies $python | Out-Null
     return $python
 }
 

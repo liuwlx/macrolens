@@ -24,7 +24,8 @@ $source = [IO.File]::ReadAllText($scriptPath)
     'GRANT SELECT, INSERT ON TABLE audit.audit_log',
     'REVOKE INSERT, UPDATE, DELETE ON TABLE data.observation_vintage',
     'pg_auth_members', 'pg_database', 'pg_namespace', 'pg_proc',
-    'Remove-KnownPreviewServer -ValidateOnly'
+    'Remove-KnownPreviewServer -ValidateOnly', 'Test-PythonRuntimeDependencies',
+    'Ensure-PythonRuntimeDependencies', "`$ErrorActionPreference = 'Continue'"
 ) | ForEach-Object {
     if (-not $source.Contains($_)) { throw "Missing contract: $_" }
 }
@@ -37,6 +38,7 @@ if ($source -match '(?im)^\s*ALTER\s+DEFAULT\s+PRIVILEGES') { throw 'Default pri
 if ($source -match '(?im)^\s*GRANT\s+ALL') { throw 'GRANT ALL forbidden.' }
 if ($source -match '(?im)^\s*GRANT[^;]*\bTRUNCATE\b') { throw 'TRUNCATE grant forbidden.' }
 if ($source -match '(?im)^\s*GRANT[^;]*data\.observation_vintage') { throw 'observation_vintage write grant forbidden.' }
+if ($source.Contains('& $python -c ''import asyncpg, psycopg, uvicorn''')) { throw 'Direct native dependency import probe is forbidden under global EAP Stop.' }
 
 & git.exe -C $repoRoot check-ignore --quiet .env.remote
 if ($LASTEXITCODE -ne 0) { throw '.env.remote must be gitignored.' }
@@ -63,6 +65,33 @@ $node22 = Find-Node22
 if (-not [IO.Path]::IsPathRooted($node22)) { throw 'Node 22 discovery must return an absolute path.' }
 $python312 = Find-Python312Bootstrap
 if (-not [IO.Path]::IsPathRooted($python312)) { throw 'Python 3.12 discovery must return an absolute path.' }
+
+$dependencyTestRoot = Join-Path ([IO.Path]::GetTempPath()) ("macrolens-r2-" + [Guid]::NewGuid().ToString('N'))
+$missingProbe = Join-Path $dependencyTestRoot 'missing.cmd'
+$unexpectedProbe = Join-Path $dependencyTestRoot 'unexpected.cmd'
+New-Item -ItemType Directory -Path $dependencyTestRoot | Out-Null
+try {
+    [IO.File]::WriteAllText($missingProbe, "@echo off`r`nexit /b 3`r`n")
+    [IO.File]::WriteAllText($unexpectedProbe, "@echo off`r`n>&2 echo unexpected probe failure`r`nexit /b 7`r`n")
+    $installEvents = New-Object Collections.Generic.List[string]
+    $installed = Ensure-PythonRuntimeDependencies $missingProbe { $installEvents.Add('installed') }
+    if (-not $installed -or $installEvents.Count -ne 1) { throw 'Missing dependencies must select the install branch exactly once.' }
+    if ($ErrorActionPreference -ne 'Stop') { throw 'Dependency probe must restore ErrorActionPreference.' }
+
+    $unexpectedEvents = New-Object Collections.Generic.List[string]
+    try {
+        Ensure-PythonRuntimeDependencies $unexpectedProbe { $unexpectedEvents.Add('installed') } | Out-Null
+        throw 'Unexpected dependency probe failures must fail closed.'
+    } catch {
+        if ($_.Exception.Message -eq 'Unexpected dependency probe failures must fail closed.') { throw }
+        if ($_.Exception.Message -notmatch 'exit code 7') { throw }
+    }
+    if ($unexpectedEvents.Count -ne 0) { throw 'Unexpected probe failures must not install dependencies.' }
+} finally {
+    if (Test-Path -LiteralPath $missingProbe) { Remove-Item -LiteralPath $missingProbe -Force }
+    if (Test-Path -LiteralPath $unexpectedProbe) { Remove-Item -LiteralPath $unexpectedProbe -Force }
+    if (Test-Path -LiteralPath $dependencyTestRoot) { Remove-Item -LiteralPath $dependencyTestRoot -Force }
+}
 
 $probe = $null
 try {
