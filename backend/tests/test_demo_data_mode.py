@@ -5,6 +5,8 @@ import os
 import subprocess
 import sys
 from pathlib import Path
+from types import SimpleNamespace
+from uuid import uuid4
 
 import pytest
 from pydantic import ValidationError
@@ -131,6 +133,126 @@ asyncio.run(main())
     assert result.returncode == 0, json.dumps(
         {"stdout": result.stdout, "stderr": result.stderr}, ensure_ascii=False
     )
+
+
+def test_demo_missing_workspace_returns_read_only_conflict_without_database_write() -> None:
+    probe = r"""
+import asyncio
+from types import SimpleNamespace
+from uuid import uuid4
+
+import httpx
+
+from macrolens_api import db
+from macrolens_api.dependencies import get_current_user
+from macrolens_api.main import app
+
+
+class WorkspaceSessionSpy:
+    def __init__(self):
+        self.add_calls = 0
+        self.commit_calls = 0
+        self.refresh_calls = 0
+
+    async def scalar(self, statement):
+        return None
+
+    def add(self, workspace):
+        self.add_calls += 1
+
+    async def commit(self):
+        self.commit_calls += 1
+
+    async def refresh(self, workspace):
+        self.refresh_calls += 1
+
+
+async def authenticated_user():
+    return SimpleNamespace(id=uuid4(), display_name="Demo Researcher")
+
+
+async def main():
+    session = WorkspaceSessionSpy()
+
+    async def workspace_session():
+        yield session
+
+    app.dependency_overrides[get_current_user] = authenticated_user
+    app.dependency_overrides[db.get_session] = workspace_session
+    transport = httpx.ASGITransport(app=app)
+    try:
+        async with httpx.AsyncClient(transport=transport, base_url="http://testserver") as client:
+            response = await client.get("/api/v1/series/browser")
+        assert response.status_code == 409, response.text
+        assert response.json()["code"] == "demo_read_only"
+        assert session.add_calls == 0
+        assert session.commit_calls == 0
+        assert session.refresh_calls == 0
+    finally:
+        app.dependency_overrides.clear()
+
+
+asyncio.run(main())
+"""
+    env = os.environ.copy()
+    env.update(
+        {
+            "MACROLENS_DATA_MODE": "demo",
+            "DATABASE_URL": "postgresql+asyncpg://demo:demo@127.0.0.1:1/unreachable",
+            "DATABASE_URL_SYNC": "postgresql+psycopg://demo:demo@127.0.0.1:1/unreachable",
+            "PYTHONPATH": str(ROOT / "backend" / "src"),
+            "ENVIRONMENT": "test",
+        }
+    )
+    result = subprocess.run(
+        [sys.executable, "-c", probe],
+        cwd=ROOT,
+        env=env,
+        capture_output=True,
+        text=True,
+        timeout=30,
+        check=False,
+    )
+    assert result.returncode == 0, json.dumps(
+        {"stdout": result.stdout, "stderr": result.stderr}, ensure_ascii=False
+    )
+
+
+@pytest.mark.asyncio
+async def test_live_missing_workspace_still_creates_and_commits(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from macrolens_api import dependencies
+
+    class WorkspaceSessionSpy:
+        def __init__(self) -> None:
+            self.added: list[object] = []
+            self.commit_calls = 0
+            self.refresh_calls = 0
+
+        async def scalar(self, statement: object) -> None:
+            return None
+
+        def add(self, workspace: object) -> None:
+            self.added.append(workspace)
+
+        async def commit(self) -> None:
+            self.commit_calls += 1
+
+        async def refresh(self, workspace: object) -> None:
+            self.refresh_calls += 1
+
+    if hasattr(dependencies, "settings"):
+        monkeypatch.setattr(dependencies.settings, "data_mode", "live")
+    session = WorkspaceSessionSpy()
+    user = SimpleNamespace(id=uuid4(), display_name="Live Researcher")
+
+    workspace = await dependencies.get_current_workspace(session, user)  # type: ignore[arg-type]
+
+    assert workspace.owner_user_id == user.id
+    assert len(session.added) == 1
+    assert session.commit_calls == 1
+    assert session.refresh_calls == 1
 
 
 def test_demo_taxonomy_search_and_filters_keep_only_matching_direct_child_branches() -> None:

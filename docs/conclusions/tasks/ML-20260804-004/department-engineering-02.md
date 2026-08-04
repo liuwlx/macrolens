@@ -25,6 +25,7 @@ Live 空数据语义通过一次聚合查询取得每个 source 的最早 lifeti
 7. 扩展 `remote-dev.ps1 Start -DataMode Demo|Live`，默认 Demo；两种模式都建立 SSH 隧道并探测 Alembic，以支持真实认证和工作区，状态文件记录 mode。
 8. 刷新 OpenAPI 快照，执行 scoped lint/type、全量测试、脚本安全和 diff 校验。
 9. P1 复核补齐 taxonomy 五类过滤透传；`scope=all&q` 每层只返回父节点的直系子节点，并按后代节点/指标匹配保留祖先、重算 direct/descendant counts。
+10. 最终 P1 复核确认 Demo 仍查询真实工作区；若不存在则在任何 ORM 写操作前返回 `409 demo_read_only`，Live 继续自动创建并提交。
 
 ## 4. Agents、skills、tools 与文档
 
@@ -36,6 +37,7 @@ Live 空数据语义通过一次聚合查询取得每个 source 的最早 lifeti
 ## 5. 可沉淀的经验与模式
 
 - “Demo 指标读取不访问业务表”应由 exploding factory 证明；同时应单独测试认证 session 必然调用，避免把数据隔离误实现为匿名身份绕过。
+- 只读模式中的“查询真实身份数据”不代表允许补写缺失数据；查询为空后的创建逻辑必须在构造 ORM 对象前按 data mode 分流。
 - 演示数据的确定性需要同时固定 ID、随机源、时间锚点和频率边界，仅固定随机种子不够。
 - 空数据不是一种状态。列表 API 应携带 availability，让 UI 可区分尚未采集与历史截止点之前不可用；单指标 API 再根据显式用户意图决定 200 空或 409。
 - 可从一次批量 `min(vintage_at) group by source_series_id` 得到 lifetime 语义，避免浏览页 N+1。
@@ -44,7 +46,7 @@ Live 空数据语义通过一次聚合查询取得每个 source 的最早 lifeti
 
 ## 6. 更好的初始提示词
 
-> 请为 MacroLens 增加一个默认用于本地 UI 验收的只读 Demo 数据模式。Demo 的分类和指标读取不得创建业务数据 session，但认证 cookie、CurrentUser 与 CurrentWorkspace 必须始终使用真实数据库。使用仓库 61 个 canonical series 构造固定时间、固定 ID、跨进程一致的深层分类和指标数据；日/周/月/季精确生成 260/156/120/40 点。taxonomy 搜索必须逐层保留匹配后代的祖先、每次只返回直系子节点，并与 provider/theme/frequency/unit/seasonal_adjustment 过滤一致。所有业务写接口在 Demo 返回 `409 demo_read_only`，production 禁止 Demo。Live 空数据要区分 available、从未入库和指定时点尚不可用，并避免 N+1。`remote-dev Start Demo|Live` 两种模式都建立 SSH 隧道并校验 Alembic。先写失败测试，更新 OpenAPI，跑完整后端测试、scoped Ruff/mypy，并提交工作报告；不要修改前端、不要迁移/seed、不要写远程数据库。
+> 请为 MacroLens 增加一个默认用于本地 UI 验收的只读 Demo 数据模式。Demo 的分类和指标读取不得创建业务数据 session，但认证 cookie、CurrentUser 与 CurrentWorkspace 必须始终查询真实数据库；当前用户无工作区时返回 `409 demo_read_only`，绝不自动创建。使用仓库 61 个 canonical series 构造固定时间、固定 ID、跨进程一致的深层分类和指标数据；日/周/月/季精确生成 260/156/120/40 点。taxonomy 搜索必须逐层保留匹配后代的祖先、每次只返回直系子节点，并与 provider/theme/frequency/unit/seasonal_adjustment 过滤一致。所有业务写接口在 Demo 返回 `409 demo_read_only`，production 禁止 Demo。Live 空数据要区分 available、从未入库和指定时点尚不可用，并避免 N+1。`remote-dev Start Demo|Live` 两种模式都建立 SSH 隧道并校验 Alembic。先写失败测试，更新 OpenAPI，跑完整后端测试、scoped Ruff/mypy，并提交工作报告；不要修改前端、不要迁移/seed、不要写远程数据库。
 
 ## 7. 更优方案反思与提示词
 
@@ -55,6 +57,7 @@ Live 空数据语义通过一次聚合查询取得每个 source 的最早 lifeti
 ## 验证记录
 
 - `pytest backend/tests -q`（`PYTHONUTF8=1`）：132 passed。
+- 最终 workspace P1 focused：`pytest backend/tests/test_demo_data_mode.py -q`，9 passed；Demo `add/commit/refresh` 均为 0，Live 各为 1。
 - 本任务 15 个新增/修改 Python 文件 scoped `ruff check`：0 diagnostics。
 - `mypy --follow-imports=skip backend/src/macrolens_api/demo_data.py`：0 issues。
 - `mypy backend/src`：37 个既有错误，分布于 16 个历史 API/Worker 文件；本任务新增 Demo 模块无错误。本任务未扩 scope 修复这些基线债务。

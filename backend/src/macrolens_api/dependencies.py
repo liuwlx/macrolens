@@ -7,6 +7,7 @@ from fastapi import Cookie, Depends
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from .config import get_settings
 from .db import get_read_session, get_session
 from .errors import AppError
 from .models import RefreshSession, User, Workspace
@@ -14,6 +15,7 @@ from .security import TokenType, decode_token
 
 SessionDep = Annotated[AsyncSession, Depends(get_session)]
 ReadSessionDep = Annotated[AsyncSession | None, Depends(get_read_session)]
+settings = get_settings()
 
 
 async def get_current_user(
@@ -44,6 +46,13 @@ async def get_current_workspace(session: SessionDep, user: CurrentUser) -> Works
         select(Workspace).where(Workspace.owner_user_id == user.id).order_by(Workspace.created_at)
     )
     if workspace is None:
+        if settings.data_mode == "demo":
+            raise AppError(
+                409,
+                "Demo 模式只读",
+                "当前用户尚无工作区，Demo 模式不会自动创建工作区。",
+                "demo_read_only",
+            )
         workspace = Workspace(name=f"{user.display_name}的工作区", owner_user_id=user.id)
         session.add(workspace)
         await session.commit()
