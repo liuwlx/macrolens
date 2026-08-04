@@ -21,9 +21,19 @@ function Assert-LastExitCode([string]$Name) {
 }
 
 function Invoke-Checked([string]$File, [string[]]$Arguments, [string]$StandardInput = '') {
-    if ($StandardInput) { $output = $StandardInput | & $File @Arguments 2>&1 }
-    else { $output = & $File @Arguments 2>&1 }
-    Assert-LastExitCode $File
+    $previousErrorActionPreference = $ErrorActionPreference
+    try {
+        $ErrorActionPreference = 'Continue'
+        if ($StandardInput) { $output = $StandardInput | & $File @Arguments 2>&1 }
+        else { $output = & $File @Arguments 2>&1 }
+        $exitCode = $LASTEXITCODE
+    } finally {
+        $ErrorActionPreference = $previousErrorActionPreference
+    }
+    if ($exitCode -ne 0) {
+        $executableName = [IO.Path]::GetFileName($File)
+        throw "$executableName exited with code $exitCode."
+    }
     return (($output | ForEach-Object { [string]$_ }) -join "`n").Trim()
 }
 
@@ -306,12 +316,43 @@ function Test-PythonRuntimeDependencies([string]$Python) {
     throw "Python dependency probe failed with exit code $exitCode (outputPresent=$outputPresent)."
 }
 
+function Get-PipFailureCategory([object[]]$Output) {
+    $text = (($Output | ForEach-Object { [string]$_ }) -join "`n")
+    if ($text -match '(?i)no space left|disk full') { return 'disk-space' }
+    if ($text -match '(?i)permission denied|access is denied') { return 'filesystem-permission' }
+    if ($text -match '(?i)ResolutionImpossible|conflicting dependencies') { return 'dependency-resolution' }
+    if ($text -match '(?i)No matching distribution|Could not find a version') { return 'package-unavailable' }
+    if ($text -match '(?i)ReadTimeout|ConnectTimeout|ConnectionError|ProtocolError|Connection reset|SSLError|ProxyError|timed out') { return 'network' }
+    if ($text -match '(?i)subprocess-exited-with-error|Failed to build|build backend') { return 'build' }
+    return 'unclassified'
+}
+
+function Invoke-PipInstall([string]$Python, [string]$BackendPath) {
+    $arguments = @(
+        '-m', 'pip', 'install', '--disable-pip-version-check', '--timeout', '60',
+        '--retries', '5', '--no-input', '-e', $BackendPath
+    )
+    $previousErrorActionPreference = $ErrorActionPreference
+    try {
+        $ErrorActionPreference = 'Continue'
+        $output = & $Python @arguments 2>&1
+        $exitCode = $LASTEXITCODE
+    } finally {
+        $ErrorActionPreference = $previousErrorActionPreference
+    }
+    if ($exitCode -ne 0) {
+        $category = Get-PipFailureCategory @($output)
+        throw "pip install failed with exit code $exitCode (category=$category)."
+    }
+    return (($output | ForEach-Object { [string]$_ }) -join "`n").Trim()
+}
+
 function Ensure-PythonRuntimeDependencies([string]$Python, [scriptblock]$InstallAction = $null) {
     if (Test-PythonRuntimeDependencies $Python) { return $false }
     if ($InstallAction) {
         & $InstallAction | Out-Null
     } else {
-        Invoke-Checked $Python @('-m', 'pip', 'install', '--disable-pip-version-check', '-e', (Join-Path $Root 'backend')) | Out-Null
+        Invoke-PipInstall $Python (Join-Path $Root 'backend') | Out-Null
     }
     return $true
 }

@@ -25,7 +25,9 @@ $source = [IO.File]::ReadAllText($scriptPath)
     'REVOKE INSERT, UPDATE, DELETE ON TABLE data.observation_vintage',
     'pg_auth_members', 'pg_database', 'pg_namespace', 'pg_proc',
     'Remove-KnownPreviewServer -ValidateOnly', 'Test-PythonRuntimeDependencies',
-    'Ensure-PythonRuntimeDependencies', "`$ErrorActionPreference = 'Continue'"
+    'Ensure-PythonRuntimeDependencies', "`$ErrorActionPreference = 'Continue'",
+    'Get-PipFailureCategory', 'Invoke-PipInstall', "'--timeout', '60'",
+    "'--retries', '5'", "'--no-input'"
 ) | ForEach-Object {
     if (-not $source.Contains($_)) { throw "Missing contract: $_" }
 }
@@ -69,10 +71,30 @@ if (-not [IO.Path]::IsPathRooted($python312)) { throw 'Python 3.12 discovery mus
 $dependencyTestRoot = Join-Path ([IO.Path]::GetTempPath()) ("macrolens-r2-" + [Guid]::NewGuid().ToString('N'))
 $missingProbe = Join-Path $dependencyTestRoot 'missing.cmd'
 $unexpectedProbe = Join-Path $dependencyTestRoot 'unexpected.cmd'
+$checkedSuccess = Join-Path $dependencyTestRoot 'checked-success.cmd'
+$checkedFailure = Join-Path $dependencyTestRoot 'checked-failure.cmd'
 New-Item -ItemType Directory -Path $dependencyTestRoot | Out-Null
 try {
     [IO.File]::WriteAllText($missingProbe, "@echo off`r`nexit /b 3`r`n")
     [IO.File]::WriteAllText($unexpectedProbe, "@echo off`r`n>&2 echo unexpected probe failure`r`nexit /b 7`r`n")
+    [IO.File]::WriteAllText($checkedSuccess, "@echo off`r`necho success-stdout`r`n>&2 echo success-stderr`r`nexit /b 0`r`n")
+    [IO.File]::WriteAllText($checkedFailure, "@echo off`r`n>&2 echo secret-canary-must-not-leak`r`nexit /b 7`r`n")
+
+    $checkedOutput = Invoke-Checked $checkedSuccess @()
+    if ($checkedOutput -notmatch 'success-stdout' -or $checkedOutput -notmatch 'success-stderr') { throw 'Successful native output must include stdout and stderr.' }
+    if ($ErrorActionPreference -ne 'Stop') { throw 'Invoke-Checked must restore EAP after success.' }
+    try {
+        Invoke-Checked $checkedFailure @() | Out-Null
+        throw 'Nonzero native command must fail.'
+    } catch {
+        if ($_.Exception.Message -eq 'Nonzero native command must fail.') { throw }
+        if ($_.Exception.Message -notmatch 'checked-failure\.cmd exited with code 7') { throw }
+        if ($_.Exception.Message -match 'secret-canary-must-not-leak') { throw 'Generic native failure leaked captured output.' }
+    }
+    if ($ErrorActionPreference -ne 'Stop') { throw 'Invoke-Checked must restore EAP after failure.' }
+
+    $pipCategory = Get-PipFailureCategory @('https://user:password@example.invalid REMOTE_DB_PASSWORD=secret ReadTimeout')
+    if ($pipCategory -ne 'network') { throw 'Pip diagnostics must return a bounded non-secret category.' }
     $installEvents = New-Object Collections.Generic.List[string]
     $installed = Ensure-PythonRuntimeDependencies $missingProbe { $installEvents.Add('installed') }
     if (-not $installed -or $installEvents.Count -ne 1) { throw 'Missing dependencies must select the install branch exactly once.' }
@@ -90,6 +112,8 @@ try {
 } finally {
     if (Test-Path -LiteralPath $missingProbe) { Remove-Item -LiteralPath $missingProbe -Force }
     if (Test-Path -LiteralPath $unexpectedProbe) { Remove-Item -LiteralPath $unexpectedProbe -Force }
+    if (Test-Path -LiteralPath $checkedSuccess) { Remove-Item -LiteralPath $checkedSuccess -Force }
+    if (Test-Path -LiteralPath $checkedFailure) { Remove-Item -LiteralPath $checkedFailure -Force }
     if (Test-Path -LiteralPath $dependencyTestRoot) { Remove-Item -LiteralPath $dependencyTestRoot -Force }
 }
 
