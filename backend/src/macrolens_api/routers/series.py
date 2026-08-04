@@ -6,7 +6,17 @@ from uuid import UUID
 
 from fastapi import APIRouter, Query, Response
 
-from ..dependencies import CurrentUser, CurrentWorkspace, SessionDep
+from ..config import get_settings
+from ..demo_data import (
+    demo_analytics,
+    demo_list_series,
+    demo_observations,
+    demo_revisions,
+    demo_series_browser,
+    demo_series_csv,
+    demo_series_detail,
+)
+from ..dependencies import CurrentUser, CurrentWorkspace, ReadSessionDep
 from ..errors import AppError
 from ..schemas import (
     ObservationResponse,
@@ -27,6 +37,7 @@ from ..services.data_browser import (
 from ..services.series import get_observations, get_revisions, get_series_detail, search_series
 
 router = APIRouter(prefix="/series", tags=["Series"])
+settings = get_settings()
 
 
 def _validate_date_range(start: date | None, end: date | None) -> None:
@@ -35,7 +46,7 @@ def _validate_date_range(start: date | None, end: date | None) -> None:
 
 
 async def _browser_filters(
-    session: SessionDep,
+    session: ReadSessionDep,
     *,
     q: str | None,
     node_id: UUID | None,
@@ -46,6 +57,7 @@ async def _browser_filters(
     unit: str | None,
     seasonal_adjustment: str | None,
 ) -> BrowserFilters:
+    assert session is not None
     node_ids = (
         await taxonomy_descendant_ids(session, tree_code, node_id) if node_id is not None else None
     )
@@ -62,7 +74,7 @@ async def _browser_filters(
 
 @router.get("/browser", response_model=SeriesBrowserResponse)
 async def browse_series(
-    session: SessionDep,
+    session: ReadSessionDep,
     _user: CurrentUser,
     _workspace: CurrentWorkspace,
     q: str | None = Query(default=None, max_length=200),
@@ -85,6 +97,23 @@ async def browse_series(
     data_as_of: datetime | None = None,
 ) -> SeriesBrowserResponse:
     _validate_date_range(published_from, published_to)
+    if settings.data_mode == "demo":
+        return demo_series_browser(
+            q=q,
+            node_id=node_id,
+            provider=provider,
+            theme=theme,
+            frequency=frequency,
+            unit=unit,
+            seasonal_adjustment=seasonal_adjustment,
+            published_from=published_from,
+            published_to=published_to,
+            sort=sort,
+            order=order,
+            limit=limit,
+            offset=offset,
+        )
+    assert session is not None
     filters = await _browser_filters(
         session,
         q=q,
@@ -111,7 +140,7 @@ async def browse_series(
 
 @router.get("/browser/export")
 async def export_series_browser(
-    session: SessionDep,
+    session: ReadSessionDep,
     _user: CurrentUser,
     _workspace: CurrentWorkspace,
     q: str | None = Query(default=None, max_length=200),
@@ -132,6 +161,34 @@ async def export_series_browser(
     data_as_of: datetime | None = None,
 ) -> Response:
     _validate_date_range(published_from, published_to)
+    if settings.data_mode == "demo":
+        result = demo_series_browser(
+            q=q,
+            node_id=node_id,
+            provider=provider,
+            theme=theme,
+            frequency=frequency,
+            unit=unit,
+            seasonal_adjustment=seasonal_adjustment,
+            published_from=published_from,
+            published_to=published_to,
+            sort=sort,
+            order=order,
+            limit=10_000,
+            offset=0,
+        )
+        filename = "macrolens-series-browser.demo.csv"
+        return Response(
+            content=browser_csv(result),
+            media_type="text/csv; charset=utf-8",
+            headers={
+                "Content-Disposition": f'attachment; filename="{filename}"',
+                "X-Content-Type-Options": "nosniff",
+                "X-MacroLens-Data-Mode": "demo",
+                "Cache-Control": "private, no-store",
+            },
+        )
+    assert session is not None
     filters = await _browser_filters(
         session,
         q=q,
@@ -160,6 +217,7 @@ async def export_series_browser(
         headers={
             "Content-Disposition": 'attachment; filename="macrolens-series-browser.csv"',
             "X-Content-Type-Options": "nosniff",
+            "X-MacroLens-Data-Mode": "live",
             "Cache-Control": "private, no-store",
         },
     )
@@ -168,7 +226,7 @@ async def export_series_browser(
 @router.get("/{series_id}/export")
 async def export_series(
     series_id: UUID,
-    session: SessionDep,
+    session: ReadSessionDep,
     _user: CurrentUser,
     _workspace: CurrentWorkspace,
     start: date | None = None,
@@ -180,6 +238,25 @@ async def export_series(
     data_as_of: datetime | None = None,
 ) -> Response:
     _validate_date_range(start, end)
+    if settings.data_mode == "demo":
+        content = demo_series_csv(
+            series_id,
+            start=start,
+            end=end,
+            transform=transform,
+        )
+        filename = "macrolens-series.demo.csv"
+        return Response(
+            content=content,
+            media_type="text/csv; charset=utf-8",
+            headers={
+                "Content-Disposition": f'attachment; filename="{filename}"',
+                "X-Content-Type-Options": "nosniff",
+                "X-MacroLens-Data-Mode": "demo",
+                "Cache-Control": "private, no-store",
+            },
+        )
+    assert session is not None
     content = await series_csv(
         session,
         series_id=series_id,
@@ -194,6 +271,7 @@ async def export_series(
         headers={
             "Content-Disposition": 'attachment; filename="macrolens-series.csv"',
             "X-Content-Type-Options": "nosniff",
+            "X-MacroLens-Data-Mode": "live",
             "Cache-Control": "private, no-store",
         },
     )
@@ -202,7 +280,7 @@ async def export_series(
 @router.get("/{series_id}/analytics", response_model=SeriesAnalyticsResponse)
 async def get_series_analytics(
     series_id: UUID,
-    session: SessionDep,
+    session: ReadSessionDep,
     _user: CurrentUser,
     _workspace: CurrentWorkspace,
     start: date | None = None,
@@ -214,6 +292,9 @@ async def get_series_analytics(
     data_as_of: datetime | None = None,
 ) -> SeriesAnalyticsResponse:
     _validate_date_range(start, end)
+    if settings.data_mode == "demo":
+        return demo_analytics(series_id, start=start, end=end, transform=transform)
+    assert session is not None
     return await series_analytics(
         session,
         series_id=series_id,
@@ -226,7 +307,7 @@ async def get_series_analytics(
 
 @router.get("")
 async def list_series(
-    session: SessionDep,
+    session: ReadSessionDep,
     q: str | None = Query(default=None, max_length=200),
     theme: str | None = None,
     provider: str | None = None,
@@ -236,6 +317,17 @@ async def list_series(
     limit: int = Query(default=50, ge=1, le=200),
     offset: int = Query(default=0, ge=0),
 ) -> dict[str, Any]:
+    if settings.data_mode == "demo":
+        return demo_list_series(
+            q=q,
+            theme=theme,
+            provider=provider,
+            frequency=frequency,
+            unit=unit,
+            limit=limit,
+            offset=offset,
+        )
+    assert session is not None
     items, total = await search_series(
         session,
         q=q,
@@ -247,18 +339,26 @@ async def list_series(
         limit=limit,
         offset=offset,
     )
-    return {"items": [item.model_dump(mode="json") for item in items], "total": total, "limit": limit, "offset": offset}
+    return {
+        "items": [item.model_dump(mode="json") for item in items],
+        "total": total,
+        "limit": limit,
+        "offset": offset,
+    }
 
 
 @router.get("/{series_id}", response_model=SeriesDetail)
-async def series_detail(series_id: UUID, session: SessionDep) -> SeriesDetail:
+async def series_detail(series_id: UUID, session: ReadSessionDep) -> SeriesDetail:
+    if settings.data_mode == "demo":
+        return demo_series_detail(series_id)
+    assert session is not None
     return await get_series_detail(session, series_id)
 
 
 @router.get("/{series_id}/observations", response_model=ObservationResponse)
 async def series_observations(
     series_id: UUID,
-    session: SessionDep,
+    session: ReadSessionDep,
     _user: CurrentUser,
     _workspace: CurrentWorkspace,
     start: date | None = None,
@@ -270,6 +370,9 @@ async def series_observations(
     data_as_of: datetime | None = None,
 ) -> ObservationResponse:
     _validate_date_range(start, end)
+    if settings.data_mode == "demo":
+        return demo_observations(series_id, start=start, end=end, transform=transform)
+    assert session is not None
     snapshot = normalize_data_as_of(data_as_of)
     return await get_observations(
         session,
@@ -278,13 +381,14 @@ async def series_observations(
         end=end,
         transform=transform,
         data_as_of=snapshot,
+        historical_cutoff=data_as_of is not None,
     )
 
 
 @router.get("/{series_id}/revisions", response_model=RevisionResponse)
 async def series_revisions(
     series_id: UUID,
-    session: SessionDep,
+    session: ReadSessionDep,
     _user: CurrentUser,
     _workspace: CurrentWorkspace,
     start: date | None = None,
@@ -292,6 +396,9 @@ async def series_revisions(
     data_as_of: datetime | None = None,
 ) -> RevisionResponse:
     _validate_date_range(start, end)
+    if settings.data_mode == "demo":
+        return demo_revisions(series_id, start=start, end=end)
+    assert session is not None
     return await get_revisions(
         session,
         series_id=series_id,

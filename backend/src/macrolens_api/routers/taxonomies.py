@@ -7,18 +7,21 @@ from uuid import UUID
 from fastapi import APIRouter, Path, Query
 from sqlalchemy import select
 
-from ..dependencies import SessionDep
+from ..config import get_settings
+from ..demo_data import demo_taxonomy, demo_taxonomy_children
+from ..dependencies import ReadSessionDep
 from ..errors import AppError
 from ..models import Series, TaxonomyNode, TaxonomySeries
 from ..schemas import TaxonomyChildNode, TaxonomyChildrenResponse
 from ..services.data_browser import BrowserFilters, _load_candidates, _matches, _summary
 
 router = APIRouter(prefix="/taxonomies", tags=["Catalog"])
+settings = get_settings()
 
 
 @router.get("/{tree_code}/children", response_model=TaxonomyChildrenResponse)
 async def taxonomy_children(
-    session: SessionDep,
+    session: ReadSessionDep,
     tree_code: str = Path(min_length=1, max_length=80),
     parent_id: UUID | None = None,
     q: str | None = Query(default=None, max_length=200),
@@ -29,6 +32,14 @@ async def taxonomy_children(
     unit: str | None = None,
     seasonal_adjustment: str | None = None,
 ) -> TaxonomyChildrenResponse:
+    if settings.data_mode == "demo":
+        return demo_taxonomy_children(
+            tree_code,
+            parent_id=parent_id,
+            q=q,
+            scope=scope,
+        )
+    assert session is not None
     parsed_parent = parent_id
     nodes = list(
         (
@@ -127,11 +138,17 @@ async def taxonomy_children(
         parent_id=parsed_parent,
         nodes=response_nodes,
         series=direct_series,
+        data_mode="live",
     )
 
 
 @router.get("/{tree_code}")
-async def taxonomy(tree_code: str, session: SessionDep, include_series: bool = True) -> dict[str, Any]:
+async def taxonomy(
+    tree_code: str, session: ReadSessionDep, include_series: bool = True
+) -> dict[str, Any]:
+    if settings.data_mode == "demo":
+        return demo_taxonomy(tree_code, include_series=include_series)
+    assert session is not None
     nodes = list(
         (
             await session.scalars(
@@ -147,7 +164,10 @@ async def taxonomy(tree_code: str, session: SessionDep, include_series: bool = T
             await session.execute(
                 select(TaxonomySeries, Series)
                 .join(Series, Series.id == TaxonomySeries.series_id)
-                .where(TaxonomySeries.node_id.in_([node.id for node in nodes]), Series.status == "active")
+                .where(
+                    TaxonomySeries.node_id.in_([node.id for node in nodes]),
+                    Series.status == "active",
+                )
                 .order_by(TaxonomySeries.display_order, Series.name_zh)
             )
         ).all()
@@ -180,4 +200,8 @@ async def taxonomy(tree_code: str, session: SessionDep, include_series: bool = T
             "children": [serialize(child) for child in children[node.id]],
         }
 
-    return {"tree_code": tree_code, "nodes": [serialize(node) for node in children[None]]}
+    return {
+        "tree_code": tree_code,
+        "nodes": [serialize(node) for node in children[None]],
+        "data_mode": "live",
+    }

@@ -37,6 +37,7 @@ async def compare_series(session: AsyncSession, request: CompareRequest) -> Comp
             transform=spec.transform,
             data_as_of=data_as_of,
             first_release=request.vintage == "first_release",
+            historical_cutoff=request.vintage not in {"latest", "first_release"},
         )
         data = response.data
         if spec.lag_periods:

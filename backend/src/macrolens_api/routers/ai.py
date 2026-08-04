@@ -10,7 +10,8 @@ from fastapi import APIRouter, Header, Response
 from sqlalchemy import select
 
 from ..config import get_settings
-from ..dependencies import CurrentUser, CurrentWorkspace, SessionDep
+from ..demo_data import demo_ai_capability
+from ..dependencies import CurrentUser, CurrentWorkspace, ReadSessionDep, SessionDep
 from ..errors import AppError
 from ..models import AICitation, AIRun, Project
 from ..schemas import AICapabilityResponse, AICitationPublic, AIRunCreate, AIRunPublic
@@ -26,11 +27,14 @@ settings = get_settings()
 @router.get("/capabilities", response_model=AICapabilityResponse)
 async def get_ai_capability(
     series_id: UUID,
-    session: SessionDep,
+    session: ReadSessionDep,
     _user: CurrentUser,
     _workspace: CurrentWorkspace,
     data_as_of: datetime | None = None,
 ) -> AICapabilityResponse:
+    if settings.data_mode == "demo":
+        return demo_ai_capability(series_id)
+    assert session is not None
     if data_as_of is not None and normalize_data_as_of(data_as_of) > datetime.now(UTC):
         raise AppError(
             422,

@@ -4,7 +4,12 @@ from collections.abc import AsyncIterator
 from functools import lru_cache
 from typing import Any
 
-from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import (
+    AsyncEngine,
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
+)
 
 from .config import get_settings
 
@@ -13,7 +18,7 @@ settings = get_settings()
 
 @lru_cache(maxsize=1)
 def get_engine() -> AsyncEngine:
-    """Create the async engine lazily so schema/openapi tooling can import the app without a DB driver."""
+    """Create the engine lazily so tooling can import the app without a DB driver."""
     return create_async_engine(
         settings.database_url,
         pool_pre_ping=True,
@@ -43,6 +48,15 @@ async def get_session() -> AsyncIterator[AsyncSession]:
         except Exception:
             await session.rollback()
             raise
+
+
+async def get_read_session() -> AsyncIterator[AsyncSession | None]:
+    """Avoid constructing a database session for deterministic demo reads."""
+    if settings.data_mode == "demo":
+        yield None
+        return
+    async for session in get_session():
+        yield session
 
 
 async def dispose_engine() -> None:

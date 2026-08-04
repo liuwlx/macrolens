@@ -6,24 +6,25 @@ from collections import defaultdict, deque
 from collections.abc import Awaitable, Callable
 from typing import Any
 
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from fastapi import Request, Response
+from sqlalchemy.ext.asyncio import AsyncSession
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.responses import JSONResponse
 
 from .config import get_settings
 from .db import SessionLocal
 from .logging import get_logger
 from .models import AuditLog
 from .security import TokenType, decode_token
-from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.responses import JSONResponse
 
 logger = get_logger(__name__)
 settings = get_settings()
 
 
 class RequestContextMiddleware(BaseHTTPMiddleware):
-    async def dispatch(self, request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
+    async def dispatch(
+        self, request: Request, call_next: Callable[[Request], Awaitable[Response]]
+    ) -> Response:
         request_id = request.headers.get("x-request-id") or secrets.token_hex(12)
         request.state.request_id = request_id
         started = time.perf_counter()
@@ -70,8 +71,16 @@ class LocalRateLimitMiddleware(BaseHTTPMiddleware):
                 self._hits.pop(client, None)
         self._last_cleanup = now
 
-    async def dispatch(self, request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
-        if request.url.path in {"/api/v1/health", "/api/v1/live", "/api/v1/ready", "/metrics", "/metrics/"}:
+    async def dispatch(
+        self, request: Request, call_next: Callable[[Request], Awaitable[Response]]
+    ) -> Response:
+        if request.url.path in {
+            "/api/v1/health",
+            "/api/v1/live",
+            "/api/v1/ready",
+            "/metrics",
+            "/metrics/",
+        }:
             return await call_next(request)
         client = request.client.host if request.client else "unknown"
         now = time.monotonic()
@@ -102,14 +111,23 @@ class CsrfOriginMiddleware(BaseHTTPMiddleware):
         super().__init__(app)
         self.allowed_origin = allowed_origin.rstrip("/")
 
-    async def dispatch(self, request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
+    async def dispatch(
+        self, request: Request, call_next: Callable[[Request], Awaitable[Response]]
+    ) -> Response:
         if request.method in {"GET", "HEAD", "OPTIONS", "TRACE"}:
             return await call_next(request)
         origin = request.headers.get("origin")
         referer = request.headers.get("referer")
         candidate = origin or (referer.rstrip("/") if referer else None)
-        has_auth_cookie = bool(request.cookies.get("macrolens_access") or request.cookies.get("macrolens_refresh"))
-        if (has_auth_cookie and not candidate) or (candidate and not (candidate == self.allowed_origin or candidate.startswith(f"{self.allowed_origin}/"))):
+        has_auth_cookie = bool(
+            request.cookies.get("macrolens_access") or request.cookies.get("macrolens_refresh")
+        )
+        if (has_auth_cookie and not candidate) or (
+            candidate
+            and not (
+                candidate == self.allowed_origin or candidate.startswith(f"{self.allowed_origin}/")
+            )
+        ):
             return JSONResponse(
                 status_code=403,
                 content={
@@ -123,10 +141,42 @@ class CsrfOriginMiddleware(BaseHTTPMiddleware):
         return await call_next(request)
 
 
+class DemoReadOnlyMiddleware(BaseHTTPMiddleware):
+    """Fail closed for API mutations while serving deterministic demo data."""
+
+    _AUTH_SESSION_PATHS = {
+        "/api/v1/auth/login",
+        "/api/v1/auth/logout",
+        "/api/v1/auth/refresh",
+    }
+
+    async def dispatch(
+        self, request: Request, call_next: Callable[[Request], Awaitable[Response]]
+    ) -> Response:
+        if (
+            settings.data_mode == "demo"
+            and request.method in {"POST", "PUT", "PATCH", "DELETE"}
+            and request.url.path not in self._AUTH_SESSION_PATHS
+        ):
+            return JSONResponse(
+                status_code=409,
+                content={
+                    "type": "https://api.macrolens.local/problems/demo-read-only",
+                    "title": "Demo data mode is read-only",
+                    "status": 409,
+                    "detail": "State-changing API operations are disabled in demo data mode.",
+                    "code": "demo_read_only",
+                },
+            )
+        return await call_next(request)
+
+
 class AuditMiddleware(BaseHTTPMiddleware):
     """Best-effort immutable audit trail for successful state-changing API requests."""
 
-    async def dispatch(self, request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
+    async def dispatch(
+        self, request: Request, call_next: Callable[[Request], Awaitable[Response]]
+    ) -> Response:
         response = await call_next(request)
         if request.method not in {"POST", "PUT", "PATCH", "DELETE"} or response.status_code >= 400:
             return response

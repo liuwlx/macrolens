@@ -47,6 +47,7 @@ from ..schemas import (
     NextRelease,
     ProviderInfo,
     SeriesAnalyticsResponse,
+    SeriesAvailability,
     SeriesBrowserItem,
     SeriesBrowserResponse,
     SeriesCapabilities,
@@ -216,6 +217,7 @@ def build_browser_item(
     candidate: BrowserCandidate,
     points: list[Point],
     license_info: LicenseInfo | None,
+    availability: SeriesAvailability | None = None,
 ) -> SeriesBrowserItem:
     series = candidate.series
     reason_code, reason = _source_reason(candidate)
@@ -298,6 +300,7 @@ def build_browser_item(
         source_status=candidate.source_status,
         unavailable_reason_code=reason_code,
         taxonomy_order=candidate.taxonomy_order,
+        availability=availability or ("available" if current is not None else "not_ingested"),
     )
 
 
@@ -585,6 +588,44 @@ async def _points_by_source(
     return dict(grouped)
 
 
+async def _earliest_vintage_by_source(
+    session: AsyncSession,
+    source_ids: set[int],
+) -> dict[int, datetime]:
+    if not source_ids:
+        return {}
+    rows = (
+        await session.execute(
+            select(
+                ObservationVintage.source_series_id,
+                func.min(ObservationVintage.vintage_at),
+            )
+            .where(ObservationVintage.source_series_id.in_(source_ids))
+            .group_by(ObservationVintage.source_series_id)
+        )
+    ).all()
+    return {
+        int(source_id): earliest for source_id, earliest in rows if isinstance(earliest, datetime)
+    }
+
+
+async def _lifetime_availability_by_source(
+    session: AsyncSession,
+    source_ids: set[int],
+    *,
+    data_as_of: datetime,
+) -> dict[int, SeriesAvailability]:
+    earliest = await _earliest_vintage_by_source(session, source_ids)
+    return {
+        source_id: (
+            "not_available_as_of"
+            if source_id in earliest and earliest[source_id] > data_as_of
+            else "not_ingested"
+        )
+        for source_id in source_ids
+    }
+
+
 async def _latest_publications_by_source(
     session: AsyncSession,
     source_ids: set[int],
@@ -628,9 +669,7 @@ async def _sort_points_by_source(
     data_as_of: datetime,
 ) -> dict[int, list[Point]]:
     """Load only current, previous and calendar-lag points needed by browser sort metrics."""
-    bindings = [
-        binding for candidate in candidates if (binding := candidate.binding) is not None
-    ]
+    bindings = [binding for candidate in candidates if (binding := candidate.binding) is not None]
     if not bindings:
         return {}
     source_ids = {binding.source.id for binding in bindings}
@@ -812,6 +851,7 @@ async def series_browser(
             publication_source_ids,
             data_as_of=snapshot,
         )
+
         def publication_matches(candidate: BrowserCandidate) -> bool:
             binding = candidate.binding
             published = publications.get(binding.source.id) if binding is not None else None
@@ -824,9 +864,7 @@ async def series_browser(
 
         matched = [candidate for candidate in matched if publication_matches(candidate)]
 
-    all_bindings = [
-        binding for candidate in matched if (binding := candidate.binding) is not None
-    ]
+    all_bindings = [binding for candidate in matched if (binding := candidate.binding) is not None]
     all_license_by_source: dict[int, LicenseInfo] | None = None
     if sort in {"current_period", "current", "change", "period_change", "yoy"}:
         all_license_by_source = await _license_map(session, all_bindings)
@@ -867,27 +905,31 @@ async def series_browser(
     )
     page_source_ids = {binding.source.id for binding in bindings}
     points = await _points_by_source(session, page_source_ids, data_as_of=snapshot)
+    empty_source_ids = {source_id for source_id in page_source_ids if not points.get(source_id)}
+    availability_by_source = await _lifetime_availability_by_source(
+        session,
+        empty_source_ids,
+        data_as_of=snapshot,
+    )
     items = [
         build_browser_item(
             candidate,
             points.get(candidate.binding.source.id, []) if candidate.binding else [],
             license_by_source.get(candidate.binding.source.id) if candidate.binding else None,
+            (
+                availability_by_source.get(candidate.binding.source.id, "available")
+                if candidate.binding
+                else "not_ingested"
+            ),
         )
         for candidate in page
     ]
-    if data_as_of is not None and page_source_ids and not any(item.current for item in items):
-        raise AppError(
-            409,
-            "快照不可用",
-            "指定 data_as_of 无法复现任何匹配指标的观测。",
-            "snapshot_unavailable",
-            {"data_as_of": snapshot.isoformat()},
-        )
     return SeriesBrowserResponse(
         items=items,
         facets=facets,
         pagination=BrowserPagination(total=total, limit=limit, offset=offset),
         data_as_of=snapshot,
+        data_mode="live",
     )
 
 
@@ -910,9 +952,7 @@ def browser_csv(response: SeriesBrowserResponse) -> bytes:
             "export_limit_exceeded",
         )
     restricted = [
-        item
-        for item in response.items
-        if item.license is None or not item.license.download_allowed
+        item for item in response.items if item.license is None or not item.license.download_allowed
     ]
     if restricted:
         raise AppError(
@@ -942,6 +982,7 @@ def browser_csv(response: SeriesBrowserResponse) -> bytes:
             "period_change",
             "yoy",
             "data_as_of",
+            "data_mode",
         ]
     )
     for item in response.items:
@@ -960,6 +1001,7 @@ def browser_csv(response: SeriesBrowserResponse) -> bytes:
                 item.period_change.value if item.period_change.value is not None else "",
                 item.yoy.value if item.yoy.value is not None else "",
                 response.data_as_of.isoformat(),
+                response.data_mode,
             ]
         )
     return ("\ufeff" + output.getvalue()).encode("utf-8")
@@ -999,7 +1041,7 @@ async def series_csv(
             {"restricted_total": 1, "restricted_series": [candidate.series.name_zh]},
         )
     snapshot = normalize_data_as_of(data_as_of)
-    points = (
+    snapshot_points = (
         await _points_by_source(
             session,
             {binding.source.id},
@@ -1007,20 +1049,23 @@ async def series_csv(
             max_points=10_001,
         )
     ).get(binding.source.id, [])
+    if data_as_of is not None and not snapshot_points:
+        earliest = await _earliest_vintage_by_source(session, {binding.source.id})
+        if earliest.get(binding.source.id, snapshot) > snapshot:
+            raise AppError(
+                409,
+                "快照不可用",
+                "指定 data_as_of 无法复现该指标的观测。",
+                "snapshot_unavailable",
+                {"data_as_of": snapshot.isoformat()},
+            )
+    points = snapshot_points
     points = [
         point
         for point in points
         if (start is None or point.period_start >= start)
         and (end is None or point.period_start <= end)
     ]
-    if data_as_of is not None and not points:
-        raise AppError(
-            409,
-            "快照不可用",
-            "指定 data_as_of 无法复现该指标的观测。",
-            "snapshot_unavailable",
-            {"data_as_of": snapshot.isoformat()},
-        )
     if len(points) > 10_000:
         raise AppError(
             413,
@@ -1043,6 +1088,7 @@ async def series_csv(
             "published_at",
             "vintage_at",
             "data_as_of",
+            "data_mode",
             "transform",
             "unit",
             "provider",
@@ -1059,13 +1105,10 @@ async def series_csv(
                 point.period_end,
                 point.value if point.value is not None else "",
                 _csv_safe(point.status),
-                point.published_at.isoformat()
-                if isinstance(point.published_at, datetime)
-                else "",
-                point.vintage_at.isoformat()
-                if isinstance(point.vintage_at, datetime)
-                else "",
+                point.published_at.isoformat() if isinstance(point.published_at, datetime) else "",
+                point.vintage_at.isoformat() if isinstance(point.vintage_at, datetime) else "",
                 snapshot.isoformat(),
+                "live",
                 _csv_safe(transform),
                 _csv_safe(candidate.series.unit_label_zh),
                 _csv_safe(binding.provider.code),
@@ -1097,9 +1140,7 @@ def _statistics(points: list[Point], decimal_places: int) -> SeriesStatistics:
         )
     current = values[-1]
     percentile = (
-        Decimal(sum(1 for value in values if value <= current))
-        / Decimal(len(values))
-        * 100
+        Decimal(sum(1 for value in values if value <= current)) / Decimal(len(values)) * 100
     )
     return SeriesStatistics(
         count=len(values),
@@ -1228,9 +1269,7 @@ async def _contributions(
     component_ids = {dependency.source_series_id for dependency in dependencies}
     component_candidates = await _load_candidates(session)
     by_id = {
-        item.series.id: item
-        for item in component_candidates
-        if item.series.id in component_ids
+        item.series.id: item for item in component_candidates if item.series.id in component_ids
     }
     if set(by_id) != component_ids or any(item.binding is None for item in by_id.values()):
         return _contribution_unavailable(
@@ -1351,7 +1390,7 @@ async def series_analytics(
             "license_display_denied",
         )
     snapshot = normalize_data_as_of(data_as_of)
-    points = (
+    snapshot_points = (
         await _points_by_source(
             session,
             {binding.source.id},
@@ -1359,20 +1398,23 @@ async def series_analytics(
             max_points=10_000,
         )
     ).get(binding.source.id, [])
+    if data_as_of is not None and not snapshot_points:
+        earliest = await _earliest_vintage_by_source(session, {binding.source.id})
+        if earliest.get(binding.source.id, snapshot) > snapshot:
+            raise AppError(
+                409,
+                "快照不可用",
+                "指定 data_as_of 无法复现该指标的观测。",
+                "snapshot_unavailable",
+                {"data_as_of": snapshot.isoformat()},
+            )
+    points = snapshot_points
     points = [
         point
         for point in points
         if (start is None or point.period_start >= start)
         and (end is None or point.period_start <= end)
     ]
-    if data_as_of is not None and not points:
-        raise AppError(
-            409,
-            "快照不可用",
-            "指定 data_as_of 无法复现该指标的观测。",
-            "snapshot_unavailable",
-            {"data_as_of": snapshot.isoformat()},
-        )
     transformed = transform_points(points, transform, candidate.series.frequency)
     contributions = await _contributions(
         session,
@@ -1416,6 +1458,7 @@ async def series_analytics(
         contributions=contributions,
         capabilities=capabilities,
         data_as_of=snapshot,
+        data_mode="live",
     )
 
 

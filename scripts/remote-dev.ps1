@@ -2,7 +2,10 @@
 param(
     [Parameter(Mandatory = $true, Position = 0)]
     [ValidateSet('Provision', 'Start', 'Status', 'Stop', 'Deprovision')]
-    [string]$Action
+    [string]$Action,
+
+    [ValidateSet('Demo', 'Live')]
+    [string]$DataMode = 'Demo'
 )
 
 Set-StrictMode -Version 2.0
@@ -15,6 +18,10 @@ $HostName = '111.229.152.122'
 $SshUser = 'ubuntu'
 $Role = 'macrolens_local_dev'
 $Schemas = @('source', 'catalog', 'ingestion', 'data', 'release', 'docs', 'fomc', 'app', 'audit')
+
+if ($Action -ne 'Start' -and $PSBoundParameters.ContainsKey('DataMode')) {
+    throw '-DataMode is only valid with the Start action.'
+}
 
 function Assert-LastExitCode([string]$Name) {
     if ($LASTEXITCODE -ne 0) { throw "$Name exited with code $LASTEXITCODE." }
@@ -395,7 +402,7 @@ function Get-LocalAlembicHead {
     return $heads[0]
 }
 
-function Set-ChildEnvironment($Config) {
+function Set-ChildEnvironment($Config, [ValidateSet('Demo', 'Live')] [string]$DataMode) {
     $password = [Uri]::EscapeDataString($Config.REMOTE_DB_PASSWORD)
     $base = "postgresql://$($Config.REMOTE_DB_USER):$password@127.0.0.1:$($Config.LOCAL_DB_PORT)/$($Config.REMOTE_DB_NAME)"
     $env:DATABASE_URL = $base.Replace('postgresql://', 'postgresql+asyncpg://')
@@ -406,6 +413,7 @@ function Set-ChildEnvironment($Config) {
     $env:WEB_ORIGIN = 'http://localhost:3000'
     $env:NEXT_PUBLIC_API_URL = 'http://localhost:8000/api/v1'
     $env:NEXT_PUBLIC_DATA_BROWSER_V2 = 'true'
+    $env:MACROLENS_DATA_MODE = $DataMode.ToLowerInvariant()
 }
 
 function ConvertTo-PsycopgConnectionUrl([string]$SqlAlchemyUrl) {
@@ -447,30 +455,39 @@ function Test-ProcessRecord($Record) {
     return (Get-CommandLineHash $cim.CommandLine) -eq [string]$Record.commandLineSha256
 }
 
-function Start-RemoteDevelopment {
+function Start-RemoteDevelopment([ValidateSet('Demo', 'Live')] [string]$DataMode) {
     $config = Read-RemoteEnvironment
-    @([int]$config.LOCAL_DB_PORT, [int]$config.LOCAL_API_PORT) | ForEach-Object { Assert-PortFree $_ }
+    $mode = $DataMode.ToLowerInvariant()
+    $requiredPorts = @([int]$config.LOCAL_API_PORT)
+    if ($mode -eq 'live') { $requiredPorts += [int]$config.LOCAL_DB_PORT }
+    $requiredPorts | ForEach-Object { Assert-PortFree $_ }
     Remove-KnownPreviewServer -ValidateOnly
     $python = Get-Python $config
     $node = Get-Node $config
-    $postgres = Get-RemotePostgres $config
+    $postgres = if ($mode -eq 'live') { Get-RemotePostgres $config } else { $null }
     $processes = New-Object Collections.Generic.List[Diagnostics.Process]
+    $tunnel = $null
     try {
-        $ssh = Resolve-Application 'ssh.exe'
-        $forward = "127.0.0.1:$($config.LOCAL_DB_PORT):$($postgres.Ip):5432"
-        $tunnel = Start-Process -FilePath $ssh -ArgumentList (@('-N', '-T', '-L', $forward) + @(Get-SshArguments $config)) -PassThru -WindowStyle Hidden
-        $processes.Add($tunnel)
-        Wait-ForPort ([int]$config.LOCAL_DB_PORT) $tunnel
-        Set-ChildEnvironment $config
-        $env:MACROLENS_ALEMBIC_PROBE_URL = ConvertTo-PsycopgConnectionUrl $env:DATABASE_URL_SYNC
-        try {
-            $query = "import os,psycopg;c=psycopg.connect(os.environ['MACROLENS_ALEMBIC_PROBE_URL']);print(c.execute('select version_num from alembic_version').fetchone()[0]);c.close()"
-            $remoteHead = Invoke-Checked $python @('-c', $query)
-        } finally {
-            Remove-Item Env:MACROLENS_ALEMBIC_PROBE_URL -ErrorAction SilentlyContinue
+        $forward = $null
+        if ($mode -eq 'live') {
+            $ssh = Resolve-Application 'ssh.exe'
+            $forward = "127.0.0.1:$($config.LOCAL_DB_PORT):$($postgres.Ip):5432"
+            $tunnel = Start-Process -FilePath $ssh -ArgumentList (@('-N', '-T', '-L', $forward) + @(Get-SshArguments $config)) -PassThru -WindowStyle Hidden
+            $processes.Add($tunnel)
+            Wait-ForPort ([int]$config.LOCAL_DB_PORT) $tunnel
+            Set-ChildEnvironment $config $DataMode
+            $env:MACROLENS_ALEMBIC_PROBE_URL = ConvertTo-PsycopgConnectionUrl $env:DATABASE_URL_SYNC
+            try {
+                $query = "import os,psycopg;c=psycopg.connect(os.environ['MACROLENS_ALEMBIC_PROBE_URL']);print(c.execute('select version_num from alembic_version').fetchone()[0]);c.close()"
+                $remoteHead = Invoke-Checked $python @('-c', $query)
+            } finally {
+                Remove-Item Env:MACROLENS_ALEMBIC_PROBE_URL -ErrorAction SilentlyContinue
+            }
+            $localHead = Get-LocalAlembicHead
+            if ($remoteHead -ne $localHead) { throw "Alembic mismatch remote=$remoteHead local=$localHead; migrations were not run." }
+        } else {
+            Set-ChildEnvironment $config $DataMode
         }
-        $localHead = Get-LocalAlembicHead
-        if ($remoteHead -ne $localHead) { throw "Alembic mismatch remote=$remoteHead local=$localHead; migrations were not run." }
         Remove-KnownPreviewServer
         Assert-PortFree ([int]$config.LOCAL_WEB_PORT)
         $api = Start-Process -FilePath $python -ArgumentList @('-m', 'uvicorn', 'macrolens_api.main:app', '--host', '127.0.0.1', '--port', $config.LOCAL_API_PORT) -WorkingDirectory (Join-Path $Root 'backend') -PassThru -WindowStyle Hidden
@@ -488,13 +505,13 @@ function Start-RemoteDevelopment {
         } finally { $env:Path = $oldPath }
         $processes.Add($web)
         Wait-ForPort ([int]$config.LOCAL_WEB_PORT) $web 60
-        $records = @(
-            New-ProcessRecord $tunnel 'tunnel' $forward
-            New-ProcessRecord $api 'api' 'macrolens_api.main:app'
-            New-ProcessRecord $web 'web' 'apps/web'
-        )
-        @{ processes = $records } | ConvertTo-Json -Depth 4 | Set-Content -LiteralPath $State -Encoding UTF8
-        Write-Host 'Web http://localhost:3000; API http://localhost:8000/docs; tunnel 127.0.0.1:15432.'
+        $records = @()
+        if ($mode -eq 'live') { $records += New-ProcessRecord $tunnel 'tunnel' $forward }
+        $records += New-ProcessRecord $api 'api' 'macrolens_api.main:app'
+        $records += New-ProcessRecord $web 'web' 'apps/web'
+        @{ dataMode = $mode; processes = $records } | ConvertTo-Json -Depth 4 | Set-Content -LiteralPath $State -Encoding UTF8
+        $tunnelSummary = if ($mode -eq 'live') { '127.0.0.1:15432' } else { 'disabled' }
+        Write-Host "mode=$mode Web http://localhost:3000; API http://localhost:8000/docs; tunnel $tunnelSummary."
     } catch {
         foreach ($process in $processes) {
             if (-not $process.HasExited) { Stop-Process $process.Id -Force -ErrorAction SilentlyContinue }
@@ -523,8 +540,10 @@ function Stop-RemoteDevelopment {
 function Show-RemoteDevelopmentStatus {
     if (-not (Test-Path -LiteralPath $State)) { Write-Host 'STOPPED'; return }
     $saved = Get-Content -LiteralPath $State -Raw | ConvertFrom-Json
+    $mode = if ($saved.PSObject.Properties['dataMode']) { [string]$saved.dataMode } else { 'live' }
     $statuses = @($saved.processes | ForEach-Object { "$($_.role)=$(Test-ProcessRecord $_)" })
-    Write-Host "$($statuses -join ' ') tunnel=$(Test-Port 15432) api=$(Test-Port 8000) web=$(Test-Port 3000)"
+    $tunnelStatus = if ($mode -eq 'demo') { 'disabled' } else { Test-Port 15432 }
+    Write-Host "mode=$mode $($statuses -join ' ') tunnel=$tunnelStatus api=$(Test-Port 8000) web=$(Test-Port 3000)"
 }
 
 function Deprovision-RemoteDevelopment {
@@ -555,7 +574,7 @@ COMMIT;
 
 switch ($Action) {
     Provision { Provision-RemoteDevelopment }
-    Start { Start-RemoteDevelopment }
+    Start { Start-RemoteDevelopment $DataMode }
     Status { Show-RemoteDevelopmentStatus }
     Stop { Stop-RemoteDevelopment }
     Deprovision { Deprovision-RemoteDevelopment }

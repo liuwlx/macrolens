@@ -10,6 +10,8 @@ if ($errors.Count) { throw ($errors | ForEach-Object Message | Out-String) }
 $source = [IO.File]::ReadAllText($scriptPath)
 @(
     'Provision', 'Start', 'Status', 'Stop', 'Deprovision',
+    "ValidateSet('Demo', 'Live')", "[string]`$DataMode = 'Demo'",
+    'MACROLENS_DATA_MODE', 'dataMode', 'mode=',
     'BatchMode=yes', 'StrictHostKeyChecking=yes', 'ExitOnForwardFailure=yes',
     'ServerAliveInterval=30', "'-N', '-T', '-L'", '127.0.0.1:',
     'sudo docker ps', 'sudo docker inspect', 'sudo docker exec',
@@ -52,6 +54,36 @@ if ($LASTEXITCODE -ne 0) { throw '.env.remote.state.json must be gitignored.' }
 
 # Load functions through the read-only Status action, then exercise local-only discovery and PID identity checks.
 . $scriptPath Status
+$environmentBefore = @{
+    DATABASE_URL = $env:DATABASE_URL
+    DATABASE_URL_SYNC = $env:DATABASE_URL_SYNC
+    JWT_SECRET = $env:JWT_SECRET
+    PYTHONPATH = $env:PYTHONPATH
+    ENVIRONMENT = $env:ENVIRONMENT
+    WEB_ORIGIN = $env:WEB_ORIGIN
+    NEXT_PUBLIC_API_URL = $env:NEXT_PUBLIC_API_URL
+    NEXT_PUBLIC_DATA_BROWSER_V2 = $env:NEXT_PUBLIC_DATA_BROWSER_V2
+    MACROLENS_DATA_MODE = $env:MACROLENS_DATA_MODE
+}
+$fakeConfig = @{
+    REMOTE_DB_PASSWORD = 'not-a-secret'
+    REMOTE_DB_USER = 'demo'
+    LOCAL_DB_PORT = '15432'
+    REMOTE_DB_NAME = 'macrolens'
+    LOCAL_JWT_SECRET = ('x' * 32)
+}
+try {
+    Set-ChildEnvironment $fakeConfig 'Demo'
+    if ($env:MACROLENS_DATA_MODE -ne 'demo') { throw 'Demo mode must be injected into the API child environment.' }
+    Set-ChildEnvironment $fakeConfig 'Live'
+    if ($env:MACROLENS_DATA_MODE -ne 'live') { throw 'Live mode must be injected into the API child environment.' }
+} finally {
+    foreach ($key in $environmentBefore.Keys) {
+        $value = $environmentBefore[$key]
+        if ($null -eq $value) { Remove-Item "Env:$key" -ErrorAction SilentlyContinue }
+        else { Set-Item "Env:$key" $value }
+    }
+}
 $sampleSqlAlchemyUrl = 'postgresql+psycopg://user:p%40ss@127.0.0.1:15432/macrolens?sslmode=disable'
 $samplePsycopgUrl = ConvertTo-PsycopgConnectionUrl $sampleSqlAlchemyUrl
 if ($samplePsycopgUrl -ne 'postgresql://user:p%40ss@127.0.0.1:15432/macrolens?sslmode=disable') { throw 'Psycopg URL conversion must change only the scheme.' }

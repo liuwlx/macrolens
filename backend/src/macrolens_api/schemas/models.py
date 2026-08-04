@@ -7,6 +7,9 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, model_validator
 
+type DataMode = Literal["live", "demo"]
+type SeriesAvailability = Literal["available", "not_ingested", "not_available_as_of"]
+
 
 class ORMModel(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -122,6 +125,7 @@ class TaxonomyChildrenResponse(BaseModel):
     parent_id: UUID | None
     nodes: list[TaxonomyChildNode]
     series: list[SeriesSummary]
+    data_mode: DataMode
 
 
 class BrowserObservation(BaseModel):
@@ -173,6 +177,7 @@ class SeriesBrowserItem(BaseModel):
     source_status: Literal["ready", "missing", "conflict"] = "ready"
     unavailable_reason_code: str | None = None
     taxonomy_order: int = 0
+    availability: SeriesAvailability
 
 
 class SeriesBrowserResponse(BaseModel):
@@ -180,6 +185,7 @@ class SeriesBrowserResponse(BaseModel):
     facets: BrowserFacets
     pagination: BrowserPagination
     data_as_of: datetime
+    data_mode: DataMode
 
 
 class CapabilityStatus(BaseModel):
@@ -252,6 +258,7 @@ class SeriesAnalyticsResponse(BaseModel):
     contributions: ContributionResult
     capabilities: SeriesCapabilities
     data_as_of: datetime
+    data_mode: DataMode
 
 
 class AICapabilityResponse(BaseModel):
@@ -288,6 +295,7 @@ class ObservationMeta(BaseModel):
     unit: str
     lineage: LineageInfo | None = None
     license: LicenseInfo | None = None
+    data_mode: DataMode
 
 
 class ObservationResponse(BaseModel):
@@ -315,7 +323,15 @@ class RevisionResponse(BaseModel):
 class CompareSeriesSpec(BaseModel):
     series_id: UUID
     transform: Literal[
-        "level", "difference", "mom", "qoq", "yoy", "annualized_3m", "annualized_6m", "rebased_100", "zscore"
+        "level",
+        "difference",
+        "mom",
+        "qoq",
+        "yoy",
+        "annualized_3m",
+        "annualized_6m",
+        "rebased_100",
+        "zscore",
     ] = "level"
     lag_periods: int = Field(default=0, ge=-120, le=120)
     axis: Literal["left", "right"] = "left"
@@ -329,7 +345,7 @@ class CompareRequest(BaseModel):
     include_correlation: bool = True
 
     @model_validator(mode="after")
-    def validate_request(self) -> "CompareRequest":
+    def validate_request(self) -> CompareRequest:
         if self.start and self.end and self.start > self.end:
             raise ValueError("start must be on or before end")
         ids = [item.series_id for item in self.series]
@@ -491,7 +507,9 @@ class FomcMeetingDetail(FomcMeetingSummary):
 
 
 class FavoriteCreate(BaseModel):
-    object_type: Literal["series", "document", "release_event", "fomc_meeting", "saved_view", "project", "ai_run"]
+    object_type: Literal[
+        "series", "document", "release_event", "fomc_meeting", "saved_view", "project", "ai_run"
+    ]
     object_id: UUID
     group_name: str | None = Field(default=None, max_length=120)
     note: str | None = Field(default=None, max_length=2000)
@@ -547,7 +565,9 @@ class ProjectPublic(ORMModel):
 
 
 class ProjectItemCreate(BaseModel):
-    object_type: Literal["series", "document", "release_event", "fomc_meeting", "saved_view", "ai_run", "note"]
+    object_type: Literal[
+        "series", "document", "release_event", "fomc_meeting", "saved_view", "ai_run", "note"
+    ]
     object_id: UUID
     title_override: str | None = None
     metadata: dict[str, Any] = Field(default_factory=dict)
@@ -555,7 +575,9 @@ class ProjectItemCreate(BaseModel):
 
 class AlertCreate(BaseModel):
     name: str = Field(min_length=1, max_length=240)
-    alert_type: Literal["release_reminder", "threshold", "revision", "new_document", "fomc_update", "digest"]
+    alert_type: Literal[
+        "release_reminder", "threshold", "revision", "new_document", "fomc_update", "digest"
+    ]
     target_type: str | None = None
     target_id: UUID | None = None
     rule: dict[str, Any]
@@ -588,7 +610,9 @@ class NotificationPublic(ORMModel):
 
 
 class AIContextInput(BaseModel):
-    context_type: Literal["series", "document", "release_event", "fomc_meeting", "saved_view", "note"]
+    context_type: Literal[
+        "series", "document", "release_event", "fomc_meeting", "saved_view", "note"
+    ]
     context_id: UUID
 
 
@@ -600,7 +624,7 @@ class AIRunCreate(BaseModel):
     contexts: list[AIContextInput] = Field(min_length=1, max_length=12)
 
     @model_validator(mode="after")
-    def validate_contexts(self) -> "AIRunCreate":
+    def validate_contexts(self) -> AIRunCreate:
         keys = [(item.context_type, item.context_id) for item in self.contexts]
         if len(keys) != len(set(keys)):
             raise ValueError("AI contexts must be unique")
@@ -657,6 +681,7 @@ class JobPublic(ORMModel):
     started_at: datetime | None
     finished_at: datetime | None
 
+
 class ProjectItemPublic(ORMModel):
     id: UUID
     project_id: UUID
@@ -697,7 +722,9 @@ class ProjectDetail(ProjectPublic):
 class SourceMappingUpdate(BaseModel):
     provider_series_id: str | None = None
     source_locator: dict[str, Any] | None = None
-    mapping_status: Literal["needs_review", "verified", "license_required", "disabled"] | None = None
+    mapping_status: Literal["needs_review", "verified", "license_required", "disabled"] | None = (
+        None
+    )
     is_primary: bool | None = None
     notes: str | None = Field(default=None, max_length=5000)
 

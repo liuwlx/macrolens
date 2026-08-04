@@ -90,9 +90,7 @@ async def get_primary_source(
     return row[0], row[1], row[2]
 
 
-async def get_license(
-    session: AsyncSession, provider: Provider, dataset: Dataset
-) -> LicenseInfo:
+async def get_license(session: AsyncSession, provider: Provider, dataset: Dataset) -> LicenseInfo:
     today = date.today()
     policy = await session.scalar(
         select(LicensePolicy)
@@ -107,8 +105,6 @@ async def get_license(
     return _license_from_policy(policy, provider)
 
 
-
-
 def _transformed_unit(transform: str, level_unit: str) -> str:
     if transform in {"level", "difference"}:
         return level_unit
@@ -117,6 +113,7 @@ def _transformed_unit(transform: str, level_unit: str) -> str:
     if transform == "rebased_100":
         return "指数（基期=100）"
     return "%"
+
 
 def _provider_info(provider: Provider) -> ProviderInfo:
     return ProviderInfo(
@@ -127,7 +124,9 @@ def _provider_info(provider: Provider) -> ProviderInfo:
     )
 
 
-async def _latest_for_source(session: AsyncSession, source_series_id: int) -> ObservationLatest | None:
+async def _latest_for_source(
+    session: AsyncSession, source_series_id: int
+) -> ObservationLatest | None:
     return await session.scalar(
         select(ObservationLatest)
         .where(ObservationLatest.source_series_id == source_series_id)
@@ -155,7 +154,9 @@ async def build_series_summary(
         unit_code=series.unit_code,
         unit_label_zh=series.unit_label_zh,
         default_transform=series.default_transform,
-        latest_period=latest.period_start if latest else (series.latest_period if expose_values else None),
+        latest_period=latest.period_start
+        if latest
+        else (series.latest_period if expose_values else None),
         latest_value=latest.value if latest else None,
         latest_vintage_at=latest.vintage_at if latest else None,
         provider=_provider_info(provider) if provider else None,
@@ -177,9 +178,11 @@ async def search_series(
     filters: list[Any] = [Series.status == status]
     if q:
         pattern = f"%{q.strip()}%"
-        alias_exists = select(SeriesAlias.id).where(
-            SeriesAlias.series_id == Series.id, SeriesAlias.alias.ilike(pattern)
-        ).exists()
+        alias_exists = (
+            select(SeriesAlias.id)
+            .where(SeriesAlias.series_id == Series.id, SeriesAlias.alias.ilike(pattern))
+            .exists()
+        )
         filters.append(
             or_(
                 Series.name_zh.ilike(pattern),
@@ -218,7 +221,9 @@ async def search_series(
     ).all()
     items: list[SeriesSummary] = []
     for series, source, dataset, provider in rows:
-        license_info = await get_license(session, provider, dataset) if provider and dataset else None
+        license_info = (
+            await get_license(session, provider, dataset) if provider and dataset else None
+        )
         items.append(await build_series_summary(session, series, source, provider, license_info))
     return items, total
 
@@ -230,7 +235,9 @@ async def get_series_detail(session: AsyncSession, series_id: UUID) -> SeriesDet
     aliases = list(
         (
             await session.scalars(
-                select(SeriesAlias.alias).where(SeriesAlias.series_id == series.id).order_by(SeriesAlias.alias)
+                select(SeriesAlias.alias)
+                .where(SeriesAlias.series_id == series.id)
+                .order_by(SeriesAlias.alias)
             )
         ).all()
     )
@@ -276,7 +283,12 @@ async def _query_vintage_points(
         try:
             as_of = datetime.fromisoformat(vintage.replace("Z", "+00:00"))
         except ValueError as exc:
-            raise AppError(422, "vintage 参数无效", "请使用 latest、first_release 或 ISO 时间。", "invalid_vintage") from exc
+            raise AppError(
+                422,
+                "vintage 参数无效",
+                "请使用 latest、first_release 或 ISO 时间。",
+                "invalid_vintage",
+            ) from exc
         stmt = (
             stmt.where(ObservationVintage.vintage_at <= as_of)
             .distinct(ObservationVintage.period_start)
@@ -285,6 +297,17 @@ async def _query_vintage_points(
     rows = list((await session.scalars(stmt)).all())
     rows.sort(key=lambda row: row.period_start)
     return rows
+
+
+async def _earliest_vintage_at(
+    session: AsyncSession,
+    source_id: int,
+) -> datetime | None:
+    return await session.scalar(
+        select(func.min(ObservationVintage.vintage_at)).where(
+            ObservationVintage.source_series_id == source_id
+        )
+    )
 
 
 async def get_observations(
@@ -296,6 +319,7 @@ async def get_observations(
     transform: str,
     data_as_of: datetime,
     first_release: bool = False,
+    historical_cutoff: bool = False,
 ) -> ObservationResponse:
     series = await session.get(Series, series_id)
     if series is None:
@@ -303,7 +327,9 @@ async def get_observations(
     source, dataset, provider = await get_primary_source(session, series_id)
     license_info = await get_license(session, provider, dataset)
     if not license_info.display_allowed:
-        raise AppError(403, "数据许可限制", "该数据源当前不允许在产品中展示。", "license_display_denied")
+        raise AppError(
+            403, "数据许可限制", "该数据源当前不允许在产品中展示。", "license_display_denied"
+        )
 
     rows: list[Any] = await _query_vintage_points(
         session,
@@ -312,6 +338,16 @@ async def get_observations(
         end,
         "first_release" if first_release else data_as_of.isoformat(),
     )
+    if historical_cutoff and not rows:
+        earliest = await _earliest_vintage_at(session, source.id)
+        if earliest is not None and earliest > data_as_of:
+            raise AppError(
+                409,
+                "快照不可用",
+                "指定 data_as_of 早于该指标的第一条历史观测。",
+                "snapshot_unavailable",
+                {"data_as_of": data_as_of.isoformat()},
+            )
 
     points = [
         Point(
@@ -374,6 +410,7 @@ async def get_observations(
                 source_locator=source.source_locator,
             ),
             license=license_info,
+            data_mode="live",
         ),
     )
 
@@ -389,7 +426,12 @@ async def get_revisions(
     source, dataset, provider = await get_primary_source(session, series_id)
     license_info = await get_license(session, provider, dataset)
     if not license_info.display_allowed:
-        raise AppError(403, "数据许可限制", "该数据源当前不允许在产品中展示修订历史。", "license_display_denied")
+        raise AppError(
+            403,
+            "数据许可限制",
+            "该数据源当前不允许在产品中展示修订历史。",
+            "license_display_denied",
+        )
     stmt = select(ObservationVintage).where(
         ObservationVintage.source_series_id == source.id,
         ObservationVintage.vintage_at <= data_as_of,

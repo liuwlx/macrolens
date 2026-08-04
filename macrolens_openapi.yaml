@@ -178,6 +178,100 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/taxonomies/{tree_code}/children:
+    get:
+      tags:
+      - Catalog
+      summary: Taxonomy Children
+      operationId: taxonomy_children_api_v1_taxonomies__tree_code__children_get
+      parameters:
+      - name: tree_code
+        in: path
+        required: true
+        schema:
+          type: string
+          minLength: 1
+          maxLength: 80
+          title: Tree Code
+      - name: parent_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Parent Id
+      - name: q
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            maxLength: 200
+          - type: 'null'
+          title: Q
+      - name: scope
+        in: query
+        required: false
+        schema:
+          type: string
+          pattern: ^(children|all)$
+          default: children
+          title: Scope
+      - name: provider
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Provider
+      - name: theme
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Theme
+      - name: frequency
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Frequency
+      - name: unit
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Unit
+      - name: seasonal_adjustment
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Seasonal Adjustment
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaxonomyChildrenResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /api/v1/taxonomies/{tree_code}:
     get:
       tags:
@@ -207,6 +301,436 @@ paths:
                 type: object
                 additionalProperties: true
                 title: Response Taxonomy Api V1 Taxonomies  Tree Code  Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/series/browser:
+    get:
+      tags:
+      - Series
+      summary: Browse Series
+      operationId: browse_series_api_v1_series_browser_get
+      parameters:
+      - name: q
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            maxLength: 200
+          - type: 'null'
+          title: Q
+      - name: node_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Node Id
+      - name: tree_code
+        in: query
+        required: false
+        schema:
+          type: string
+          maxLength: 80
+          default: macro-default
+          title: Tree Code
+      - name: provider
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Provider
+      - name: theme
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Theme
+      - name: frequency
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Frequency
+      - name: unit
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Unit
+      - name: seasonal_adjustment
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Seasonal Adjustment
+      - name: published_from
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          title: Published From
+      - name: published_to
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          title: Published To
+      - name: sort
+        in: query
+        required: false
+        schema:
+          type: string
+          pattern: ^(taxonomy|name|current_period|current|change|period_change|yoy)$
+          default: taxonomy
+          title: Sort
+      - name: order
+        in: query
+        required: false
+        schema:
+          type: string
+          pattern: ^(asc|desc)$
+          default: asc
+          title: Order
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 100
+          minimum: 1
+          default: 20
+          title: Limit
+      - name: offset
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 1000000
+          minimum: 0
+          default: 0
+          title: Offset
+      - name: data_as_of
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Data As Of
+      - name: macrolens_access
+        in: cookie
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Macrolens Access
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SeriesBrowserResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/series/browser/export:
+    get:
+      tags:
+      - Series
+      summary: Export Series Browser
+      operationId: export_series_browser_api_v1_series_browser_export_get
+      parameters:
+      - name: q
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            maxLength: 200
+          - type: 'null'
+          title: Q
+      - name: node_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Node Id
+      - name: tree_code
+        in: query
+        required: false
+        schema:
+          type: string
+          maxLength: 80
+          default: macro-default
+          title: Tree Code
+      - name: provider
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Provider
+      - name: theme
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Theme
+      - name: frequency
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Frequency
+      - name: unit
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Unit
+      - name: seasonal_adjustment
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Seasonal Adjustment
+      - name: published_from
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          title: Published From
+      - name: published_to
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          title: Published To
+      - name: sort
+        in: query
+        required: false
+        schema:
+          type: string
+          pattern: ^(taxonomy|name|current_period|current|change|period_change|yoy)$
+          default: taxonomy
+          title: Sort
+      - name: order
+        in: query
+        required: false
+        schema:
+          type: string
+          pattern: ^(asc|desc)$
+          default: asc
+          title: Order
+      - name: data_as_of
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Data As Of
+      - name: macrolens_access
+        in: cookie
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Macrolens Access
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/series/{series_id}/export:
+    get:
+      tags:
+      - Series
+      summary: Export Series
+      operationId: export_series_api_v1_series__series_id__export_get
+      parameters:
+      - name: series_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Series Id
+      - name: start
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          title: Start
+      - name: end
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          title: End
+      - name: transform
+        in: query
+        required: false
+        schema:
+          type: string
+          pattern: ^(level|difference|mom|qoq|yoy|annualized_3m|annualized_6m|rebased_100|zscore)$
+          default: level
+          title: Transform
+      - name: data_as_of
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Data As Of
+      - name: macrolens_access
+        in: cookie
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Macrolens Access
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/series/{series_id}/analytics:
+    get:
+      tags:
+      - Series
+      summary: Get Series Analytics
+      operationId: get_series_analytics_api_v1_series__series_id__analytics_get
+      parameters:
+      - name: series_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Series Id
+      - name: start
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          title: Start
+      - name: end
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          title: End
+      - name: transform
+        in: query
+        required: false
+        schema:
+          type: string
+          pattern: ^(level|difference|mom|qoq|yoy|annualized_3m|annualized_6m|rebased_100|zscore)$
+          default: level
+          title: Transform
+      - name: data_as_of
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Data As Of
+      - name: macrolens_access
+        in: cookie
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Macrolens Access
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SeriesAnalyticsResponse'
         '422':
           description: Validation Error
           content:
@@ -367,13 +891,23 @@ paths:
           pattern: ^(level|difference|mom|qoq|yoy|annualized_3m|annualized_6m|rebased_100|zscore)$
           default: level
           title: Transform
-      - name: vintage
+      - name: data_as_of
         in: query
         required: false
         schema:
-          type: string
-          default: latest
-          title: Vintage
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Data As Of
+      - name: macrolens_access
+        in: cookie
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Macrolens Access
       responses:
         '200':
           description: Successful Response
@@ -419,6 +953,23 @@ paths:
             format: date
           - type: 'null'
           title: End
+      - name: data_as_of
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Data As Of
+      - name: macrolens_access
+        in: cookie
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Macrolens Access
       responses:
         '200':
           description: Successful Response
@@ -925,6 +1476,50 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/ai/capabilities:
+    get:
+      tags:
+      - AI
+      summary: Get Ai Capability
+      operationId: get_ai_capability_api_v1_ai_capabilities_get
+      parameters:
+      - name: series_id
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Series Id
+      - name: data_as_of
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Data As Of
+      - name: macrolens_access
+        in: cookie
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Macrolens Access
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AICapabilityResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /api/v1/ai/runs:
     post:
       tags:
@@ -932,6 +1527,14 @@ paths:
       summary: Create Ai Run
       operationId: create_ai_run_api_v1_ai_runs_post
       parameters:
+      - name: Idempotency-Key
+        in: header
+        required: true
+        schema:
+          type: string
+          minLength: 4
+          maxLength: 300
+          title: Idempotency-Key
       - name: macrolens_access
         in: cookie
         required: false
@@ -2955,6 +3558,34 @@ paths:
                 $ref: '#/components/schemas/HTTPValidationError'
 components:
   schemas:
+    AICapabilityResponse:
+      properties:
+        series_id:
+          type: string
+          format: uuid
+          title: Series Id
+        configured:
+          type: boolean
+          title: Configured
+        allowed:
+          type: boolean
+          title: Allowed
+        reason_code:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Reason Code
+        reason:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Reason
+      type: object
+      required:
+      - series_id
+      - configured
+      - allowed
+      title: AICapabilityResponse
     AICitationPublic:
       properties:
         id:
@@ -3050,6 +3681,12 @@ components:
             format: uuid
           - type: 'null'
           title: Project Id
+        data_as_of:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Data As Of
         contexts:
           items:
             $ref: '#/components/schemas/AIContextInput'
@@ -3430,6 +4067,159 @@ components:
       - user
       - access_expires_in_seconds
       title: AuthResponse
+    BrowserFacetValue:
+      properties:
+        value:
+          type: string
+          title: Value
+        label:
+          type: string
+          title: Label
+        count:
+          type: integer
+          title: Count
+      type: object
+      required:
+      - value
+      - label
+      - count
+      title: BrowserFacetValue
+    BrowserFacets:
+      properties:
+        provider:
+          items:
+            $ref: '#/components/schemas/BrowserFacetValue'
+          type: array
+          title: Provider
+        theme:
+          items:
+            $ref: '#/components/schemas/BrowserFacetValue'
+          type: array
+          title: Theme
+        frequency:
+          items:
+            $ref: '#/components/schemas/BrowserFacetValue'
+          type: array
+          title: Frequency
+        unit:
+          items:
+            $ref: '#/components/schemas/BrowserFacetValue'
+          type: array
+          title: Unit
+        seasonal_adjustment:
+          items:
+            $ref: '#/components/schemas/BrowserFacetValue'
+          type: array
+          title: Seasonal Adjustment
+      type: object
+      title: BrowserFacets
+    BrowserMetric:
+      properties:
+        value:
+          anyOf:
+          - type: string
+            pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          - type: 'null'
+          title: Value
+        unit:
+          type: string
+          title: Unit
+        status:
+          type: string
+          enum:
+          - available
+          - unavailable
+          title: Status
+        basis:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Basis
+        reason_code:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Reason Code
+        reason:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Reason
+      type: object
+      required:
+      - value
+      - unit
+      - status
+      title: BrowserMetric
+    BrowserObservation:
+      properties:
+        period_start:
+          type: string
+          format: date
+          title: Period Start
+        period_end:
+          type: string
+          format: date
+          title: Period End
+        value:
+          anyOf:
+          - type: string
+            pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          - type: 'null'
+          title: Value
+        published_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Published At
+        vintage_at:
+          type: string
+          format: date-time
+          title: Vintage At
+      type: object
+      required:
+      - period_start
+      - period_end
+      - value
+      - vintage_at
+      title: BrowserObservation
+    BrowserPagination:
+      properties:
+        total:
+          type: integer
+          title: Total
+        limit:
+          type: integer
+          title: Limit
+        offset:
+          type: integer
+          title: Offset
+      type: object
+      required:
+      - total
+      - limit
+      - offset
+      title: BrowserPagination
+    CapabilityStatus:
+      properties:
+        allowed:
+          type: boolean
+          title: Allowed
+        reason_code:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Reason Code
+        reason:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Reason
+      type: object
+      required:
+      - allowed
+      title: CapabilityStatus
     CompareRequest:
       properties:
         series:
@@ -3552,6 +4342,109 @@ components:
       required:
       - series_id
       title: CompareSeriesSpec
+    ContributionComponent:
+      properties:
+        series_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Series Id
+        name_zh:
+          type: string
+          title: Name Zh
+        value:
+          type: string
+          pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          title: Value
+        unit:
+          type: string
+          title: Unit
+        grouped:
+          type: boolean
+          title: Grouped
+          default: false
+      type: object
+      required:
+      - series_id
+      - name_zh
+      - value
+      - unit
+      title: ContributionComponent
+    ContributionPeriod:
+      properties:
+        period_start:
+          type: string
+          format: date
+          title: Period Start
+        target_value:
+          type: string
+          pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          title: Target Value
+        contribution_total:
+          type: string
+          pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          title: Contribution Total
+        difference:
+          type: string
+          pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          title: Difference
+        components:
+          items:
+            $ref: '#/components/schemas/ContributionComponent'
+          type: array
+          title: Components
+      type: object
+      required:
+      - period_start
+      - target_value
+      - contribution_total
+      - difference
+      - components
+      title: ContributionPeriod
+    ContributionResult:
+      properties:
+        available:
+          type: boolean
+          title: Available
+        reason_code:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Reason Code
+        reason:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Reason
+        target_unit:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Target Unit
+        periods:
+          items:
+            $ref: '#/components/schemas/ContributionPeriod'
+          type: array
+          title: Periods
+        components:
+          items:
+            $ref: '#/components/schemas/ContributionComponent'
+          type: array
+          title: Components
+        reconciliation:
+          additionalProperties:
+            anyOf:
+            - type: string
+              pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+            - type: string
+            - type: boolean
+          type: object
+          title: Reconciliation
+      type: object
+      required:
+      - available
+      title: ContributionResult
     CorrelationCell:
       properties:
         left_series_id:
@@ -3577,6 +4470,11 @@ components:
       - coefficient
       - observations
       title: CorrelationCell
+    DataMode:
+      type: string
+      enum:
+      - live
+      - demo
     DocumentChunkPublic:
       properties:
         id:
@@ -4289,6 +5187,43 @@ components:
       - percent_change
       - observed_at
       title: MarketReactionItem
+    NextRelease:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        title_zh:
+          type: string
+          title: Title Zh
+        title_en:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Title En
+        scheduled_at:
+          type: string
+          format: date-time
+          title: Scheduled At
+        source_timezone:
+          type: string
+          title: Source Timezone
+        status:
+          type: string
+          title: Status
+        role:
+          type: string
+          title: Role
+      type: object
+      required:
+      - id
+      - title_zh
+      - title_en
+      - scheduled_at
+      - source_timezone
+      - status
+      - role
+      title: NextRelease
     NoteCreate:
       properties:
         title:
@@ -4442,6 +5377,8 @@ components:
           anyOf:
           - $ref: '#/components/schemas/LicenseInfo'
           - type: 'null'
+        data_mode:
+          $ref: '#/components/schemas/DataMode'
       type: object
       required:
       - data_as_of
@@ -4449,6 +5386,7 @@ components:
       - transform
       - frequency
       - unit
+      - data_mode
       title: ObservationMeta
     ObservationPoint:
       properties:
@@ -5084,10 +6022,15 @@ components:
             $ref: '#/components/schemas/RevisionItem'
           type: array
           title: Items
+        data_as_of:
+          type: string
+          format: date-time
+          title: Data As Of
       type: object
       required:
       - series_id
       - items
+      - data_as_of
       title: RevisionResponse
     SavedViewCreate:
       properties:
@@ -5190,6 +6133,152 @@ components:
           title: Is Shared
       type: object
       title: SavedViewUpdate
+    SeriesAnalyticsResponse:
+      properties:
+        series:
+          $ref: '#/components/schemas/SeriesSummary'
+        statistics:
+          $ref: '#/components/schemas/SeriesStatistics'
+        next_release:
+          anyOf:
+          - $ref: '#/components/schemas/NextRelease'
+          - type: 'null'
+        contributions:
+          $ref: '#/components/schemas/ContributionResult'
+        capabilities:
+          $ref: '#/components/schemas/SeriesCapabilities'
+        data_as_of:
+          type: string
+          format: date-time
+          title: Data As Of
+        data_mode:
+          $ref: '#/components/schemas/DataMode'
+      type: object
+      required:
+      - series
+      - statistics
+      - next_release
+      - contributions
+      - capabilities
+      - data_as_of
+      - data_mode
+      title: SeriesAnalyticsResponse
+    SeriesAvailability:
+      type: string
+      enum:
+      - available
+      - not_ingested
+      - not_available_as_of
+    SeriesBrowserItem:
+      properties:
+        series:
+          $ref: '#/components/schemas/SeriesSummary'
+        current:
+          anyOf:
+          - $ref: '#/components/schemas/BrowserObservation'
+          - type: 'null'
+        previous:
+          anyOf:
+          - $ref: '#/components/schemas/BrowserObservation'
+          - type: 'null'
+        change:
+          $ref: '#/components/schemas/BrowserMetric'
+        period_change:
+          $ref: '#/components/schemas/BrowserMetric'
+        yoy:
+          $ref: '#/components/schemas/BrowserMetric'
+        license:
+          anyOf:
+          - $ref: '#/components/schemas/LicenseInfo'
+          - type: 'null'
+        display_denied:
+          type: boolean
+          title: Display Denied
+          default: false
+        source_status:
+          type: string
+          enum:
+          - ready
+          - missing
+          - conflict
+          title: Source Status
+          default: ready
+        unavailable_reason_code:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Unavailable Reason Code
+        taxonomy_order:
+          type: integer
+          title: Taxonomy Order
+          default: 0
+        availability:
+          $ref: '#/components/schemas/SeriesAvailability'
+      type: object
+      required:
+      - series
+      - current
+      - previous
+      - change
+      - period_change
+      - yoy
+      - license
+      - availability
+      title: SeriesBrowserItem
+    SeriesBrowserResponse:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/SeriesBrowserItem'
+          type: array
+          title: Items
+        facets:
+          $ref: '#/components/schemas/BrowserFacets'
+        pagination:
+          $ref: '#/components/schemas/BrowserPagination'
+        data_as_of:
+          type: string
+          format: date-time
+          title: Data As Of
+        data_mode:
+          $ref: '#/components/schemas/DataMode'
+      type: object
+      required:
+      - items
+      - facets
+      - pagination
+      - data_as_of
+      - data_mode
+      title: SeriesBrowserResponse
+    SeriesCapabilities:
+      properties:
+        display:
+          $ref: '#/components/schemas/CapabilityStatus'
+        download:
+          $ref: '#/components/schemas/CapabilityStatus'
+        ai:
+          $ref: '#/components/schemas/CapabilityStatus'
+        trend:
+          $ref: '#/components/schemas/CapabilityStatus'
+        history:
+          $ref: '#/components/schemas/CapabilityStatus'
+        revisions:
+          $ref: '#/components/schemas/CapabilityStatus'
+        documents:
+          $ref: '#/components/schemas/CapabilityStatus'
+        contributions:
+          $ref: '#/components/schemas/CapabilityStatus'
+      type: object
+      required:
+      - display
+      - download
+      - ai
+      - trend
+      - history
+      - revisions
+      - documents
+      - contributions
+      title: SeriesCapabilities
     SeriesDetail:
       properties:
         id:
@@ -5295,6 +6384,57 @@ components:
       - status
       - first_period
       title: SeriesDetail
+    SeriesStatistics:
+      properties:
+        count:
+          type: integer
+          title: Count
+        mean:
+          anyOf:
+          - type: string
+            pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          - type: 'null'
+          title: Mean
+        median:
+          anyOf:
+          - type: string
+            pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          - type: 'null'
+          title: Median
+        min:
+          anyOf:
+          - type: string
+            pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          - type: 'null'
+          title: Min
+        max:
+          anyOf:
+          - type: string
+            pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          - type: 'null'
+          title: Max
+        stddev:
+          anyOf:
+          - type: string
+            pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          - type: 'null'
+          title: Stddev
+        current_percentile:
+          anyOf:
+          - type: string
+            pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          - type: 'null'
+          title: Current Percentile
+      type: object
+      required:
+      - count
+      - mean
+      - median
+      - min
+      - max
+      - stddev
+      - current_percentile
+      title: SeriesStatistics
     SeriesSummary:
       properties:
         id:
@@ -5398,6 +6538,83 @@ components:
           title: Notes
       type: object
       title: SourceMappingUpdate
+    TaxonomyChildNode:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        code:
+          type: string
+          title: Code
+        name_zh:
+          type: string
+          title: Name Zh
+        name_en:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Name En
+        node_type:
+          type: string
+          title: Node Type
+        icon_key:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Icon Key
+        has_children:
+          type: boolean
+          title: Has Children
+        direct_series_count:
+          type: integer
+          title: Direct Series Count
+        descendant_series_count:
+          type: integer
+          title: Descendant Series Count
+      type: object
+      required:
+      - id
+      - code
+      - name_zh
+      - name_en
+      - node_type
+      - icon_key
+      - has_children
+      - direct_series_count
+      - descendant_series_count
+      title: TaxonomyChildNode
+    TaxonomyChildrenResponse:
+      properties:
+        tree_code:
+          type: string
+          title: Tree Code
+        parent_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Parent Id
+        nodes:
+          items:
+            $ref: '#/components/schemas/TaxonomyChildNode'
+          type: array
+          title: Nodes
+        series:
+          items:
+            $ref: '#/components/schemas/SeriesSummary'
+          type: array
+          title: Series
+        data_mode:
+          $ref: '#/components/schemas/DataMode'
+      type: object
+      required:
+      - tree_code
+      - parent_id
+      - nodes
+      - series
+      - data_mode
+      title: TaxonomyChildrenResponse
     UserPublic:
       properties:
         id:
@@ -5436,11 +6653,6 @@ components:
         type:
           type: string
           title: Error Type
-        input:
-          title: Input
-        ctx:
-          type: object
-          title: Context
       type: object
       required:
       - loc

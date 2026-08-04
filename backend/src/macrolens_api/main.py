@@ -1,7 +1,7 @@
 from __future__ import annotations
 
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from typing import AsyncIterator
 
 import sentry_sdk
 from fastapi import FastAPI
@@ -29,10 +29,34 @@ from .config import get_settings
 from .db import dispose_engine
 from .errors import AppError, app_error_handler, request_validation_error_handler
 from .logging import configure_logging, get_logger
-from .middleware import AuditMiddleware, CsrfOriginMiddleware, LocalRateLimitMiddleware, RequestContextMiddleware
-from .routers import admin, ai, auth, compare, documents, fomc, health, releases, reports, series, sharing, taxonomies, workspace
+from .middleware import (
+    AuditMiddleware,
+    CsrfOriginMiddleware,
+    DemoReadOnlyMiddleware,
+    LocalRateLimitMiddleware,
+    RequestContextMiddleware,
+)
+from .routers import (
+    admin,
+    ai,
+    auth,
+    compare,
+    documents,
+    fomc,
+    health,
+    releases,
+    reports,
+    series,
+    sharing,
+    taxonomies,
+    workspace,
+)
 
 settings = get_settings()
+if settings.data_mode == "demo":
+    from .demo_data import get_demo_registry
+
+    get_demo_registry()
 configure_logging(settings.log_level)
 logger = get_logger(__name__)
 
@@ -78,6 +102,7 @@ app.add_middleware(
 app.add_middleware(LocalRateLimitMiddleware, requests_per_minute=300)
 app.add_middleware(AuditMiddleware)
 app.add_middleware(CsrfOriginMiddleware, allowed_origin=settings.web_origin)
+app.add_middleware(DemoReadOnlyMiddleware)
 app.add_middleware(RequestContextMiddleware)
 
 api_prefix = "/api/v1"
@@ -114,7 +139,9 @@ def configure_telemetry() -> None:
             }
         )
     )
-    exporter = OTLPSpanExporter(endpoint=settings.otel_exporter_otlp_endpoint.rstrip("/") + "/v1/traces")
+    exporter = OTLPSpanExporter(
+        endpoint=settings.otel_exporter_otlp_endpoint.rstrip("/") + "/v1/traces"
+    )
     provider.add_span_processor(BatchSpanProcessor(exporter))
     trace.set_tracer_provider(provider)
     FastAPIInstrumentor.instrument_app(app, excluded_urls="health,live,ready,metrics")
