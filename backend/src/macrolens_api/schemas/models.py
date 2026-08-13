@@ -141,6 +141,10 @@ class BrowserObservation(BaseModel):
     value: Decimal | None
     published_at: datetime | None = None
     vintage_at: datetime
+    source_series_id: int | None = None
+    run_id: UUID | None = None
+    publication_batch_id: UUID | None = None
+    raw_object_id: UUID | None = None
 
 
 class BrowserMetric(BaseModel):
@@ -264,6 +268,7 @@ class SeriesAnalyticsResponse(BaseModel):
     next_release: NextRelease | None
     contributions: ContributionResult
     capabilities: SeriesCapabilities
+    lineage: LineageInfo | None = None
     data_as_of: datetime
     data_mode: DataMode
 
@@ -284,6 +289,10 @@ class ObservationPoint(BaseModel):
     status: str
     published_at: datetime | None = None
     vintage_at: datetime
+    source_series_id: int | None = None
+    run_id: UUID | None = None
+    publication_batch_id: UUID | None = None
+    raw_object_id: UUID | None = None
 
 
 class LineageInfo(BaseModel):
@@ -319,6 +328,10 @@ class RevisionItem(BaseModel):
     first_vintage_at: datetime
     latest_vintage_at: datetime
     versions: int
+    first_run_id: UUID | None = None
+    latest_run_id: UUID | None = None
+    first_raw_object_id: UUID | None = None
+    latest_raw_object_id: UUID | None = None
 
 
 class RevisionResponse(BaseModel):
@@ -734,6 +747,10 @@ class SourceMappingUpdate(BaseModel):
     )
     is_primary: bool | None = None
     notes: str | None = Field(default=None, max_length=5000)
+
+
+class SourceMappingApproval(BaseModel):
+    probe_job_id: UUID
 
 
 class AdminDocumentFetchRequest(BaseModel):

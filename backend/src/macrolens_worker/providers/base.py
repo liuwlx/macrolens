@@ -3,10 +3,11 @@ from __future__ import annotations
 import calendar
 import re
 from abc import ABC, abstractmethod
+from collections.abc import Iterable
 from dataclasses import dataclass, field
 from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
-from typing import Any, Iterable
+from typing import Any, Literal
 
 import httpx
 
@@ -41,6 +42,28 @@ class ProviderFetchResult:
     raw_bytes: bytes
     observations: list[NormalizedObservation]
     source_last_modified: datetime | None = None
+    captured_at: datetime | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class MappingProbeResult:
+    """Read-only evidence for deciding whether a source mapping may be approved."""
+
+    provider_code: str
+    source_series_id: int
+    provider_series_id: str
+    request_url: str
+    http_reachable: bool
+    http_status: int | None
+    content_type: str
+    business_success: bool
+    identity_match: bool
+    official_description: str
+    response_sha256: str
+    probed_at: datetime
+    authorization_available: bool
+    production_ready: bool
+    classification: Literal["PASS", "AUTH_REQUIRED", "BLOCKED"]
 
 
 class ProviderAdapter(ABC):

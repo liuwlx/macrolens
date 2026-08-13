@@ -46,6 +46,7 @@ from ..schemas import (
     ContributionPeriod,
     ContributionResult,
     LicenseInfo,
+    LineageInfo,
     NextRelease,
     ProviderInfo,
     SeriesAnalyticsResponse,
@@ -312,6 +313,10 @@ def build_browser_item(
             value=_round_value(point.value, series.decimal_places),
             published_at=point.published_at if isinstance(point.published_at, datetime) else None,
             vintage_at=point.vintage_at,
+            source_series_id=point.source_series_id,
+            run_id=point.run_id,
+            publication_batch_id=point.publication_batch_id,
+            raw_object_id=point.raw_object_id,
         )
 
     return SeriesBrowserItem(
@@ -591,6 +596,9 @@ async def _points_by_source(
             ObservationVintage.observation_status,
             ObservationVintage.published_at,
             ObservationVintage.vintage_at,
+            ObservationVintage.run_id,
+            ObservationVintage.publication_batch_id,
+            ObservationVintage.raw_object_id,
             func.row_number()
             .over(
                 partition_by=(
@@ -617,6 +625,9 @@ async def _points_by_source(
             versioned.c.observation_status,
             versioned.c.published_at,
             versioned.c.vintage_at,
+            versioned.c.run_id,
+            versioned.c.publication_batch_id,
+            versioned.c.raw_object_id,
             func.row_number()
             .over(
                 partition_by=versioned.c.source_id,
@@ -645,6 +656,10 @@ async def _points_by_source(
                 status=row["observation_status"],
                 published_at=row["published_at"],
                 vintage_at=row["vintage_at"],
+                source_series_id=int(row["source_id"]),
+                run_id=row["run_id"],
+                publication_batch_id=row["publication_batch_id"],
+                raw_object_id=row["raw_object_id"],
             )
         )
     return dict(grouped)
@@ -1205,6 +1220,10 @@ async def series_csv(
             "unit",
             "provider",
             "attribution",
+            "source_series_id",
+            "run_id",
+            "publication_batch_id",
+            "raw_object_id",
         ]
     )
     for point in transformed:
@@ -1225,6 +1244,10 @@ async def series_csv(
                 _csv_safe(candidate.series.unit_label_zh),
                 _csv_safe(binding.provider.code),
                 _csv_safe(license_info.attribution_text or binding.provider.attribution_text or ""),
+                point.source_series_id or binding.source.id,
+                point.run_id or "",
+                point.publication_batch_id or "",
+                point.raw_object_id or "",
             ]
         )
     return ("\ufeff" + output.getvalue()).encode("utf-8")
@@ -1569,6 +1592,13 @@ async def series_analytics(
         next_release=await _next_release(session, series_id),
         contributions=contributions,
         capabilities=capabilities,
+        lineage=LineageInfo(
+            provider=binding.provider.code,
+            dataset=binding.dataset.code,
+            provider_series_id=binding.source.provider_series_id,
+            source_series_id=binding.source.id,
+            source_locator=binding.source.source_locator,
+        ),
         data_as_of=snapshot,
         data_mode="live",
     )

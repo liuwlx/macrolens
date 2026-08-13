@@ -1,0 +1,63 @@
+{
+  "fixture_meta": {
+    "canonical_code": "US.CPI.HEADLINE",
+    "provider_series_id": "CUSR0000SA0",
+    "sanitized": true,
+    "credential_fields_removed": true,
+    "official_identity_source": "https://www.bls.gov/cpi/factsheets/cpi-series-ids.htm",
+    "official_value_source": "https://www.bls.gov/news.release/archives/cpi_01132026.htm"
+  },
+  "provider": "BLS_API_V2",
+  "requests": [
+    {
+      "seriesid": ["CUSR0000SA0"],
+      "startyear": "2025",
+      "endyear": "2025",
+      "catalog": true,
+      "calculations": false,
+      "annualaverage": false,
+      "aspects": false
+    }
+  ],
+  "responses": [
+    {
+      "status": "REQUEST_SUCCEEDED",
+      "responseTime": 42,
+      "message": [],
+      "Results": {
+        "series": [
+          {
+            "seriesID": "CUSR0000SA0",
+            "catalog": {
+              "series_title": "All items in U.S. city average, all urban consumers, seasonally adjusted",
+              "series_id": "CUSR0000SA0",
+              "seasonality": "Seasonally Adjusted",
+              "survey_name": "CPI for All Urban Consumers (CPI-U)",
+              "survey_abbreviation": "CU",
+              "measure_data_type": "All items",
+              "area": "U.S. city average",
+              "item": "All items"
+            },
+            "data": [
+              {
+                "year": "2025",
+                "period": "M12",
+                "periodName": "December",
+                "latest": "true",
+                "value": "324.054",
+                "footnotes": [{}]
+              },
+              {
+                "year": "2025",
+                "period": "M11",
+                "periodName": "November",
+                "value": "324.003",
+                "footnotes": [{}]
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

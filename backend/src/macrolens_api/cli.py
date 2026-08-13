@@ -13,6 +13,7 @@ from .config import get_settings
 from .db import SessionLocal
 from .models import (
     Dataset,
+    Job,
     LicensePolicy,
     Provider,
     ReleaseDefinition,
@@ -26,6 +27,7 @@ from .models import (
 )
 from .security import hash_password
 from .services.jobs import enqueue_job
+from .services.source_mapping_identity import source_mapping_fingerprint
 
 app = typer.Typer(no_args_is_help=True)
 settings = get_settings()
@@ -344,11 +346,6 @@ async def seed_all() -> None:
                     SourceSeries.dataset_id == dataset.id,
                 )
             )
-            status = {
-                "READY": "verified",
-                "LICENSE_REQUIRED": "license_required",
-                "LEGAL_REVIEW_REQUIRED": "license_required",
-            }.get(item["mapping_status"], "needs_review")
             if source_series is None:
                 source_series = SourceSeries(
                     series_id=series.id,
@@ -358,14 +355,40 @@ async def seed_all() -> None:
             source_series.provider_series_id = item.get("provider_series_id")
             source_series.source_locator = item.get("locator") or {}
             source_series.mapping_type = (item.get("mapping_type") or "direct").lower()
-            source_series.mapping_status = status
-            source_series.is_primary = status == "verified"
             source_series.source_frequency = FREQUENCY_MAP[item["frequency"]]
             source_series.source_unit = item["unit"]
             source_series.source_title = item["name_en"] or item["name_zh"]
             source_series.notes = "; ".join(item.get("notes") or [])
-            source_series.verified_by = "seed-registry" if status == "verified" else None
-            source_series.verified_at = datetime.now(UTC) if status == "verified" else None
+            await session.flush()
+            probe_job = (
+                await session.get(Job, source_series.verification_job_id)
+                if source_series.verification_job_id
+                else None
+            )
+            fingerprint = source_mapping_fingerprint(source_series, dataset, provider)
+            approval = probe_job.result.get("approval") if probe_job else None
+            was_probe_approved = bool(
+                probe_job is not None
+                and source_series.mapping_status == "verified"
+                and source_series.is_primary
+                and probe_job.status == "succeeded"
+                and probe_job.result.get("mapping_fingerprint") == fingerprint
+                and source_series.verification_fingerprint == fingerprint
+                and isinstance(approval, dict)
+                and int(approval.get("source_series_id", -1)) == source_series.id
+            )
+            status = {
+                "READY": "verified" if was_probe_approved else "needs_review",
+                "LICENSE_REQUIRED": "license_required",
+                "LEGAL_REVIEW_REQUIRED": "license_required",
+            }.get(item["mapping_status"], "needs_review")
+            source_series.mapping_status = status
+            source_series.is_primary = was_probe_approved and status == "verified"
+            if status != "verified":
+                source_series.verified_by = None
+                source_series.verified_at = None
+                source_series.verification_job_id = None
+                source_series.verification_fingerprint = None
 
         desired_node_codes = {node.code for node in registry.nodes}
         legacy_nodes = list(

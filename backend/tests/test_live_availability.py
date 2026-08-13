@@ -366,10 +366,13 @@ async def test_live_never_ingested_single_series_returns_200_shape(
             transform="level",
             data_as_of=cutoff,
         )
-        assert (
-            content.decode("utf-8-sig")
-            .splitlines()[0]
-            .endswith(",data_mode,transform,unit,provider,attribution")
+        header = content.decode("utf-8-sig").splitlines()[0]
+        assert header.startswith(
+            "series_id,canonical_code,name_zh,period_start,period_end,value,status,"
+            "published_at,vintage_at,data_as_of,data_mode,transform,unit,provider,attribution"
+        )
+        assert header.endswith(
+            ",source_series_id,run_id,publication_batch_id,raw_object_id"
         )
     else:
         response = await data_browser.series_analytics(
