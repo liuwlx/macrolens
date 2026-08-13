@@ -1,9 +1,15 @@
-import type { BrowserSeriesAvailability } from "@/lib/types";
+import type { BrowserSeriesAvailability, SeriesBrowserItem } from "@/lib/types";
 
 export type CatalogOnlyAvailability = Extract<
   BrowserSeriesAvailability,
-  "pending_mapping" | "pending_credentials" | "pending_license"
+  | "pending_mapping"
+  | "pending_credentials"
+  | "pending_license"
+  | "not_ingested"
+  | "not_available_as_of"
 >;
+
+export type BrowserDataCapabilityState = "unknown" | "catalog_only" | "data_ready";
 
 export const browserAvailabilityLabels: Record<
   Exclude<BrowserSeriesAvailability, "available">,
@@ -19,9 +25,15 @@ export const browserAvailabilityLabels: Record<
 export function isCatalogOnlyAvailability(
   availability?: BrowserSeriesAvailability,
 ): availability is CatalogOnlyAvailability {
-  return availability === "pending_mapping"
-    || availability === "pending_credentials"
-    || availability === "pending_license";
+  return availability !== undefined && availability !== "available";
+}
+
+export function browserDataCapabilityState(
+  item: SeriesBrowserItem | undefined,
+  browserResolved: boolean,
+): BrowserDataCapabilityState {
+  if (!browserResolved || item === undefined) return "unknown";
+  return isCatalogOnlyAvailability(item.availability) ? "catalog_only" : "data_ready";
 }
 
 export function catalogOnlyReason(availability: CatalogOnlyAvailability): string {

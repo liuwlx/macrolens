@@ -2,10 +2,14 @@ from __future__ import annotations
 
 import json
 from collections import defaultdict
+from collections.abc import Hashable, Iterable, Mapping
+from collections.abc import Set as AbstractSet
 from dataclasses import dataclass
 from functools import cached_property, lru_cache
 from pathlib import Path
 from typing import Any
+
+from .errors import AppError
 
 
 @dataclass(frozen=True, slots=True)
@@ -74,6 +78,60 @@ class CatalogRegistry:
             result.extend(node.series_codes)
             pending.extend(reversed(self.children_by_code.get(node.code, ())))
         return tuple(result)
+
+
+CatalogNodeFact = tuple[Hashable, str, Hashable | None]
+
+
+def validate_catalog_projection(
+    registry: CatalogRegistry,
+    *,
+    tree_code: str,
+    nodes: Iterable[CatalogNodeFact],
+    series_codes: AbstractSet[str] | None = None,
+    series_owners: Mapping[str, AbstractSet[str]] | None = None,
+) -> None:
+    if tree_code != registry.tree_code:
+        return
+    node_facts = list(nodes)
+    expected_nodes = {node.code for node in registry.nodes}
+    actual_node_codes_by_id = {node_id: code for node_id, code, _parent_id in node_facts}
+    actual_nodes = set(actual_node_codes_by_id.values())
+    actual_parents = {
+        code: actual_node_codes_by_id.get(parent_id) if parent_id is not None else None
+        for _node_id, code, parent_id in node_facts
+    }
+    expected_parents = {node.code: node.parent_code for node in registry.nodes}
+    expected_series = {indicator.canonical_code for indicator in registry.indicators}
+    actual_series = set(series_owners) if series_owners is not None else series_codes
+    ownership_mismatch_count = 0
+    if series_owners is not None:
+        ownership_mismatch_count = sum(
+            set(series_owners.get(canonical_code, ()))
+            != {registry.owner_by_series_code[canonical_code].code}
+            for canonical_code in expected_series
+        )
+    if (
+        len(actual_node_codes_by_id) != len(node_facts)
+        or len(actual_nodes) != len(node_facts)
+        or actual_nodes != expected_nodes
+        or actual_parents != expected_parents
+        or (actual_series is not None and actual_series != expected_series)
+        or ownership_mismatch_count
+    ):
+        raise AppError(
+            503,
+            "指标目录尚未就绪",
+            "Live 指标目录与受控 registry 不一致，已停止返回部分或错误目录。",
+            "catalog_registry_mismatch",
+            {
+                "expected_node_count": len(expected_nodes),
+                "actual_node_count": len(actual_nodes),
+                "expected_series_count": len(expected_series),
+                "actual_series_count": len(actual_series) if actual_series is not None else None,
+                "ownership_mismatch_count": ownership_mismatch_count,
+            },
+        )
 
 
 def _repo_root() -> Path:

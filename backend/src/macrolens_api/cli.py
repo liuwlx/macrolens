@@ -425,18 +425,18 @@ async def seed_all() -> None:
             node = nodes_by_code[node_spec.code]
             for display_order, canonical_code in enumerate(node_spec.series_codes):
                 series = series_by_code[canonical_code]
-                mapping = await session.scalar(
+                taxonomy_mapping = await session.scalar(
                     select(TaxonomySeries).where(
                         TaxonomySeries.node_id == node.id,
                         TaxonomySeries.series_id == series.id,
                     )
                 )
-                if mapping is None:
-                    mapping = TaxonomySeries(node_id=node.id, series_id=series.id)
-                    session.add(mapping)
-                mapping.display_role = "primary"
-                mapping.display_order = display_order
-                mapping.is_primary = True
+                if taxonomy_mapping is None:
+                    taxonomy_mapping = TaxonomySeries(node_id=node.id, series_id=series.id)
+                    session.add(taxonomy_mapping)
+                taxonomy_mapping.display_role = "primary"
+                taxonomy_mapping.display_order = display_order
+                taxonomy_mapping.is_primary = True
 
         for code, name in [
             ("PCE", "个人收入与支出"),

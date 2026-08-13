@@ -15,7 +15,7 @@ from sqlalchemy import Date as SQLDate
 from sqlalchemy import and_, case, cast, func, or_, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..catalog_registry import get_catalog_registry
+from ..catalog_registry import get_catalog_registry, validate_catalog_projection
 from ..config import get_settings
 from ..errors import AppError
 from ..models import (
@@ -381,28 +381,25 @@ async def _load_candidates(
         for candidate_id, alias in aliases:
             by_id[candidate_id].aliases.append(alias)
     if series_id is None:
-        actual_codes = {candidate.series.canonical_code for candidate in by_id.values()}
-        expected_codes = set(catalog_codes)
-        ownership_mismatches = sum(
-            candidate.node_codes
-            != {registry.owner_by_series_code[candidate.series.canonical_code].code}
-            for candidate in by_id.values()
-            if candidate.series.canonical_code in registry.owner_by_series_code
+        nodes = list(
+            (
+                await session.scalars(
+                    select(TaxonomyNode).where(
+                        TaxonomyNode.tree_code == registry.tree_code,
+                        TaxonomyNode.visible.is_(True),
+                    )
+                )
+            ).all()
         )
-        if actual_codes != expected_codes or ownership_mismatches:
-            raise AppError(
-                503,
-                "指标目录尚未就绪",
-                "Live 指标目录与受控 registry 不一致，已停止返回部分目录。",
-                "catalog_registry_mismatch",
-                {
-                    "expected_count": len(expected_codes),
-                    "actual_count": len(actual_codes),
-                    "missing_count": len(expected_codes - actual_codes),
-                    "unexpected_count": len(actual_codes - expected_codes),
-                    "ownership_mismatch_count": ownership_mismatches,
-                },
-            )
+        validate_catalog_projection(
+            registry,
+            tree_code=registry.tree_code,
+            nodes=((node.id, node.code, node.parent_id) for node in nodes),
+            series_owners={
+                candidate.series.canonical_code: candidate.node_codes
+                for candidate in by_id.values()
+            },
+        )
     return list(by_id.values())
 
 
@@ -420,6 +417,11 @@ async def taxonomy_descendant_ids(
                 )
             )
         ).all()
+    )
+    validate_catalog_projection(
+        get_catalog_registry(),
+        tree_code=tree_code,
+        nodes=((node.id, node.code, node.parent_id) for node in nodes),
     )
     if not any(node.id == node_id for node in nodes):
         raise AppError(404, "分类节点不存在", "没有找到指定的分类节点。", "taxonomy_node_not_found")
@@ -697,6 +699,10 @@ def _provider_credentials_ready(provider_code: str) -> bool:
     return provider_code not in required_credentials or bool(required_credentials[provider_code])
 
 
+def _has_displayable_point(points: list[Point]) -> bool:
+    return any(point.value is not None for point in points)
+
+
 def _catalog_availability(
     candidate: BrowserCandidate,
     points: list[Point],
@@ -714,7 +720,7 @@ def _catalog_availability(
         return "pending_mapping"
     if license_info is None or not license_info.display_allowed:
         return "pending_license"
-    if points:
+    if _has_displayable_point(points):
         return "available"
     if lifetime_availability == "not_available_as_of":
         return lifetime_availability
@@ -1002,7 +1008,11 @@ async def series_browser(
     )
     page_source_ids = {binding.source.id for binding in bindings}
     points = await _points_by_source(session, page_source_ids, data_as_of=snapshot)
-    empty_source_ids = {source_id for source_id in page_source_ids if not points.get(source_id)}
+    empty_source_ids = {
+        source_id
+        for source_id in page_source_ids
+        if not _has_displayable_point(points.get(source_id, []))
+    }
     availability_by_source = await _lifetime_availability_by_source(
         session,
         empty_source_ids,

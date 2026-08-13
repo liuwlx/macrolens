@@ -34,7 +34,22 @@ const item = {
 
 const facets = { provider: [], theme: [], frequency: [], unit: [], seasonal_adjustment: [] };
 
-async function fulfillApi(route: Route, mode: "live-empty" | "live-pending" | "demo") {
+type PendingAvailability = "pending_mapping" | "pending_credentials" | "pending_license";
+type ApiMode = "live-empty" | "demo" | PendingAvailability;
+
+function isPendingAvailability(mode: ApiMode): mode is PendingAvailability {
+  return mode.startsWith("pending_");
+}
+
+function dataCapabilityRequests(requests: string[]) {
+  return requests.filter((path) =>
+    path.startsWith("/api/v1/series/series-1")
+      || path.startsWith("/api/v1/documents")
+      || path.endsWith("/ai/capabilities")
+  );
+}
+
+async function fulfillApi(route: Route, mode: ApiMode) {
   const url = new URL(route.request().url());
   const path = url.pathname;
   let body: unknown = {};
@@ -51,7 +66,7 @@ async function fulfillApi(route: Route, mode: "live-empty" | "live-pending" | "d
   } else if (path.endsWith("/series/browser")) {
     body = mode === "demo"
       ? { data_mode: "demo", items: [item], facets, pagination: { total: 1, limit: 20, offset: 0 }, data_as_of: fixedSnapshot }
-      : { data_mode: "live", items: [{ ...item, availability: mode === "live-pending" ? "pending_mapping" : "not_ingested", current: null, previous: null }], facets, pagination: { total: 1, limit: 20, offset: 0 }, data_as_of: fixedSnapshot };
+      : { data_mode: "live", items: [{ ...item, availability: isPendingAvailability(mode) ? mode : "not_ingested", current: null, previous: null }], facets, pagination: { total: 1, limit: 20, offset: 0 }, data_as_of: fixedSnapshot };
   } else if (path.endsWith("/taxonomies/macro-default/children")) {
     const parentId = url.searchParams.get("parent_id");
     const searching = url.searchParams.get("q") === "价格" && url.searchParams.get("scope") === "all";
@@ -82,7 +97,7 @@ async function fulfillApi(route: Route, mode: "live-empty" | "live-pending" | "d
   await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(body) });
 }
 
-async function installApi(page: Page, mode: "live-empty" | "live-pending" | "demo", requests?: string[]) {
+async function installApi(page: Page, mode: ApiMode, requests?: string[]) {
   await page.route("**/api/v1/**", (route) => {
     requests?.push(new URL(route.request().url()).pathname);
     return fulfillApi(route, mode);
@@ -100,7 +115,7 @@ test("not-ingested series is an empty data state and does not pin a snapshot", a
 
 test("pending catalog series stays visible without requesting data-only APIs", async ({ page }) => {
   const requests: string[] = [];
-  await installApi(page, "live-pending", requests);
+  await installApi(page, "pending_mapping", requests);
   await page.goto("/data?view=v2");
 
   await expect(page.getByText("待映射").first()).toBeVisible();
@@ -112,6 +127,39 @@ test("pending catalog series stays visible without requesting data-only APIs", a
   expect(requests.some((path) => path.endsWith("/series/series-1/observations"))).toBe(false);
   expect(requests.some((path) => path.endsWith("/ai/capabilities"))).toBe(false);
 });
+
+for (const [availability, label, tab] of [
+  ["pending_credentials", "待凭据", "revisions"],
+  ["pending_license", "待许可", "documents"],
+] as const) {
+  test(`deep-linked ${availability} stays catalog-only before and after readiness resolves`, async ({ page }) => {
+    const requests: string[] = [];
+    let releaseBrowser: () => void = () => undefined;
+    let markBrowserStarted: () => void = () => undefined;
+    const browserStarted = new Promise<void>((resolve) => { markBrowserStarted = resolve; });
+    const browserRelease = new Promise<void>((resolve) => { releaseBrowser = resolve; });
+    await page.route("**/api/v1/**", async (route) => {
+      const path = new URL(route.request().url()).pathname;
+      requests.push(path);
+      if (path.endsWith("/series/browser")) {
+        markBrowserStarted();
+        await browserRelease;
+      }
+      await fulfillApi(route, availability);
+    });
+
+    await page.goto(`/data?view=v2&series=series-1&tab=${tab}`);
+    await browserStarted;
+    await page.waitForTimeout(100);
+    const requestsBeforeReadiness = dataCapabilityRequests(requests);
+    releaseBrowser();
+
+    await expect(page.getByText(label).first()).toBeVisible();
+    await expect(page.getByText(`${label}：目录可见，但数据读取与发布保持关闭。`).first()).toBeVisible();
+    expect(requestsBeforeReadiness).toEqual([]);
+    expect(dataCapabilityRequests(requests)).toEqual([]);
+  });
+}
 
 test("demo mode is persistent, read-only, snapshot-pinned, and exports marked CSV", async ({ page }) => {
   await installApi(page, "demo");

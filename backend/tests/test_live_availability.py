@@ -182,6 +182,70 @@ async def test_live_browser_marks_verified_visible_points_available(
     assert response.items[0].current is not None
 
 
+async def test_live_browser_keeps_all_null_points_data_capabilities_closed(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    candidate = _candidate()
+    binding = candidate.binding
+    assert binding is not None
+    observed_at = datetime(2020, 1, 2, tzinfo=UTC)
+
+    async def candidates(_session: object) -> list[BrowserCandidate]:
+        return [candidate]
+
+    async def licenses(_session: object, _bindings: object) -> dict[int, LicenseInfo]:
+        return {binding.source.id: _license()}
+
+    async def points(_session: object, _ids: object, **_kwargs: object) -> dict[int, list[Point]]:
+        return {
+            binding.source.id: [
+                Point(
+                    period_start=date(2020, 1, 1),
+                    period_end=date(2020, 1, 31),
+                    value=None,
+                    value_text="not published",
+                    status="missing",
+                    published_at=observed_at,
+                    vintage_at=observed_at,
+                )
+            ]
+        }
+
+    async def availability_by_source(
+        _session: object,
+        ids: set[int],
+        *,
+        data_as_of: datetime,
+    ) -> dict[int, str]:
+        assert ids == {binding.source.id}
+        assert data_as_of == datetime(2020, 1, 3, tzinfo=UTC)
+        return {binding.source.id: "not_ingested"}
+
+    monkeypatch.setattr(data_browser, "_load_candidates", candidates)
+    monkeypatch.setattr(data_browser, "_license_map", licenses)
+    monkeypatch.setattr(data_browser, "_points_by_source", points)
+    monkeypatch.setattr(
+        data_browser,
+        "_lifetime_availability_by_source",
+        availability_by_source,
+    )
+
+    response = await data_browser.series_browser(
+        object(),  # type: ignore[arg-type]
+        filters=BrowserFilters(),
+        sort="taxonomy",
+        order="asc",
+        limit=20,
+        offset=0,
+        data_as_of=datetime(2020, 1, 3, tzinfo=UTC),
+        published_from=None,
+        published_to=None,
+    )
+
+    assert response.items[0].availability == "not_ingested"
+    assert response.items[0].current is None
+
+
 @pytest.mark.parametrize(
     ("mapping_status", "provider_code", "verified", "expected"),
     [

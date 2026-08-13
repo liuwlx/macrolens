@@ -5,7 +5,10 @@ from uuid import UUID, uuid4
 
 import pytest
 
+from macrolens_api.errors import AppError
+from macrolens_api.routers import series as series_router
 from macrolens_api.routers import taxonomies
+from macrolens_api.services import data_browser
 from macrolens_api.services.data_browser import BrowserCandidate, SourceBinding
 
 
@@ -152,3 +155,76 @@ async def test_live_taxonomy_search_preserves_each_ancestor_and_direct_children(
     )
     assert leaf.nodes == []
     assert [series.canonical_code for series in leaf.series] == ["US.PCE.HEADLINE"]
+
+
+async def test_reparented_intermediate_node_blocks_tree_and_browser_filter(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    root = _node("root", "宏观经济", parent_id=None, sort_order=0)
+    inflation = _node("inflation", "通胀", parent_id=root.id, sort_order=1)
+    pce = _node("pce", "PCE", parent_id=root.id, sort_order=1)
+    headline = _node("pce-headline", "总PCE", parent_id=pce.id, sort_order=1)
+    nodes = [root, inflation, pce, headline]
+    candidate = _candidate(headline.id)
+    expected_registry = SimpleNamespace(
+        tree_code="macro-default",
+        expected_series_count=1,
+        nodes=[
+            SimpleNamespace(code="root", parent_code=None),
+            SimpleNamespace(code="inflation", parent_code="root"),
+            SimpleNamespace(code="pce", parent_code="inflation"),
+            SimpleNamespace(code="pce-headline", parent_code="pce"),
+        ],
+        indicators=[SimpleNamespace(canonical_code=candidate.series.canonical_code)],
+        owner_by_series_code={
+            candidate.series.canonical_code: SimpleNamespace(code="pce-headline")
+        },
+    )
+
+    async def candidates(_session: object) -> list[BrowserCandidate]:
+        return [candidate]
+
+    monkeypatch.setattr(taxonomies, "settings", SimpleNamespace(data_mode="live"))
+    monkeypatch.setattr(taxonomies, "_load_candidates", candidates)
+    monkeypatch.setattr(taxonomies, "get_catalog_registry", lambda: expected_registry)
+    monkeypatch.setattr(data_browser, "get_catalog_registry", lambda: expected_registry)
+    monkeypatch.setattr(series_router, "settings", SimpleNamespace(data_mode="live"))
+    session = FakeSession(nodes)
+
+    with pytest.raises(AppError) as tree_error:
+        await taxonomies.taxonomy_children(
+            session,  # type: ignore[arg-type]
+            tree_code="macro-default",
+            parent_id=None,
+            q=None,
+            scope="children",
+            provider=None,
+            theme=None,
+            frequency=None,
+            unit=None,
+            seasonal_adjustment=None,
+        )
+    assert tree_error.value.status_code == 503
+
+    with pytest.raises(AppError) as browser_error:
+        await series_router.browse_series(
+            session,  # type: ignore[arg-type]
+            object(),  # type: ignore[arg-type]
+            object(),  # type: ignore[arg-type]
+            q=None,
+            node_id=inflation.id,
+            tree_code="macro-default",
+            provider=None,
+            theme=None,
+            frequency=None,
+            unit=None,
+            seasonal_adjustment=None,
+            published_from=None,
+            published_to=None,
+            sort="taxonomy",
+            order="asc",
+            limit=20,
+            offset=0,
+            data_as_of=None,
+        )
+    assert browser_error.value.status_code == 503

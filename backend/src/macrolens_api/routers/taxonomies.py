@@ -7,7 +7,7 @@ from uuid import UUID
 from fastapi import APIRouter, Path, Query
 from sqlalchemy import select
 
-from ..catalog_registry import get_catalog_registry
+from ..catalog_registry import get_catalog_registry, validate_catalog_projection
 from ..config import get_settings
 from ..demo_data import demo_taxonomy, demo_taxonomy_children
 from ..dependencies import ReadSessionDep
@@ -26,34 +26,12 @@ def _validate_registry_tree(
     series_codes: set[str] | None = None,
 ) -> None:
     registry = get_catalog_registry()
-    if tree_code != registry.tree_code:
-        return
-    expected_nodes = {node.code for node in registry.nodes}
-    actual_nodes = {node.code for node in nodes}
-    actual_node_codes_by_id = {node.id: node.code for node in nodes}
-    actual_parents = {
-        node.code: actual_node_codes_by_id.get(node.parent_id) if node.parent_id else None
-        for node in nodes
-    }
-    expected_parents = {node.code: node.parent_code for node in registry.nodes}
-    expected_series = {indicator.canonical_code for indicator in registry.indicators}
-    if (
-        actual_nodes != expected_nodes
-        or actual_parents != expected_parents
-        or (series_codes is not None and series_codes != expected_series)
-    ):
-        raise AppError(
-            503,
-            "指标分类尚未就绪",
-            "Live 分类树与受控 registry 不一致，已停止返回部分目录。",
-            "taxonomy_registry_mismatch",
-            {
-                "expected_node_count": len(expected_nodes),
-                "actual_node_count": len(actual_nodes),
-                "expected_series_count": len(expected_series),
-                "actual_series_count": len(series_codes) if series_codes is not None else None,
-            },
-        )
+    validate_catalog_projection(
+        registry,
+        tree_code=tree_code,
+        nodes=((node.id, node.code, node.parent_id) for node in nodes),
+        series_codes=series_codes,
+    )
 
 
 @router.get("/{tree_code}/children", response_model=TaxonomyChildrenResponse)

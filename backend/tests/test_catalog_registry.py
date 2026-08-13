@@ -58,13 +58,30 @@ class ResultRows:
 
 
 class FakeSession:
-    def __init__(self, rows: list[object]) -> None:
+    def __init__(self, rows: list[object], nodes: list[object] | None = None) -> None:
         self.rows = rows
+        self.nodes = nodes if nodes is not None else _catalog_nodes()
         self.calls = 0
 
     async def execute(self, _statement: object) -> ResultRows:
         self.calls += 1
         return ResultRows(self.rows if self.calls == 1 else [])
+
+    async def scalars(self, _statement: object) -> ResultRows:
+        return ResultRows(self.nodes)
+
+
+def _catalog_nodes() -> list[object]:
+    registry = get_catalog_registry()
+    ids_by_code = {node.code: uuid4() for node in registry.nodes}
+    return [
+        SimpleNamespace(
+            id=ids_by_code[node.code],
+            code=node.code,
+            parent_id=ids_by_code.get(node.parent_code),
+        )
+        for node in registry.nodes
+    ]
 
 
 def _catalog_rows(limit: int = 61) -> list[object]:
@@ -125,3 +142,15 @@ async def test_live_catalog_loader_fails_closed_on_taxonomy_ownership_drift() ->
 
     assert captured.value.status_code == 503
     assert captured.value.extra["ownership_mismatch_count"] == 1
+
+
+async def test_live_catalog_loader_fails_closed_on_intermediate_taxonomy_reparenting() -> None:
+    nodes = _catalog_nodes()
+    by_code = {node.code: node for node in nodes}
+    by_code["pce"].parent_id = by_code["root"].id
+
+    with pytest.raises(AppError) as captured:
+        await _load_candidates(FakeSession(_catalog_rows(), nodes))  # type: ignore[arg-type]
+
+    assert captured.value.status_code == 503
+    assert captured.value.code == "catalog_registry_mismatch"
