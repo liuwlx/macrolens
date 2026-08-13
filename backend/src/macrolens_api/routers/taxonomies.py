@@ -7,6 +7,7 @@ from uuid import UUID
 from fastapi import APIRouter, Path, Query
 from sqlalchemy import select
 
+from ..catalog_registry import get_catalog_registry
 from ..config import get_settings
 from ..demo_data import demo_taxonomy, demo_taxonomy_children
 from ..dependencies import ReadSessionDep
@@ -17,6 +18,42 @@ from ..services.data_browser import BrowserFilters, _load_candidates, _matches, 
 
 router = APIRouter(prefix="/taxonomies", tags=["Catalog"])
 settings = get_settings()
+
+
+def _validate_registry_tree(
+    tree_code: str,
+    nodes: list[TaxonomyNode],
+    series_codes: set[str] | None = None,
+) -> None:
+    registry = get_catalog_registry()
+    if tree_code != registry.tree_code:
+        return
+    expected_nodes = {node.code for node in registry.nodes}
+    actual_nodes = {node.code for node in nodes}
+    actual_node_codes_by_id = {node.id: node.code for node in nodes}
+    actual_parents = {
+        node.code: actual_node_codes_by_id.get(node.parent_id) if node.parent_id else None
+        for node in nodes
+    }
+    expected_parents = {node.code: node.parent_code for node in registry.nodes}
+    expected_series = {indicator.canonical_code for indicator in registry.indicators}
+    if (
+        actual_nodes != expected_nodes
+        or actual_parents != expected_parents
+        or (series_codes is not None and series_codes != expected_series)
+    ):
+        raise AppError(
+            503,
+            "指标分类尚未就绪",
+            "Live 分类树与受控 registry 不一致，已停止返回部分目录。",
+            "taxonomy_registry_mismatch",
+            {
+                "expected_node_count": len(expected_nodes),
+                "actual_node_count": len(actual_nodes),
+                "expected_series_count": len(expected_series),
+                "actual_series_count": len(series_codes) if series_codes is not None else None,
+            },
+        )
 
 
 @router.get("/{tree_code}/children", response_model=TaxonomyChildrenResponse)
@@ -57,10 +94,11 @@ async def taxonomy_children(
     )
     if not nodes:
         raise AppError(404, "分类树不存在", "没有找到指定分类树。", "taxonomy_not_found")
+    _validate_registry_tree(tree_code, nodes)
     by_id = {node.id: node for node in nodes}
     if parsed_parent is not None and parsed_parent not in by_id:
         raise AppError(404, "分类节点不存在", "没有找到指定父节点。", "taxonomy_node_not_found")
-    children: dict[object, list[TaxonomyNode]] = defaultdict(list)
+    children: dict[UUID | None, list[TaxonomyNode]] = defaultdict(list)
     for node in nodes:
         children[node.parent_id].append(node)
 
@@ -74,14 +112,14 @@ async def taxonomy_children(
         seasonal_adjustment=seasonal_adjustment,
     )
     candidates = [candidate for candidate in candidates if _matches(candidate, filters)]
-    series_by_node: dict[object, set[object]] = defaultdict(set)
+    series_by_node: dict[UUID, set[UUID]] = defaultdict(set)
     for candidate in candidates:
         for node_id in candidate.node_ids:
             if node_id in by_id:
                 series_by_node[node_id].add(candidate.series.id)
 
-    def descendant_nodes(node_id: object) -> set[object]:
-        result: set[object] = {node_id}
+    def descendant_nodes(node_id: UUID) -> set[UUID]:
+        result = {node_id}
         pending = [(node_id, 0)]
         while pending:
             current, depth = pending.pop()
@@ -105,20 +143,49 @@ async def taxonomy_children(
                     pending.append((child.id, depth + 1))
         return result
 
-    visible_nodes = nodes if scope == "all" else children[parsed_parent]
+    active_series_ids = {candidate.series.id for candidate in candidates}
     if q and q.strip():
         needle = q.strip().casefold()
-        visible_nodes = [
+        matching_candidates = [
+            candidate
+            for candidate in candidates
+            if _matches(
+                candidate,
+                BrowserFilters(
+                    q=q,
+                    provider=provider,
+                    theme=theme,
+                    frequency=frequency,
+                    unit=unit,
+                    seasonal_adjustment=seasonal_adjustment,
+                ),
+            )
+        ]
+        active_series_ids = {candidate.series.id for candidate in matching_candidates}
+        search_nodes = nodes if scope == "all" else children[parsed_parent]
+        matching_nodes = [
             node
-            for node in visible_nodes
+            for node in search_nodes
             if needle in node.code.casefold()
             or needle in node.name_zh.casefold()
             or needle in (node.name_en or "").casefold()
         ]
-    response_nodes: list[TaxonomyChildNode] = []
-    for node in visible_nodes:
+        for node in matching_nodes:
+            for descendant_id in descendant_nodes(node.id):
+                active_series_ids.update(series_by_node[descendant_id])
+
+    visible_nodes: list[TaxonomyNode] = []
+    descendant_series_by_node: dict[UUID, set[UUID]] = {}
+    for node in children[parsed_parent]:
         descendants = descendant_nodes(node.id)
         descendant_series = set().union(*(series_by_node[item] for item in descendants))
+        descendant_series &= active_series_ids
+        if descendant_series:
+            visible_nodes.append(node)
+            descendant_series_by_node[node.id] = descendant_series
+    response_nodes: list[TaxonomyChildNode] = []
+    for node in visible_nodes:
+        descendant_series = descendant_series_by_node[node.id]
         response_nodes.append(
             TaxonomyChildNode(
                 id=node.id,
@@ -128,14 +195,18 @@ async def taxonomy_children(
                 node_type=node.node_type,
                 icon_key=node.icon_key,
                 has_children=bool(children[node.id]),
-                direct_series_count=len(series_by_node[node.id]),
+                direct_series_count=len(series_by_node[node.id] & active_series_ids),
                 descendant_series_count=len(descendant_series),
             )
         )
     direct_series = [
         _summary(candidate, None)
         for candidate in candidates
-        if parsed_parent is not None and parsed_parent in candidate.node_ids
+        if (
+            parsed_parent is not None
+            and parsed_parent in candidate.node_ids
+            and candidate.series.id in active_series_ids
+        )
     ]
     direct_series.sort(key=lambda item: (item.name_zh, item.canonical_code))
     return TaxonomyChildrenResponse(
@@ -163,6 +234,9 @@ async def taxonomy(
             )
         ).all()
     )
+    if not nodes:
+        raise AppError(404, "分类树不存在", "没有找到指定分类树。", "taxonomy_not_found")
+    _validate_registry_tree(tree_code, nodes)
     series_by_node: dict[Any, list[dict[str, Any]]] = defaultdict(list)
     if include_series and nodes:
         rows = (
@@ -171,11 +245,16 @@ async def taxonomy(
                 .join(Series, Series.id == TaxonomySeries.series_id)
                 .where(
                     TaxonomySeries.node_id.in_([node.id for node in nodes]),
-                    Series.status == "active",
+                    TaxonomySeries.is_primary.is_(True),
                 )
                 .order_by(TaxonomySeries.display_order, Series.name_zh)
             )
         ).all()
+        _validate_registry_tree(
+            tree_code,
+            nodes,
+            {series.canonical_code for _mapping, series in rows},
+        )
         for mapping, series in rows:
             series_by_node[mapping.node_id].append(
                 {

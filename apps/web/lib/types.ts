@@ -388,7 +388,13 @@ export type TaxonomyChildrenResponse = {
 };
 
 export type BrowserMetricStatus = "available" | "unavailable" | "restricted";
-export type BrowserSeriesAvailability = "available" | "not_ingested" | "not_available_as_of";
+export type BrowserSeriesAvailability =
+  | "available"
+  | "pending_mapping"
+  | "pending_credentials"
+  | "pending_license"
+  | "not_ingested"
+  | "not_available_as_of";
 
 export type BrowserMetricValue = {
   value: number | string | null;

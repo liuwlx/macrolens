@@ -6167,6 +6167,9 @@ components:
       type: string
       enum:
       - available
+      - pending_mapping
+      - pending_credentials
+      - pending_license
       - not_ingested
       - not_available_as_of
     SeriesBrowserItem:
@@ -6653,6 +6656,11 @@ components:
         type:
           type: string
           title: Error Type
+        input:
+          title: Input
+        ctx:
+          type: object
+          title: Context
       type: object
       required:
       - loc

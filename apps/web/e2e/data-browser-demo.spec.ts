@@ -34,7 +34,7 @@ const item = {
 
 const facets = { provider: [], theme: [], frequency: [], unit: [], seasonal_adjustment: [] };
 
-async function fulfillApi(route: Route, mode: "live-empty" | "demo") {
+async function fulfillApi(route: Route, mode: "live-empty" | "live-pending" | "demo") {
   const url = new URL(route.request().url());
   const path = url.pathname;
   let body: unknown = {};
@@ -51,7 +51,7 @@ async function fulfillApi(route: Route, mode: "live-empty" | "demo") {
   } else if (path.endsWith("/series/browser")) {
     body = mode === "demo"
       ? { data_mode: "demo", items: [item], facets, pagination: { total: 1, limit: 20, offset: 0 }, data_as_of: fixedSnapshot }
-      : { data_mode: "live", items: [{ ...item, availability: "not_ingested", current: null, previous: null }], facets, pagination: { total: 1, limit: 20, offset: 0 }, data_as_of: fixedSnapshot };
+      : { data_mode: "live", items: [{ ...item, availability: mode === "live-pending" ? "pending_mapping" : "not_ingested", current: null, previous: null }], facets, pagination: { total: 1, limit: 20, offset: 0 }, data_as_of: fixedSnapshot };
   } else if (path.endsWith("/taxonomies/macro-default/children")) {
     const parentId = url.searchParams.get("parent_id");
     const searching = url.searchParams.get("q") === "价格" && url.searchParams.get("scope") === "all";
@@ -82,8 +82,11 @@ async function fulfillApi(route: Route, mode: "live-empty" | "demo") {
   await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(body) });
 }
 
-async function installApi(page: Page, mode: "live-empty" | "demo") {
-  await page.route("**/api/v1/**", (route) => fulfillApi(route, mode));
+async function installApi(page: Page, mode: "live-empty" | "live-pending" | "demo", requests?: string[]) {
+  await page.route("**/api/v1/**", (route) => {
+    requests?.push(new URL(route.request().url()).pathname);
+    return fulfillApi(route, mode);
+  });
 }
 
 test("not-ingested series is an empty data state and does not pin a snapshot", async ({ page }) => {
@@ -93,6 +96,21 @@ test("not-ingested series is an empty data state and does not pin a snapshot", a
   await expect(page).toHaveURL(/series=series-1/);
   expect(new URL(page.url()).searchParams.has("data_as_of")).toBe(false);
   await expect(page.getByText("明细表加载失败")).toHaveCount(0);
+});
+
+test("pending catalog series stays visible without requesting data-only APIs", async ({ page }) => {
+  const requests: string[] = [];
+  await installApi(page, "live-pending", requests);
+  await page.goto("/data?view=v2");
+
+  await expect(page.getByText("待映射").first()).toBeVisible();
+  await expect(page.getByRole("button", { name: "查看历史数据" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "加入对比" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "导出数据" })).toBeDisabled();
+  expect(requests.some((path) => path.endsWith("/series/series-1"))).toBe(false);
+  expect(requests.some((path) => path.endsWith("/series/series-1/analytics"))).toBe(false);
+  expect(requests.some((path) => path.endsWith("/series/series-1/observations"))).toBe(false);
+  expect(requests.some((path) => path.endsWith("/ai/capabilities"))).toBe(false);
 });
 
 test("demo mode is persistent, read-only, snapshot-pinned, and exports marked CSV", async ({ page }) => {

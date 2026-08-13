@@ -10,6 +10,7 @@ import { apiDownload, apiFetch, ApiError, queryString } from "@/lib/api";
 import type { AICapabilitiesResponse, Favorite, SeriesAnalyticsResponse, SeriesBrowserItem, SeriesBrowserResponse, SeriesDetail, TaxonomyBrowserSeries } from "@/lib/types";
 
 import { AnalysisPanel } from "./analysis-panel";
+import { isCatalogOnlyAvailability } from "./browser-availability";
 import { BrowserDrawer } from "./browser-drawers";
 import { BrowserFilterBar } from "./browser-filter-bar";
 import { BrowserTable } from "./browser-table";
@@ -77,9 +78,10 @@ export function DataBrowserPage() {
   }, [browserQuery.data, browserQuery.isPlaceholderData, state.series, state.data_as_of, updateState]);
 
   const selectedItem = browserQuery.data?.items.find((item) => item.series.id === state.series);
-  const detailQuery = useQuery({ queryKey: ["data-browser-detail", permissionKey, state.series], queryFn: ({ signal }) => apiFetch<SeriesDetail>(`/series/${state.series}`, { signal }), enabled: Boolean(state.series), staleTime: 5 * 60_000, retry: shouldRetry });
-  const analyticsQuery = useQuery({ queryKey: ["data-browser-analytics", permissionKey, state.series, state.transform, state.start, state.end, state.data_as_of], queryFn: ({ signal }) => apiFetch<SeriesAnalyticsResponse>(`/series/${state.series}/analytics${queryString({ transform: state.transform, start: state.start, end: state.end, data_as_of: state.data_as_of })}`, { signal }), enabled: Boolean(state.series), staleTime: 5 * 60_000, retry: shouldRetry });
-  const aiQuery = useQuery({ queryKey: ["data-browser-ai-capability", permissionKey, state.series, state.data_as_of], queryFn: ({ signal }) => apiFetch<AICapabilitiesResponse>(`/ai/capabilities${queryString({ series_id: state.series, data_as_of: state.data_as_of })}`, { signal }), enabled: Boolean(state.series), staleTime: 5 * 60_000, retry: shouldRetry });
+  const catalogOnly = isCatalogOnlyAvailability(selectedItem?.availability);
+  const detailQuery = useQuery({ queryKey: ["data-browser-detail", permissionKey, state.series], queryFn: ({ signal }) => apiFetch<SeriesDetail>(`/series/${state.series}`, { signal }), enabled: Boolean(state.series) && !catalogOnly, staleTime: 5 * 60_000, retry: shouldRetry });
+  const analyticsQuery = useQuery({ queryKey: ["data-browser-analytics", permissionKey, state.series, state.transform, state.start, state.end, state.data_as_of], queryFn: ({ signal }) => apiFetch<SeriesAnalyticsResponse>(`/series/${state.series}/analytics${queryString({ transform: state.transform, start: state.start, end: state.end, data_as_of: state.data_as_of })}`, { signal }), enabled: Boolean(state.series) && !catalogOnly, staleTime: 5 * 60_000, retry: shouldRetry });
+  const aiQuery = useQuery({ queryKey: ["data-browser-ai-capability", permissionKey, state.series, state.data_as_of], queryFn: ({ signal }) => apiFetch<AICapabilitiesResponse>(`/ai/capabilities${queryString({ series_id: state.series, data_as_of: state.data_as_of })}`, { signal }), enabled: Boolean(state.series) && !catalogOnly, staleTime: 5 * 60_000, retry: shouldRetry });
   const favoritesQuery = useQuery({ queryKey: ["favorites", permissionKey], queryFn: ({ signal }) => apiFetch<Favorite[]>("/me/favorites", { signal }), staleTime: 5 * 60_000, retry: shouldRetry });
   const selectedFavorite = favoritesQuery.data?.find((favorite) => favorite.object_type === "series" && favorite.object_id === state.series);
   const favoriteMutation = useMutation({ mutationFn: () => selectedFavorite ? apiFetch(`/me/favorites/${selectedFavorite.id}`, { method: "DELETE" }) : apiFetch("/me/favorites", { method: "POST", body: JSON.stringify({ object_type: "series", object_id: state.series, group_name: "重点指标" }) }), onSuccess: () => queryClient.invalidateQueries({ queryKey: ["favorites", permissionKey] }) });

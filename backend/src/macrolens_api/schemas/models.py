@@ -8,7 +8,14 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, model_validator
 
 type DataMode = Literal["live", "demo"]
-type SeriesAvailability = Literal["available", "not_ingested", "not_available_as_of"]
+type SeriesAvailability = Literal[
+    "available",
+    "pending_mapping",
+    "pending_credentials",
+    "pending_license",
+    "not_ingested",
+    "not_available_as_of",
+]
 
 
 class ORMModel(BaseModel):
