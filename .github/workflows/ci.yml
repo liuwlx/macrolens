@@ -132,7 +132,7 @@ jobs:
           node-version: "22"
       - run: npm install --no-audit --no-fund
       - run: npx playwright install --with-deps chromium
-      - run: npm run e2e -- --project=chromium
+      - run: npm --workspace apps/web run e2e -- --project=chromium
         env:
           PLAYWRIGHT_BASE_URL: http://localhost:3000
           E2E_ADMIN_EMAIL: admin@example.com

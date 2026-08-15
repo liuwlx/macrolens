@@ -85,6 +85,10 @@ def _fixture_value(series: Series, series_index: int, point_index: int) -> Decim
     return Decimal(90 + series_index * 10) + Decimal(point_index) / Decimal(3)
 
 
+def _is_acceptance_revision_point(point_index: int, point_count: int) -> bool:
+    return point_count >= 2 and point_index == point_count - 2
+
+
 async def _approve_runtime_acceptance_mappings(
     session: AsyncSession,
     source_rows: list[SourceRow],
@@ -199,7 +203,7 @@ async def seed_runtime_acceptance_fixtures(session: AsyncSession) -> dict[str, i
         finished_at=datetime.now(UTC),
         status="succeeded",
         inserted_count=0,
-        revised_count=1,
+        revised_count=len(source_rows),
         unchanged_count=0,
         rejected_count=0,
         metrics={"fixture": True, "version": FIXTURE_VERSION},
@@ -228,7 +232,7 @@ async def seed_runtime_acceptance_fixtures(session: AsyncSession) -> dict[str, i
             )
             first_value = (
                 value - Decimal("0.10")
-                if series_index == 0 and point_index == len(periods) - 2
+                if _is_acceptance_revision_point(point_index, len(periods))
                 else value
             )
             session.add(

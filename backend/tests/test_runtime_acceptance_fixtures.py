@@ -8,6 +8,18 @@ from macrolens_api import test_fixtures
 from macrolens_api.models import Job
 
 
+def test_every_acceptance_series_gets_one_revision_point() -> None:
+    point_count = 67
+
+    revision_points = [
+        point_index
+        for point_index in range(point_count)
+        if test_fixtures._is_acceptance_revision_point(point_index, point_count)
+    ]
+
+    assert revision_points == [point_count - 2]
+
+
 def test_runtime_acceptance_fixtures_reject_development(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

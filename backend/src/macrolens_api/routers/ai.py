@@ -24,6 +24,15 @@ router = APIRouter(prefix="/ai", tags=["AI"])
 settings = get_settings()
 
 
+def _resolve_ai_cutoff(
+    data_as_of: datetime | None,
+    request_started_at: datetime,
+) -> datetime:
+    if data_as_of is None:
+        return request_started_at
+    return normalize_data_as_of(data_as_of)
+
+
 @router.get("/capabilities", response_model=AICapabilityResponse)
 async def get_ai_capability(
     series_id: UUID,
@@ -68,7 +77,7 @@ async def create_ai_run(
             "ai_not_configured",
         )
     request_started_at = datetime.now(UTC)
-    cutoff = normalize_data_as_of(payload.data_as_of)
+    cutoff = _resolve_ai_cutoff(payload.data_as_of, request_started_at)
     if cutoff > request_started_at:
         raise AppError(
             422,
