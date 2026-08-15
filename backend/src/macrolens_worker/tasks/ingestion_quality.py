@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 from collections import defaultdict
+from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import UTC, date, datetime, timedelta
-from typing import Iterable
 
 from macrolens_api.models import Dataset, SourceSeries
 from macrolens_worker.providers.base import NormalizedObservation
@@ -55,7 +55,10 @@ def validate_ingestion_completeness(
         by_source[item.source_series_id].append(item)
         key = (item.source_series_id, item.period_start, item.vintage_at)
         previous = duplicate_keys.get(key)
-        if previous is not None and (previous.value, previous.value_text) != (item.value, item.value_text):
+        if previous is not None and (previous.value, previous.value_text) != (
+            item.value,
+            item.value_text,
+        ):
             issues.append(
                 CompletenessIssue(
                     "conflicting_duplicate",
@@ -67,7 +70,9 @@ def validate_ingestion_completeness(
         duplicate_keys[key] = item
 
     for source_id, source in expected.items():
-        rows = sorted(by_source.get(source_id, []), key=lambda item: (item.period_start, item.vintage_at))
+        rows = sorted(
+            by_source.get(source_id, []), key=lambda item: (item.period_start, item.vintage_at)
+        )
         if not rows:
             issues.append(
                 CompletenessIssue(
@@ -83,7 +88,9 @@ def validate_ingestion_completeness(
             if previous is None or row.vintage_at >= previous.vintage_at:
                 latest_by_period[row.period_start] = row
         latest_rows = sorted(latest_by_period.values(), key=lambda item: item.period_start)
-        non_null = [row for row in latest_rows if row.value is not None or row.value_text is not None]
+        non_null = [
+            row for row in latest_rows if row.value is not None or row.value_text is not None
+        ]
         if not non_null and not bool(source.source_locator.get("allow_all_null", False)):
             issues.append(
                 CompletenessIssue(
@@ -108,7 +115,8 @@ def validate_ingestion_completeness(
                 CompletenessIssue(
                     "missing_observation_value",
                     f"Source {source_id} has {len(unexpected_nulls)} missing latest values; "
-                    f"allowed {allowed_null_periods} after {allowed_leading_nulls} leading periods.",
+                    f"allowed {allowed_null_periods} after {allowed_leading_nulls} "
+                    "leading periods.",
                     source_id,
                     first.period_start,
                 )
@@ -124,7 +132,8 @@ def validate_ingestion_completeness(
                     issues.append(
                         CompletenessIssue(
                             "invalid_expected_first_period",
-                            f"Source {source_id} has invalid expected_first_period={expected_first_raw!r}.",
+                            f"Source {source_id} has invalid expected_first_period="
+                            f"{expected_first_raw!r}.",
                             source_id,
                         )
                     )
@@ -164,32 +173,50 @@ def validate_ingestion_completeness(
                 )
             )
 
-        min_key = "min_observations_backfill" if mode in {"backfill", "vintage_backfill"} else "min_observations_incremental"
-        minimum = int(source.source_locator.get(min_key, source.source_locator.get("min_observations", 1)))
+        min_key = (
+            "min_observations_backfill"
+            if mode in {"backfill", "vintage_backfill"}
+            else "min_observations_incremental"
+        )
+        minimum = int(
+            source.source_locator.get(min_key, source.source_locator.get("min_observations", 1))
+        )
         unique_periods = set(latest_by_period)
         non_null_periods = {row.period_start for row in non_null}
         if len(non_null_periods) < minimum:
             issues.append(
                 CompletenessIssue(
                     "minimum_history",
-                    f"Source {source_id} returned {len(non_null_periods)} non-null periods; expected at least {minimum}.",
+                    f"Source {source_id} returned {len(non_null_periods)} non-null "
+                    f"periods; expected at least {minimum}.",
                     source_id,
                 )
             )
-        if bool(source.source_locator.get("require_contiguous", frequency in {"weekly", "monthly", "quarterly", "semiannual", "semi-annual", "annual"})):
+        if bool(
+            source.source_locator.get(
+                "require_contiguous",
+                frequency
+                in {"weekly", "monthly", "quarterly", "semiannual", "semi-annual", "annual"},
+            )
+        ):
             missing = _missing_regular_periods(unique_periods, frequency)
             allowed = int(source.source_locator.get("allowed_missing_periods", 0))
             if len(missing) > allowed:
                 issues.append(
                     CompletenessIssue(
                         "history_gap",
-                        f"Source {source_id} has {len(missing)} missing {frequency} periods; allowed {allowed}.",
+                        f"Source {source_id} has {len(missing)} missing {frequency} "
+                        f"periods; allowed {allowed}.",
                         source_id,
                         missing[0] if missing else None,
                     )
                 )
         if not bool(source.source_locator.get("skip_freshness_check", False)):
-            newest = max(row.period_end for row in non_null) if non_null else max(row.period_end for row in latest_rows)
+            newest = (
+                max(row.period_end for row in non_null)
+                if non_null
+                else max(row.period_end for row in latest_rows)
+            )
             max_staleness = int(
                 source.source_locator.get(
                     "max_staleness_days",
@@ -200,7 +227,8 @@ def validate_ingestion_completeness(
                 issues.append(
                     CompletenessIssue(
                         "stale_latest_period",
-                        f"Source {source_id} latest period {newest} is older than {max_staleness} days.",
+                        f"Source {source_id} latest period {newest} is older than "
+                        f"{max_staleness} days.",
                         source_id,
                         newest,
                     )

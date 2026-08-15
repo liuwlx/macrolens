@@ -20,7 +20,7 @@ function DocumentsContent() {
   const [query, setQuery] = useState("");
   const [documentType, setDocumentType] = useState("");
   const [provider, setProvider] = useState("");
-  const [selectedId, setSelectedId] = useState(searchParams.get("document") ?? "");
+  const [selectedIdOverride, setSelectedId] = useState(searchParams.get("document") ?? "");
   const [includeContent, setIncludeContent] = useState(false);
 
   const documentsQuery = useQuery({
@@ -28,15 +28,15 @@ function DocumentsContent() {
     queryFn: () => apiFetch<{ items: DocumentSummary[]; total: number }>(`/documents${queryString({ q: query, document_type: documentType, provider, limit: 100 })}`),
   });
   useEffect(() => {
-    if (!selectedId && documentsQuery.data?.items[0]) setSelectedId(documentsQuery.data.items[0].id);
-  }, [documentsQuery.data, selectedId]);
-  useEffect(() => {
     const documentId = searchParams.get("document");
-    if (documentId && documentId !== selectedId) {
+    if (documentId && documentId !== selectedIdOverride) {
+      // URL navigation is an external input that must replace the current selection.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSelectedId(documentId);
       setIncludeContent(false);
     }
-  }, [searchParams, selectedId]);
+  }, [searchParams, selectedIdOverride]);
+  const selectedId = selectedIdOverride || documentsQuery.data?.items[0]?.id || "";
   const detailQuery = useQuery({
     queryKey: ["document", selectedId, includeContent],
     queryFn: () => apiFetch<DocumentDetail>(`/documents/${selectedId}${includeContent ? "/content" : ""}`),

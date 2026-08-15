@@ -4,7 +4,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { addDays, format } from "date-fns";
 import { BellPlus, CalendarClock, ExternalLink, Filter, Sparkles } from "lucide-react";
 import { useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
 
 import { BarChart } from "@/components/chart";
 import { PageHeader } from "@/components/page-header";
@@ -23,15 +23,13 @@ function CalendarContent() {
   const [end, setEnd] = useState(format(addDays(now, 30), "yyyy-MM-dd"));
   const [importance, setImportance] = useState(1);
   const [provider, setProvider] = useState("");
-  const [selectedId, setSelectedId] = useState(initialEvent);
+  const [selectedIdOverride, setSelectedId] = useState(initialEvent);
 
   const eventsQuery = useQuery({
     queryKey: ["release-events", start, end, importance, provider],
     queryFn: () => apiFetch<{ items: ReleaseEvent[]; total: number }>(`/release-events${queryString({ start, end, country: "US", importance_min: importance, provider, limit: 300 })}`),
   });
-  useEffect(() => {
-    if (!selectedId && eventsQuery.data?.items[0]) setSelectedId(eventsQuery.data.items[0].id);
-  }, [eventsQuery.data, selectedId]);
+  const selectedId = selectedIdOverride || eventsQuery.data?.items[0]?.id || "";
   const detailQuery = useQuery({
     queryKey: ["release-event", selectedId],
     queryFn: () => apiFetch<ReleaseEventDetail>(`/release-events/${selectedId}`),

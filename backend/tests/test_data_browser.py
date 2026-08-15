@@ -13,6 +13,7 @@ from fastapi.exceptions import RequestValidationError
 from sqlalchemy.dialects import postgresql
 
 from macrolens_api.errors import AppError, request_validation_error_handler
+from macrolens_api.routers import ai as ai_router
 from macrolens_api.schemas import AIRunCreate, BrowserPagination, LicenseInfo, SeriesBrowserResponse
 from macrolens_api.services import ai_context, ai_runtime, data_browser, jobs, licenses
 from macrolens_api.services import series as series_service
@@ -81,6 +82,21 @@ def test_ai_run_create_accepts_a_frozen_data_as_of() -> None:
         contexts=[{"context_type": "series", "context_id": uuid4()}],
     )
     assert payload.data_as_of == cutoff
+
+
+def test_ai_run_without_data_as_of_uses_request_start_time() -> None:
+    request_started_at = datetime(2026, 8, 15, 12, 0, tzinfo=UTC)
+
+    assert ai_router._resolve_ai_cutoff(None, request_started_at) == request_started_at
+
+
+def test_ai_run_normalizes_explicit_data_as_of() -> None:
+    request_started_at = datetime(2026, 8, 15, 12, 0, tzinfo=UTC)
+
+    assert ai_router._resolve_ai_cutoff(
+        datetime(2026, 8, 15, 11, 0),
+        request_started_at,
+    ) == datetime(2026, 8, 15, 11, 0, tzinfo=UTC)
 
 
 def test_csv_cells_neutralize_formulas_and_record_controls() -> None:

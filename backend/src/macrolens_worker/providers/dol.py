@@ -50,9 +50,7 @@ class DOLOpenDataAdapter(ProviderAdapter):
                     "DOL_CLAIMS_URL is required and must point to the verified DOL claims endpoint"
                 )
             date_field = str(locator.get("date_field") or "week_ending")
-            value_field = str(
-                locator.get("value_field") or "initial_claims_seasonally_adjusted"
-            )
+            value_field = str(locator.get("value_field") or "initial_claims_seasonally_adjusted")
             pagination = locator.get("pagination") or {}
             if not isinstance(pagination, dict):
                 raise ProviderDataError(f"DOL mapping {source.id} pagination must be an object")
@@ -107,15 +105,14 @@ class DOLOpenDataAdapter(ProviderAdapter):
                 if not pagination_enabled:
                     if total is not None and len(rows) < total:
                         raise ProviderDataError(
-                            f"DOL endpoint declares {total} rows but pagination is disabled and only "
+                            f"DOL endpoint declares {total} rows but pagination is disabled "
+                            "and only "
                             f"{len(rows)} rows were returned"
                         )
                     break
                 received = len(rows)
                 offset += received
-                if received == 0 or received < page_size or (
-                    total is not None and offset >= total
-                ):
+                if received == 0 or received < page_size or (total is not None and offset >= total):
                     break
             else:
                 raise ProviderDataError(f"DOL pagination exceeded {self.max_pages} pages")
@@ -154,9 +151,7 @@ class DOLOpenDataAdapter(ProviderAdapter):
                     NormalizedObservation(
                         source_series_id=source.id,
                         period_start=period,
-                        period_end=period_end(
-                            period, source.source_frequency or "weekly"
-                        ),
+                        period_end=period_end(period, source.source_frequency or "weekly"),
                         value=value,
                         status="missing" if value is None else "normal",
                         vintage_at=fetched_at,
@@ -245,4 +240,3 @@ class DOLOpenDataAdapter(ProviderAdapter):
             return []
         text = raw.decode("utf-8-sig", errors="replace")
         return [dict(row) for row in csv.DictReader(io.StringIO(text))]
-

@@ -13,7 +13,7 @@ import type { Note, Project, ProjectDetail, ProjectShare } from "@/lib/types";
 function WorkspaceContent(){
   const queryClient=useQueryClient();
   const searchParams=useSearchParams();
-  const [selectedId,setSelectedId]=useState(searchParams.get("project")??"");
+  const [selectedIdOverride,setSelectedId]=useState(searchParams.get("project")??"");
   const [showCreate,setShowCreate]=useState(false);
   const [name,setName]=useState("");
   const [description,setDescription]=useState("");
@@ -23,8 +23,12 @@ function WorkspaceContent(){
   const [shareUrl,setShareUrl]=useState("");
 
   const projectsQuery=useQuery({queryKey:["projects"],queryFn:()=>apiFetch<Project[]>("/me/projects")});
-  useEffect(()=>{if(!selectedId&&projectsQuery.data?.[0])setSelectedId(projectsQuery.data[0].id)},[projectsQuery.data,selectedId]);
-  useEffect(()=>{const projectId=searchParams.get("project");if(projectId&&projectId!==selectedId)setSelectedId(projectId)},[searchParams,selectedId]);
+  useEffect(()=>{const projectId=searchParams.get("project");if(projectId&&projectId!==selectedIdOverride){
+    // URL navigation is an external input that must replace the current selection.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSelectedId(projectId);
+  }},[searchParams,selectedIdOverride]);
+  const selectedId=selectedIdOverride||projectsQuery.data?.[0]?.id||"";
   const detailQuery=useQuery({queryKey:["project",selectedId],queryFn:()=>apiFetch<ProjectDetail>(`/me/projects/${selectedId}`),enabled:Boolean(selectedId)});
   const createProject=useMutation({mutationFn:()=>apiFetch<Project>("/me/projects",{method:"POST",body:JSON.stringify({name,description:description||null})}),onSuccess:(project)=>{setSelectedId(project.id);setName("");setDescription("");setShowCreate(false);void queryClient.invalidateQueries({queryKey:["projects"]});}});
   const deleteProject=useMutation({mutationFn:(id:string)=>apiFetch(`/me/projects/${id}`,{method:"DELETE"}),onSuccess:()=>{setSelectedId("");void queryClient.invalidateQueries({queryKey:["projects"]});}});

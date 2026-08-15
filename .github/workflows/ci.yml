@@ -50,7 +50,10 @@ jobs:
       - run: python -m compileall -q backend/src backend/tests scripts
       - run: PYTHONPATH=backend/src python -m macrolens_worker.main audit-data --structural --output DATA_INGESTION_READINESS.json
       - run: PYTHONPATH=backend/src pytest backend/tests --cov=macrolens_api --cov=macrolens_worker --cov-report=term-missing --cov-fail-under=35
-      - run: cd backend && alembic upgrade head && alembic downgrade base && alembic upgrade head
+      - run: alembic upgrade head && alembic downgrade base && alembic upgrade head
+        working-directory: backend
+        env:
+          PYTHONPATH: src
       - run: PYTHONPATH=backend/src python -m macrolens_api.cli seed
       - run: PYTHONPATH=backend/src python scripts/generate_openapi.py --check
       - run: python scripts/validate_repository.py
@@ -119,17 +122,17 @@ jobs:
           p.write_text(s)
           PY
       - run: docker compose --profile acceptance up -d --build postgres minio minio-init migrate seed mock-openai
-      - run: ./scripts/wait_for_http.sh http://127.0.0.1:8081/health 120
+      - run: bash scripts/wait_for_http.sh http://127.0.0.1:8081/health 120
       - run: docker compose run --rm -e ENVIRONMENT=test -e ALLOW_TEST_FIXTURES=true seed python -m macrolens_api.cli seed-test-fixtures
       - run: docker compose --profile acceptance up -d api worker scheduler web
-      - run: ./scripts/wait_for_http.sh http://127.0.0.1:8000/api/v1/ready 180
-      - run: ./scripts/wait_for_http.sh http://localhost:3000/login 180
+      - run: bash scripts/wait_for_http.sh http://127.0.0.1:8000/api/v1/ready 180
+      - run: bash scripts/wait_for_http.sh http://localhost:3000/login 180
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
       - run: npm install --no-audit --no-fund
       - run: npx playwright install --with-deps chromium
-      - run: npm run e2e -- --project=chromium
+      - run: npm --workspace apps/web run e2e -- --project=chromium
         env:
           PLAYWRIGHT_BASE_URL: http://localhost:3000
           E2E_ADMIN_EMAIL: admin@example.com

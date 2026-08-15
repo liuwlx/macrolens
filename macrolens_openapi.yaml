@@ -3331,6 +3331,82 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/admin/source-mappings/{source_mapping_id}/probe:
+    post:
+      tags:
+      - Admin
+      summary: Create Mapping Probe
+      operationId: create_mapping_probe_api_v1_admin_source_mappings__source_mapping_id__probe_post
+      parameters:
+      - name: source_mapping_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Source Mapping Id
+      - name: macrolens_access
+        in: cookie
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Macrolens Access
+      responses:
+        '202':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobPublic'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/admin/source-mappings/{source_mapping_id}/approve:
+    post:
+      tags:
+      - Admin
+      summary: Approve Source Mapping
+      operationId: approve_source_mapping_api_v1_admin_source_mappings__source_mapping_id__approve_post
+      parameters:
+      - name: source_mapping_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Source Mapping Id
+      - name: macrolens_access
+        in: cookie
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Macrolens Access
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SourceMappingApproval'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                title: Response Approve Source Mapping Api V1 Admin Source Mappings  Source Mapping Id  Approve Post
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /api/v1/admin/quality-results:
     get:
       tags:
@@ -4177,6 +4253,29 @@ components:
           type: string
           format: date-time
           title: Vintage At
+        source_series_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Source Series Id
+        run_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Run Id
+        publication_batch_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Publication Batch Id
+        raw_object_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Raw Object Id
       type: object
       required:
       - period_start
@@ -5422,6 +5521,29 @@ components:
           type: string
           format: date-time
           title: Vintage At
+        source_series_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Source Series Id
+        run_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Run Id
+        publication_batch_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Publication Batch Id
+        raw_object_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Raw Object Id
       type: object
       required:
       - period_start
@@ -6001,6 +6123,30 @@ components:
         versions:
           type: integer
           title: Versions
+        first_run_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: First Run Id
+        latest_run_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Latest Run Id
+        first_raw_object_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: First Raw Object Id
+        latest_raw_object_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Latest Raw Object Id
       type: object
       required:
       - period_start
@@ -6147,6 +6293,10 @@ components:
           $ref: '#/components/schemas/ContributionResult'
         capabilities:
           $ref: '#/components/schemas/SeriesCapabilities'
+        lineage:
+          anyOf:
+          - $ref: '#/components/schemas/LineageInfo'
+          - type: 'null'
         data_as_of:
           type: string
           format: date-time
@@ -6167,6 +6317,9 @@ components:
       type: string
       enum:
       - available
+      - pending_mapping
+      - pending_credentials
+      - pending_license
       - not_ingested
       - not_available_as_of
     SeriesBrowserItem:
@@ -6502,6 +6655,16 @@ components:
       - default_transform
       - latest_period
       title: SeriesSummary
+    SourceMappingApproval:
+      properties:
+        probe_job_id:
+          type: string
+          format: uuid
+          title: Probe Job Id
+      type: object
+      required:
+      - probe_job_id
+      title: SourceMappingApproval
     SourceMappingUpdate:
       properties:
         provider_series_id:
@@ -6653,6 +6816,11 @@ components:
         type:
           type: string
           title: Error Type
+        input:
+          title: Input
+        ctx:
+          type: object
+          title: Context
       type: object
       required:
       - loc

@@ -71,7 +71,14 @@ async def ensure_resource_access(
             )
         )
     else:
-        raise AppError(422, "资源类型不支持", f"暂不支持 {object_type} 资源。", "unsupported_resource_type")
+        raise AppError(
+            422, "资源类型不支持", f"暂不支持 {object_type} 资源。", "unsupported_resource_type"
+        )
 
     if found is None:
-        raise AppError(404, "资源不存在", "没有找到所引用的资源，或当前用户无权访问。", f"{object_type}_not_found")
+        raise AppError(
+            404,
+            "资源不存在",
+            "没有找到所引用的资源，或当前用户无权访问。",
+            f"{object_type}_not_found",
+        )

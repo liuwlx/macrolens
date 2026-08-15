@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 from datetime import UTC, datetime, timedelta
 from enum import StrEnum
+from typing import cast
 from uuid import UUID
 
 import jwt
@@ -70,7 +71,7 @@ def create_token(
         "iat": now,
         "exp": now + ttl,
     }
-    return jwt.encode(payload, settings.jwt_secret, algorithm=settings.jwt_algorithm)
+    return cast(str, jwt.encode(payload, settings.jwt_secret, algorithm=settings.jwt_algorithm))
 
 
 def decode_token(token: str, expected_type: TokenType) -> TokenPayload:

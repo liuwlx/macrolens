@@ -866,7 +866,15 @@
         "min_observations_backfill": 60,
         "require_contiguous": true,
         "start_year": 1947,
-        "expected_first_period": "1947-01-01"
+        "expected_first_period": "1947-01-01",
+        "expected_catalog_title": "All items in U.S. city average, all urban consumers, seasonally adjusted",
+        "expected_catalog": {
+          "series_id": "CUSR0000SA0",
+          "seasonality": "Seasonally Adjusted",
+          "survey_abbreviation": "CU",
+          "area": "U.S. city average",
+          "item": "All items"
+        }
       },
       "mapping_type": "DIRECT",
       "mapping_status": "READY",

@@ -15,18 +15,22 @@ const rate = (value: unknown) => value == null ? "—" : `${Number(value).toFixe
 
 function FomcContent() {
   const searchParams = useSearchParams();
-  const [selectedId, setSelectedId] = useState(searchParams.get("meeting") ?? "");
+  const [selectedIdOverride, setSelectedId] = useState(searchParams.get("meeting") ?? "");
   const meetingsQuery = useQuery({ queryKey: ["fomc-meetings"], queryFn: () => apiFetch<{ items: FomcMeeting[] }>("/fomc/meetings?limit=80") });
-  useEffect(() => { if (!selectedId && meetingsQuery.data?.items[0]) setSelectedId(meetingsQuery.data.items[0].id); }, [meetingsQuery.data, selectedId]);
   useEffect(() => {
     const meetingId = searchParams.get("meeting");
-    if (meetingId && meetingId !== selectedId) setSelectedId(meetingId);
-  }, [searchParams, selectedId]);
+    if (meetingId && meetingId !== selectedIdOverride) {
+      // URL navigation is an external input that must replace the current selection.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setSelectedId(meetingId);
+    }
+  }, [searchParams, selectedIdOverride]);
+  const selectedId = selectedIdOverride || meetingsQuery.data?.items[0]?.id || "";
   const detailQuery = useQuery({ queryKey: ["fomc-meeting", selectedId], queryFn: () => apiFetch<FomcMeetingDetail>(`/fomc/meetings/${selectedId}`), enabled: Boolean(selectedId) });
   const probabilitiesQuery = useQuery({ queryKey: ["fomc-probabilities", selectedId], queryFn: () => apiFetch<FomcProbability[]>(`/fomc/meetings/${selectedId}/probabilities`), enabled: Boolean(selectedId) });
   const reminder = useMutation({ mutationFn: () => apiFetch("/me/alerts", { method: "POST", body: JSON.stringify({ name: "FOMC会议更新", alert_type: "fomc_update", target_type: "fomc_meeting", target_id: selectedId, rule: { document_types: ["statement", "minutes", "sep"] }, channels: ["in_app", "email"] }) }) });
 
-  const meetings = meetingsQuery.data?.items ?? [];
+  const meetings = useMemo(() => meetingsQuery.data?.items ?? [], [meetingsQuery.data]);
   const selected = detailQuery.data;
   const nextMeeting = useMemo(() => meetings.filter((item) => new Date(`${item.meeting_end}T23:59:59`) >= new Date()).sort((a,b)=>a.meeting_start.localeCompare(b.meeting_start))[0], [meetings]);
   const latestMeeting = meetings.find((item)=>item.target_rate_upper != null);

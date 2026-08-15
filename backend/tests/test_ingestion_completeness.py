@@ -18,7 +18,6 @@ from macrolens_worker.providers.base import (
 )
 from macrolens_worker.tasks.ingestion_quality import validate_ingestion_completeness
 
-
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
@@ -70,8 +69,20 @@ async def test_bls_adapter_collects_quarterly_eci(monkeypatch) -> None:
                         {
                             "seriesID": "ECI",
                             "data": [
-                                {"year": "2026", "period": "Q02", "value": "168.2", "latest": "true", "footnotes": []},
-                                {"year": "2026", "period": "Q01", "value": "166.9", "latest": "false", "footnotes": []},
+                                {
+                                    "year": "2026",
+                                    "period": "Q02",
+                                    "value": "168.2",
+                                    "latest": "true",
+                                    "footnotes": [],
+                                },
+                                {
+                                    "year": "2026",
+                                    "period": "Q01",
+                                    "value": "166.9",
+                                    "latest": "false",
+                                    "footnotes": [],
+                                },
                             ],
                         }
                     ]
@@ -103,15 +114,40 @@ async def test_fred_adapter_paginates_current_history(monkeypatch) -> None:
     async def handler(request: httpx.Request) -> httpx.Response:
         if request.url.path.endswith("/fred/series"):
             return httpx.Response(
-                200, request=request,
-                json={"seriess": [{"id": "TEST", "frequency_short": "M", "observation_start": "2026-01-01", "title": "Test"}]},
+                200,
+                request=request,
+                json={
+                    "seriess": [
+                        {
+                            "id": "TEST",
+                            "frequency_short": "M",
+                            "observation_start": "2026-01-01",
+                            "title": "Test",
+                        }
+                    ]
+                },
             )
         offset = int(request.url.params["offset"])
         offsets.append(offset)
         all_rows = [
-            {"date": "2026-01-01", "value": "1", "realtime_start": "2026-02-01", "realtime_end": "9999-12-31"},
-            {"date": "2026-02-01", "value": "2", "realtime_start": "2026-03-01", "realtime_end": "9999-12-31"},
-            {"date": "2026-03-01", "value": "3", "realtime_start": "2026-04-01", "realtime_end": "9999-12-31"},
+            {
+                "date": "2026-01-01",
+                "value": "1",
+                "realtime_start": "2026-02-01",
+                "realtime_end": "9999-12-31",
+            },
+            {
+                "date": "2026-02-01",
+                "value": "2",
+                "realtime_start": "2026-03-01",
+                "realtime_end": "9999-12-31",
+            },
+            {
+                "date": "2026-03-01",
+                "value": "3",
+                "realtime_start": "2026-04-01",
+                "realtime_end": "9999-12-31",
+            },
         ]
         limit = int(request.url.params["limit"])
         return httpx.Response(
@@ -142,8 +178,18 @@ async def test_fred_adapter_can_backfill_alfred_vintages(monkeypatch) -> None:
     async def handler(request: httpx.Request) -> httpx.Response:
         if request.url.path.endswith("/fred/series"):
             return httpx.Response(
-                200, request=request,
-                json={"seriess": [{"id": "TEST", "frequency_short": "M", "observation_start": "2026-01-01", "title": "Test"}]},
+                200,
+                request=request,
+                json={
+                    "seriess": [
+                        {
+                            "id": "TEST",
+                            "frequency_short": "M",
+                            "observation_start": "2026-01-01",
+                            "title": "Test",
+                        }
+                    ]
+                },
             )
         if request.url.path.endswith("/vintagedates"):
             return httpx.Response(
@@ -158,8 +204,18 @@ async def test_fred_adapter_can_backfill_alfred_vintages(monkeypatch) -> None:
             json={
                 "count": 2,
                 "observations": [
-                    {"date": "2026-01-01", "value": "100", "realtime_start": "2026-02-01", "realtime_end": "2026-02-28"},
-                    {"date": "2026-01-01", "value": "101", "realtime_start": "2026-03-01", "realtime_end": "9999-12-31"},
+                    {
+                        "date": "2026-01-01",
+                        "value": "100",
+                        "realtime_start": "2026-02-01",
+                        "realtime_end": "2026-02-28",
+                    },
+                    {
+                        "date": "2026-01-01",
+                        "value": "101",
+                        "realtime_start": "2026-03-01",
+                        "realtime_end": "9999-12-31",
+                    },
                 ],
             },
         )
@@ -193,8 +249,20 @@ async def test_bea_adapter_resolves_exact_line_description(monkeypatch) -> None:
                 "BEAAPI": {
                     "Results": {
                         "Data": [
-                            {"SeriesCode": "AAA", "LineNumber": "1", "LineDescription": "Health care services", "TimePeriod": "2026M01", "DataValue": "110"},
-                            {"SeriesCode": "BBB", "LineNumber": "2", "LineDescription": "Hospital services", "TimePeriod": "2026M01", "DataValue": "120"},
+                            {
+                                "SeriesCode": "AAA",
+                                "LineNumber": "1",
+                                "LineDescription": "Health care services",
+                                "TimePeriod": "2026M01",
+                                "DataValue": "110",
+                            },
+                            {
+                                "SeriesCode": "BBB",
+                                "LineNumber": "2",
+                                "LineDescription": "Hospital services",
+                                "TimePeriod": "2026M01",
+                                "DataValue": "120",
+                            },
                         ]
                     }
                 }
@@ -209,7 +277,9 @@ async def test_bea_adapter_resolves_exact_line_description(monkeypatch) -> None:
     )
     async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
         result = await BEAAdapter(client).fetch(
-            SimpleNamespace(code="BEA_API"), [(source, _dataset(4, "NIUnderlyingDetail"))], mode="incremental"
+            SimpleNamespace(code="BEA_API"),
+            [(source, _dataset(4, "NIUnderlyingDetail"))],
+            mode="incremental",
         )
     assert str(result[0].observations[0].value) == "110"
     raw = json.loads(result[0].raw_bytes)
@@ -244,7 +314,12 @@ async def test_eia_rejects_repeated_pagination_page(monkeypatch) -> None:
         with pytest.raises(ProviderDataError, match="repeated a page"):
             await adapter.fetch(
                 SimpleNamespace(code="EIA_API_V2"),
-                [(_source(5, frequency="daily", locator={"route": "v2/seriesid/TEST"}), _dataset(5))],
+                [
+                    (
+                        _source(5, frequency="daily", locator={"route": "v2/seriesid/TEST"}),
+                        _dataset(5),
+                    )
+                ],
                 mode="backfill",
             )
     get_settings.cache_clear()
@@ -296,7 +371,13 @@ async def test_nyfed_rrp_aggregates_multiple_operations_per_day() -> None:
 def test_treasury_null_fields_are_not_observations() -> None:
     from macrolens_worker.providers.treasury import TreasuryAdapter
 
-    raw = b'''<?xml version="1.0"?><feed xmlns:d="x" xmlns:m="y"><entry><content><m:properties><d:NEW_DATE>2026-07-31T00:00:00</d:NEW_DATE><d:BC_2YEAR m:null="true" /></m:properties></content></entry></feed>'''
+    raw = (
+        b'<?xml version="1.0"?>'
+        b'<feed xmlns:d="x" xmlns:m="y"><entry><content><m:properties>'
+        b"<d:NEW_DATE>2026-07-31T00:00:00</d:NEW_DATE>"
+        b'<d:BC_2YEAR m:null="true" />'
+        b"</m:properties></content></entry></feed>"
+    )
     source = _source(7, external_id="2Y_PAR_NOMINAL", frequency="daily")
     assert TreasuryAdapter(client=None)._parse(raw, [(source, _dataset(7))]) == []  # type: ignore[arg-type]
 
@@ -313,11 +394,26 @@ def test_completeness_gate_blocks_missing_gap_and_stale_data() -> None:
     )
     vintage = datetime(2026, 8, 1, tzinfo=UTC)
     observations = [
-        NormalizedObservation(8, date(2026, 1, 1), date(2026, 1, 31), __import__("decimal").Decimal("1"), vintage_at=vintage),
-        NormalizedObservation(8, date(2026, 3, 1), date(2026, 3, 31), __import__("decimal").Decimal("2"), vintage_at=vintage),
+        NormalizedObservation(
+            8,
+            date(2026, 1, 1),
+            date(2026, 1, 31),
+            __import__("decimal").Decimal("1"),
+            vintage_at=vintage,
+        ),
+        NormalizedObservation(
+            8,
+            date(2026, 3, 1),
+            date(2026, 3, 31),
+            __import__("decimal").Decimal("2"),
+            vintage_at=vintage,
+        ),
     ]
     issues, metrics = validate_ingestion_completeness(
-        [(source, _dataset(8))], observations, mode="incremental", now=datetime(2026, 8, 2, tzinfo=UTC)
+        [(source, _dataset(8))],
+        observations,
+        mode="incremental",
+        now=datetime(2026, 8, 2, tzinfo=UTC),
     )
     codes = {issue.code for issue in issues}
     assert {"minimum_history", "history_gap", "stale_latest_period"} <= codes
@@ -328,13 +424,19 @@ def test_duplicate_snapshot_conflicts_are_rejected() -> None:
     from decimal import Decimal
 
     vintage = datetime(2026, 8, 1, tzinfo=UTC)
-    first = NormalizedObservation(9, date(2026, 1, 1), date(2026, 1, 31), Decimal("1"), vintage_at=vintage)
-    second = NormalizedObservation(9, date(2026, 1, 1), date(2026, 1, 31), Decimal("2"), vintage_at=vintage)
+    first = NormalizedObservation(
+        9, date(2026, 1, 1), date(2026, 1, 31), Decimal("1"), vintage_at=vintage
+    )
+    second = NormalizedObservation(
+        9, date(2026, 1, 1), date(2026, 1, 31), Decimal("2"), vintage_at=vintage
+    )
     with pytest.raises(ProviderDataError, match="Conflicting duplicate"):
         deduplicate_observations([first, second])
 
 
-def test_source_registry_readiness_is_explicit_and_no_unmapped_series_is_enabled(monkeypatch) -> None:
+def test_source_registry_readiness_is_explicit_and_no_unmapped_series_is_enabled(
+    monkeypatch,
+) -> None:
     for key in ("BEA_API_KEY", "BLS_API_KEY", "FRED_API_KEY", "EIA_API_KEY", "CENSUS_API_KEY"):
         monkeypatch.setenv(key, "test-key")
     monkeypatch.setenv("DOL_CLAIMS_URL", "https://example.dol.gov/claims")
@@ -372,7 +474,9 @@ def test_completeness_rejects_missing_latest_values_but_allows_derived_bootstrap
         },
     )
     rows = [
-        NormalizedObservation(20, date(2026, 5, 1), date(2026, 5, 31), Decimal("1"), vintage_at=now),
+        NormalizedObservation(
+            20, date(2026, 5, 1), date(2026, 5, 31), Decimal("1"), vintage_at=now
+        ),
         NormalizedObservation(20, date(2026, 6, 1), date(2026, 6, 30), None, vintage_at=now),
     ]
     issues, _metrics = validate_ingestion_completeness(
@@ -393,8 +497,12 @@ def test_completeness_rejects_missing_latest_values_but_allows_derived_bootstrap
     )
     derived_rows = [
         NormalizedObservation(21, date(2026, 5, 1), date(2026, 5, 31), None, vintage_at=now),
-        NormalizedObservation(21, date(2026, 6, 1), date(2026, 6, 30), Decimal("2"), vintage_at=now),
-        NormalizedObservation(21, date(2026, 7, 1), date(2026, 7, 31), Decimal("3"), vintage_at=now),
+        NormalizedObservation(
+            21, date(2026, 6, 1), date(2026, 6, 30), Decimal("2"), vintage_at=now
+        ),
+        NormalizedObservation(
+            21, date(2026, 7, 1), date(2026, 7, 31), Decimal("3"), vintage_at=now
+        ),
     ]
     derived_issues, _metrics = validate_ingestion_completeness(
         [(derived, _dataset(21))], derived_rows, mode="incremental", now=now
@@ -439,8 +547,8 @@ async def test_fred_metadata_identity_and_frequency_are_enforced(monkeypatch) ->
 async def test_treasury_rejects_empty_expected_year() -> None:
     from macrolens_worker.providers.treasury import TreasuryAdapter
 
-    empty_feed = b'''<?xml version="1.0" encoding="utf-8"?>
-    <feed xmlns="http://www.w3.org/2005/Atom"></feed>'''
+    empty_feed = b"""<?xml version="1.0" encoding="utf-8"?>
+    <feed xmlns="http://www.w3.org/2005/Atom"></feed>"""
 
     async def handler(request: httpx.Request) -> httpx.Response:
         return httpx.Response(200, request=request, content=empty_feed)
@@ -881,7 +989,13 @@ def test_live_audit_summary_applies_same_completeness_gate() -> None:
         content_type="application/json",
         raw_bytes=b"{}",
         observations=[
-            NormalizedObservation(901, today - timedelta(days=1), today - timedelta(days=1), Decimal("1"), vintage_at=now),
+            NormalizedObservation(
+                901,
+                today - timedelta(days=1),
+                today - timedelta(days=1),
+                Decimal("1"),
+                vintage_at=now,
+            ),
             NormalizedObservation(901, today, today, Decimal("2"), vintage_at=now),
         ],
     )

@@ -71,6 +71,8 @@ select = ["E", "F", "I", "B", "UP", "ASYNC", "S"]
 ignore = ["S101"]
 
 [tool.ruff.lint.per-file-ignores]
+"alembic/versions/0001_initial.py" = ["E501"]
+"src/macrolens_worker/scheduler.py" = ["I001"]
 "tests/*" = ["S"]
 
 [tool.mypy]

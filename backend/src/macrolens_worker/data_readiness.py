@@ -73,7 +73,8 @@ def audit_source_registry(
         "all_production_ready": len(rows) > 0 and counts.get("ready", 0) == len(rows),
         "status_counts": dict(sorted(counts.items())),
         "provider_counts": {
-            provider: dict(sorted(values.items())) for provider, values in sorted(provider_counts.items())
+            provider: dict(sorted(values.items()))
+            for provider, values in sorted(provider_counts.items())
         },
         "indicators": [asdict(row) for row in rows],
     }
@@ -116,7 +117,13 @@ def _provider_blockers(
             blockers.append("locator:table_name")
         if not any(
             locator.get(key)
-            for key in ("series_code", "line_number", "line_match", "target_description_en", "line_aliases")
+            for key in (
+                "series_code",
+                "line_number",
+                "line_match",
+                "target_description_en",
+                "line_aliases",
+            )
         ):
             blockers.append("locator:verified_line_identity")
     elif provider == "BLS_API_V2":

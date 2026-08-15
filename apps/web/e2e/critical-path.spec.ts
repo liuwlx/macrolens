@@ -1,5 +1,11 @@
 import { expect, type Page, test } from "@playwright/test";
 
+/* eslint-disable @typescript-eslint/no-explicit-any --
+ * This runtime acceptance test intentionally traverses heterogeneous API payloads. The assertions
+ * validate their observable contract; duplicating every production response schema here would
+ * couple the E2E boundary to implementation-owned TypeScript types.
+ */
+
 const adminEmail = process.env.E2E_ADMIN_EMAIL ?? "admin@example.com";
 const adminPassword = process.env.E2E_ADMIN_PASSWORD ?? "change-me-now";
 const apiUrl = process.env.E2E_API_URL ?? "http://localhost:8000/api/v1";
@@ -125,10 +131,12 @@ test("data, release, FOMC and document read paths return linked runtime fixtures
 
   const meetings = await api<{ items: any[] }>(page, "/fomc/meetings?limit=100");
   expect(meetings.items.length).toBeGreaterThan(0);
-  const meeting = await api<any>(page, `/fomc/meetings/${meetings.items[0].id}`);
+  const fixtureMeeting = meetings.items.find((item: any) => item.meeting_start === "2026-07-28");
+  expect(fixtureMeeting).toBeTruthy();
+  const meeting = await api<any>(page, `/fomc/meetings/${fixtureMeeting.id}`);
   expect(meeting.projections.length).toBeGreaterThan(0);
   expect(meeting.dots.length).toBeGreaterThan(0);
-  const probabilities = await api<any[]>(page, `/fomc/meetings/${meetings.items[0].id}/probabilities`);
+  const probabilities = await api<any[]>(page, `/fomc/meetings/${fixtureMeeting.id}/probabilities`);
   expect(probabilities.length).toBeGreaterThan(0);
 
   const documents = await api<{ items: any[] }>(page, "/documents?limit=100");

@@ -5,20 +5,6 @@ from decimal import Decimal
 from typing import Any
 from uuid import UUID, uuid4
 
-try:
-    from pgvector.sqlalchemy import Vector
-except ModuleNotFoundError:  # Allows schema tooling to run before optional runtime deps are installed.
-    from sqlalchemy.types import UserDefinedType
-
-    class Vector(UserDefinedType[list[float]]):
-        cache_ok = True
-
-        def __init__(self, dimensions: int) -> None:
-            self.dimensions = dimensions
-
-        def get_col_spec(self, **_kwargs: Any) -> str:
-            return f"vector({self.dimensions})"
-
 from sqlalchemy import (
     BigInteger,
     Boolean,
@@ -34,9 +20,28 @@ from sqlalchemy import (
     Time,
     UniqueConstraint,
     func,
+    text,
 )
-from sqlalchemy.dialects.postgresql import JSONB, UUID as PGUUID
+from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+
+
+def _vector_type(dimensions: int) -> Any:
+    try:
+        from pgvector.sqlalchemy import Vector
+    except ModuleNotFoundError:
+        # Allows schema tooling to run before optional runtime deps are installed.
+        from sqlalchemy.types import UserDefinedType
+
+        class FallbackVector(UserDefinedType[list[float]]):
+            cache_ok = True
+
+            def get_col_spec(self, **_kwargs: Any) -> str:
+                return f"vector({dimensions})"
+
+        return FallbackVector()
+    return Vector(dimensions)
 
 
 class Base(DeclarativeBase):
@@ -68,7 +73,10 @@ class User(Base, TimestampMixin):
 
 class RefreshSession(Base):
     __tablename__ = "refresh_session"
-    __table_args__ = (Index("refresh_session_user_active_idx", "user_id", "revoked_at"), {"schema": "app"})
+    __table_args__ = (
+        Index("refresh_session_user_active_idx", "user_id", "revoked_at"),
+        {"schema": "app"},
+    )
 
     id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
     user_id: Mapped[UUID] = mapped_column(
@@ -200,6 +208,12 @@ class SourceSeries(Base, TimestampMixin):
     __tablename__ = "source_series"
     __table_args__ = (
         UniqueConstraint("dataset_id", "provider_series_id", "source_locator"),
+        Index(
+            "one_primary_source_per_series",
+            "series_id",
+            unique=True,
+            postgresql_where=text("is_primary"),
+        ),
         {"schema": "source"},
     )
 
@@ -218,6 +232,10 @@ class SourceSeries(Base, TimestampMixin):
     notes: Mapped[str | None] = mapped_column(Text)
     verified_by: Mapped[str | None] = mapped_column(String(200))
     verified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    verification_job_id: Mapped[UUID | None] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("app.job.id"), unique=True
+    )
+    verification_fingerprint: Mapped[str | None] = mapped_column(String(64))
 
     series: Mapped[Series] = relationship()
     dataset: Mapped[Dataset] = relationship()
@@ -248,7 +266,9 @@ class TaxonomySeries(Base):
     __table_args__ = {"schema": "catalog"}
 
     node_id: Mapped[UUID] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("catalog.taxonomy_node.id", ondelete="CASCADE"), primary_key=True
+        PGUUID(as_uuid=True),
+        ForeignKey("catalog.taxonomy_node.id", ondelete="CASCADE"),
+        primary_key=True,
     )
     series_id: Mapped[UUID] = mapped_column(
         PGUUID(as_uuid=True), ForeignKey("catalog.series.id", ondelete="CASCADE"), primary_key=True
@@ -289,7 +309,9 @@ class IngestionRun(Base):
     started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     status: Mapped[str] = mapped_column(String(32), nullable=False)
-    raw_object_id: Mapped[UUID | None] = mapped_column(PGUUID(as_uuid=True), ForeignKey("ingestion.raw_object.id"))
+    raw_object_id: Mapped[UUID | None] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("ingestion.raw_object.id")
+    )
     inserted_count: Mapped[int] = mapped_column(Integer, default=0)
     revised_count: Mapped[int] = mapped_column(Integer, default=0)
     unchanged_count: Mapped[int] = mapped_column(Integer, default=0)
@@ -302,12 +324,18 @@ class IngestionRun(Base):
 
 class PublicationBatch(Base):
     __tablename__ = "publication_batch"
-    __table_args__ = (Index("publication_batch_provider_status_idx", "provider_id", "status"), {"schema": "ingestion"})
+    __table_args__ = (
+        Index("publication_batch_provider_status_idx", "provider_id", "status"),
+        {"schema": "ingestion"},
+    )
 
     id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
     provider_id: Mapped[int] = mapped_column(ForeignKey("source.provider.id"), nullable=False)
     run_id: Mapped[UUID] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("ingestion.run.id", ondelete="CASCADE"), unique=True, nullable=False
+        PGUUID(as_uuid=True),
+        ForeignKey("ingestion.run.id", ondelete="CASCADE"),
+        unique=True,
+        nullable=False,
     )
     previous_batch_id: Mapped[UUID | None] = mapped_column(
         PGUUID(as_uuid=True), ForeignKey("ingestion.publication_batch.id", ondelete="SET NULL")
@@ -330,7 +358,9 @@ class QualityResult(Base):
     rule_code: Mapped[str] = mapped_column(String(120), nullable=False)
     severity: Mapped[str] = mapped_column(String(20), nullable=False)
     passed: Mapped[bool] = mapped_column(Boolean, nullable=False)
-    series_id: Mapped[UUID | None] = mapped_column(PGUUID(as_uuid=True), ForeignKey("catalog.series.id"))
+    series_id: Mapped[UUID | None] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("catalog.series.id")
+    )
     period_start: Mapped[date | None] = mapped_column(Date)
     actual_value: Mapped[str | None] = mapped_column(Text)
     expected_value: Mapped[str | None] = mapped_column(Text)
@@ -357,9 +387,13 @@ class ObservationVintage(Base):
     publication_batch_id: Mapped[UUID | None] = mapped_column(
         PGUUID(as_uuid=True), ForeignKey("ingestion.publication_batch.id", ondelete="SET NULL")
     )
-    raw_object_id: Mapped[UUID | None] = mapped_column(PGUUID(as_uuid=True), ForeignKey("ingestion.raw_object.id"))
+    raw_object_id: Mapped[UUID | None] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("ingestion.raw_object.id")
+    )
     quality_flags: Mapped[list[Any]] = mapped_column(JSONB, default=list)
-    ingested_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    ingested_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
 
 
 class ObservationLatest(Base):
@@ -480,13 +514,18 @@ class ReleaseEventSeries(Base):
 
 class ForecastSnapshot(Base):
     __tablename__ = "forecast_snapshot"
-    __table_args__ = (UniqueConstraint("event_id", "provider_id", "observed_at"), {"schema": "release"})
+    __table_args__ = (
+        UniqueConstraint("event_id", "provider_id", "observed_at"),
+        {"schema": "release"},
+    )
 
     id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
     event_id: Mapped[UUID] = mapped_column(
         PGUUID(as_uuid=True), ForeignKey("release.event.id", ondelete="CASCADE"), nullable=False
     )
-    series_id: Mapped[UUID | None] = mapped_column(PGUUID(as_uuid=True), ForeignKey("catalog.series.id"))
+    series_id: Mapped[UUID | None] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("catalog.series.id")
+    )
     provider_id: Mapped[int] = mapped_column(ForeignKey("source.provider.id"), nullable=False)
     observed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     consensus_value: Mapped[Decimal | None] = mapped_column(Numeric(30, 10))
@@ -554,7 +593,9 @@ class DocumentVersion(Base):
     )
     version_no: Mapped[int] = mapped_column(Integer, nullable=False)
     content_hash: Mapped[str] = mapped_column(String(64), nullable=False)
-    raw_object_id: Mapped[UUID | None] = mapped_column(PGUUID(as_uuid=True), ForeignKey("ingestion.raw_object.id"))
+    raw_object_id: Mapped[UUID | None] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("ingestion.raw_object.id")
+    )
     extracted_text: Mapped[str | None] = mapped_column(Text)
     translated_text_zh: Mapped[str | None] = mapped_column(Text)
     ai_summary_zh: Mapped[str | None] = mapped_column(Text)
@@ -570,7 +611,9 @@ class DocumentChunk(Base):
 
     id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
     document_version_id: Mapped[UUID] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("docs.document_version.id", ondelete="CASCADE"), nullable=False
+        PGUUID(as_uuid=True),
+        ForeignKey("docs.document_version.id", ondelete="CASCADE"),
+        nullable=False,
     )
     chunk_no: Mapped[int] = mapped_column(Integer, nullable=False)
     page_start: Mapped[int | None] = mapped_column(Integer)
@@ -579,7 +622,7 @@ class DocumentChunk(Base):
     content: Mapped[str] = mapped_column(Text, nullable=False)
     token_count: Mapped[int | None] = mapped_column(Integer)
     embedding_model: Mapped[str | None] = mapped_column(String(120))
-    embedding: Mapped[list[float] | None] = mapped_column(Vector(1536))
+    embedding: Mapped[list[float] | None] = mapped_column(_vector_type(1536))
 
 
 class DocumentSeries(Base):
@@ -648,7 +691,9 @@ class FomcDot(Base):
 class FomcProbabilitySnapshot(Base):
     __tablename__ = "probability_snapshot"
     __table_args__ = (
-        UniqueConstraint("meeting_id", "provider_id", "observed_at", "target_lower", "target_upper"),
+        UniqueConstraint(
+            "meeting_id", "provider_id", "observed_at", "target_lower", "target_upper"
+        ),
         Index("fomc_probability_meeting_observed_idx", "meeting_id", "observed_at"),
         {"schema": "fomc"},
     )
@@ -715,7 +760,9 @@ class Project(Base, TimestampMixin):
     workspace_id: Mapped[UUID] = mapped_column(
         PGUUID(as_uuid=True), ForeignKey("app.workspace.id", ondelete="CASCADE"), nullable=False
     )
-    owner_user_id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), ForeignKey("app.user_account.id"))
+    owner_user_id: Mapped[UUID] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("app.user_account.id")
+    )
     name: Mapped[str] = mapped_column(String(240), nullable=False)
     description: Mapped[str | None] = mapped_column(Text)
     status: Mapped[str] = mapped_column(String(32), default="active")
@@ -768,7 +815,9 @@ class Note(Base, TimestampMixin):
     project_id: Mapped[UUID | None] = mapped_column(
         PGUUID(as_uuid=True), ForeignKey("app.project.id", ondelete="CASCADE")
     )
-    author_user_id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), ForeignKey("app.user_account.id"))
+    author_user_id: Mapped[UUID] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("app.user_account.id")
+    )
     title: Mapped[str | None] = mapped_column(String(300))
     body_markdown: Mapped[str] = mapped_column(Text, nullable=False)
     version_no: Mapped[int] = mapped_column(Integer, default=1)
@@ -806,7 +855,9 @@ class AlertRule(Base, TimestampMixin):
     workspace_id: Mapped[UUID] = mapped_column(
         PGUUID(as_uuid=True), ForeignKey("app.workspace.id", ondelete="CASCADE"), nullable=False
     )
-    owner_user_id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), ForeignKey("app.user_account.id"))
+    owner_user_id: Mapped[UUID] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("app.user_account.id")
+    )
     name: Mapped[str] = mapped_column(String(240), nullable=False)
     alert_type: Mapped[str] = mapped_column(String(40), nullable=False)
     target_type: Mapped[str | None] = mapped_column(String(40))
@@ -847,7 +898,9 @@ class AIRun(Base):
         PGUUID(as_uuid=True), ForeignKey("app.workspace.id", ondelete="CASCADE"), nullable=False
     )
     user_id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), ForeignKey("app.user_account.id"))
-    project_id: Mapped[UUID | None] = mapped_column(PGUUID(as_uuid=True), ForeignKey("app.project.id"))
+    project_id: Mapped[UUID | None] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("app.project.id")
+    )
     prompt: Mapped[str] = mapped_column(Text, nullable=False)
     mode: Mapped[str] = mapped_column(String(32), nullable=False)
     model_name: Mapped[str] = mapped_column(String(120), nullable=False)
@@ -885,8 +938,12 @@ class AICitation(Base):
         PGUUID(as_uuid=True), ForeignKey("app.ai_run.id", ondelete="CASCADE"), nullable=False
     )
     citation_no: Mapped[int] = mapped_column(Integer, nullable=False)
-    document_chunk_id: Mapped[UUID | None] = mapped_column(PGUUID(as_uuid=True), ForeignKey("docs.chunk.id"))
-    series_id: Mapped[UUID | None] = mapped_column(PGUUID(as_uuid=True), ForeignKey("catalog.series.id"))
+    document_chunk_id: Mapped[UUID | None] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("docs.chunk.id")
+    )
+    series_id: Mapped[UUID | None] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("catalog.series.id")
+    )
     period_start: Mapped[date | None] = mapped_column(Date)
     vintage_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     quote_text: Mapped[str | None] = mapped_column(Text)
@@ -938,7 +995,14 @@ class AuditLog(Base):
 
 
 Index("series_search_idx", Series.name_zh, Series.name_en, Series.canonical_code)
-Index("observation_history_idx", ObservationVintage.source_series_id, ObservationVintage.period_start)
-Index("release_schedule_idx", ReleaseEvent.scheduled_at, ReleaseEvent.country_code, ReleaseEvent.status)
+Index(
+    "observation_history_idx", ObservationVintage.source_series_id, ObservationVintage.period_start
+)
+Index(
+    "release_schedule_idx",
+    ReleaseEvent.scheduled_at,
+    ReleaseEvent.country_code,
+    ReleaseEvent.status,
+)
 Index("document_published_idx", Document.published_at.desc())
 Index("notification_unread_idx", Notification.user_id, Notification.created_at.desc())

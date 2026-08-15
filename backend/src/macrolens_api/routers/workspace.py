@@ -10,7 +10,6 @@ from sqlalchemy import or_, select
 from ..dependencies import CurrentUser, CurrentWorkspace, SessionDep
 from ..errors import AppError
 from ..models import AlertRule, Favorite, Note, Notification, Project, ProjectItem, SavedView
-from ..services.resource_access import ensure_resource_access
 from ..schemas import (
     AlertCreate,
     AlertPublic,
@@ -29,18 +28,23 @@ from ..schemas import (
     SavedViewPublic,
     SavedViewUpdate,
 )
+from ..services.resource_access import ensure_resource_access
 
 router = APIRouter(prefix="/me", tags=["Workspace"])
 
 
 @router.get("/favorites", response_model=list[FavoritePublic])
-async def favorites(session: SessionDep, user: CurrentUser, workspace: CurrentWorkspace) -> list[FavoritePublic]:
+async def favorites(
+    session: SessionDep, user: CurrentUser, workspace: CurrentWorkspace
+) -> list[FavoritePublic]:
     rows = list(
         (
             await session.scalars(
                 select(Favorite)
                 .where(Favorite.workspace_id == workspace.id, Favorite.user_id == user.id)
-                .order_by(Favorite.group_name.nullslast(), Favorite.sort_order, Favorite.created_at.desc())
+                .order_by(
+                    Favorite.group_name.nullslast(), Favorite.sort_order, Favorite.created_at.desc()
+                )
             )
         ).all()
     )
@@ -209,7 +213,9 @@ async def delete_saved_view(
 
 
 @router.get("/projects", response_model=list[ProjectPublic])
-async def projects(session: SessionDep, user: CurrentUser, workspace: CurrentWorkspace) -> list[ProjectPublic]:
+async def projects(
+    session: SessionDep, user: CurrentUser, workspace: CurrentWorkspace
+) -> list[ProjectPublic]:
     rows = list(
         (
             await session.scalars(
@@ -512,7 +518,9 @@ async def delete_note(
 
 
 @router.get("/alerts", response_model=list[AlertPublic])
-async def alerts(session: SessionDep, user: CurrentUser, workspace: CurrentWorkspace) -> list[AlertPublic]:
+async def alerts(
+    session: SessionDep, user: CurrentUser, workspace: CurrentWorkspace
+) -> list[AlertPublic]:
     rows = list(
         (
             await session.scalars(
@@ -539,10 +547,25 @@ async def create_alert(
     }
     expected_type = required_targets.get(payload.alert_type)
     if expected_type and (payload.target_id is None or payload.target_type != expected_type):
-        raise AppError(422, "提醒目标缺失", f"{payload.alert_type} 提醒必须选择 {expected_type}。", "alert_target_required")
-    if payload.alert_type == "fomc_update" and payload.target_id is not None and payload.target_type != "fomc_meeting":
-        raise AppError(422, "提醒目标无效", "FOMC更新提醒目标必须是FOMC会议。", "alert_target_invalid")
-    if payload.target_id is not None and payload.target_type in {"series", "release_event", "fomc_meeting"}:
+        raise AppError(
+            422,
+            "提醒目标缺失",
+            f"{payload.alert_type} 提醒必须选择 {expected_type}。",
+            "alert_target_required",
+        )
+    if (
+        payload.alert_type == "fomc_update"
+        and payload.target_id is not None
+        and payload.target_type != "fomc_meeting"
+    ):
+        raise AppError(
+            422, "提醒目标无效", "FOMC更新提醒目标必须是FOMC会议。", "alert_target_invalid"
+        )
+    if payload.target_id is not None and payload.target_type in {
+        "series",
+        "release_event",
+        "fomc_meeting",
+    }:
         await ensure_resource_access(
             session,
             object_type=payload.target_type,
@@ -553,9 +576,16 @@ async def create_alert(
     if payload.alert_type == "threshold":
         operator = str(payload.rule.get("operator", ">="))
         if operator not in {">=", "<=", ">", "<", "=="} or "value" not in payload.rule:
-            raise AppError(422, "阈值规则无效", "阈值提醒需要合法 operator 和 value。", "invalid_threshold_rule")
+            raise AppError(
+                422,
+                "阈值规则无效",
+                "阈值提醒需要合法 operator 和 value。",
+                "invalid_threshold_rule",
+            )
     if payload.alert_type == "digest" and not ({"hour_utc", "schedule"} & payload.rule.keys()):
-        raise AppError(422, "简报计划缺失", "定期简报需要 hour_utc 或五段式 schedule。", "invalid_digest_rule")
+        raise AppError(
+            422, "简报计划缺失", "定期简报需要 hour_utc 或五段式 schedule。", "invalid_digest_rule"
+        )
     alert = AlertRule(
         workspace_id=workspace.id,
         owner_user_id=user.id,
@@ -629,7 +659,9 @@ async def notifications(
     )
     if unread_only:
         stmt = stmt.where(Notification.read_at.is_(None))
-    rows = list((await session.scalars(stmt.order_by(Notification.created_at.desc()).limit(200))).all())
+    rows = list(
+        (await session.scalars(stmt.order_by(Notification.created_at.desc()).limit(200))).all()
+    )
     return [NotificationPublic.model_validate(row) for row in rows]
 
 

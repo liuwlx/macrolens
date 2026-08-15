@@ -8,13 +8,19 @@ from uuid import UUID
 from sqlalchemy import and_, or_, select
 
 from macrolens_api.config import get_settings
-from macrolens_api.logging import get_logger
 from macrolens_api.db import SessionLocal
+from macrolens_api.logging import get_logger
 from macrolens_api.models import AIRun, Job
 from macrolens_worker.tasks.ai import run_ai_analysis
-from macrolens_worker.tasks.documents import embed_document, fetch_document, parse_document, summarize_document
+from macrolens_worker.tasks.documents import (
+    embed_document,
+    fetch_document,
+    parse_document,
+    summarize_document,
+)
 from macrolens_worker.tasks.email import send_email_notification
 from macrolens_worker.tasks.fomc import sync_fomc_calendar
+from macrolens_worker.tasks.mappings import probe_mapping, replay_bls_raw
 from macrolens_worker.tasks.notifications import evaluate_alerts
 from macrolens_worker.tasks.release_calendar import sync_bls_release_calendar
 from macrolens_worker.tasks.sync import sync_provider
@@ -153,6 +159,22 @@ async def execute_job(job: Job) -> dict[str, Any]:
                 provider_code=str(payload["provider_code"]),
                 mode=str(payload.get("mode", "incremental")),
                 job_id=job.id,
+                source_series_ids=(
+                    [int(item) for item in payload["source_series_ids"]]
+                    if payload.get("source_series_ids")
+                    else None
+                ),
+            )
+        if job.job_type == "mapping_probe":
+            return await probe_mapping(
+                session,
+                source_series_id=int(payload["source_series_id"]),
+            )
+        if job.job_type == "replay_bls_raw":
+            return await replay_bls_raw(
+                session,
+                raw_object_id=UUID(str(payload["raw_object_id"])),
+                source_series_ids=[int(item) for item in payload["source_series_ids"]],
             )
         if job.job_type == "parse_document":
             return await parse_document(

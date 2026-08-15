@@ -33,7 +33,7 @@ def _digest_due(rule: dict[str, object], now: datetime, last_evaluated_at: datet
     if last_evaluated_at is not None and last_evaluated_at.date() == now.date():
         return False
     if "hour_utc" in rule:
-        return now.hour == int(rule.get("hour_utc", 0))
+        return now.hour == int(str(rule.get("hour_utc", 0)))
     schedule = str(rule.get("schedule", "0 8 * * 1-5")).split()
     if len(schedule) != 5:
         return False
@@ -59,7 +59,9 @@ def _digest_due(rule: dict[str, object], now: datetime, last_evaluated_at: datet
     return cron_weekday in allowed or (cron_weekday == 0 and 7 in allowed)
 
 
-async def evaluate_alerts(session: AsyncSession, *, workspace_id: UUID | None = None) -> dict[str, int]:
+async def evaluate_alerts(
+    session: AsyncSession, *, workspace_id: UUID | None = None
+) -> dict[str, int]:
     stmt = select(AlertRule).where(AlertRule.active.is_(True))
     if workspace_id:
         stmt = stmt.where(AlertRule.workspace_id == workspace_id)
@@ -81,7 +83,10 @@ async def evaluate_alerts(session: AsyncSession, *, workspace_id: UUID | None = 
                 triggered = True
                 body = f"{event.title_zh} 将于 {event.scheduled_at.isoformat()} 发布。"
                 action_url = f"/calendar?event={event.id}"
-                payload = {"release_event_id": str(event.id), "scheduled_at": event.scheduled_at.isoformat()}
+                payload = {
+                    "release_event_id": str(event.id),
+                    "scheduled_at": event.scheduled_at.isoformat(),
+                }
 
         elif alert.alert_type in {"threshold", "revision"} and alert.target_id:
             source = await session.scalar(
@@ -143,12 +148,14 @@ async def evaluate_alerts(session: AsyncSession, *, workspace_id: UUID | None = 
             if provider_code:
                 from macrolens_api.models import Provider
 
-                document_stmt = document_stmt.join(Provider, Provider.id == Document.provider_id).where(
-                    Provider.code == str(provider_code)
-                )
+                document_stmt = document_stmt.join(
+                    Provider, Provider.id == Document.provider_id
+                ).where(Provider.code == str(provider_code))
             if document_type:
                 document_stmt = document_stmt.where(Document.document_type == str(document_type))
-            document = await session.scalar(document_stmt.order_by(Document.created_at.desc()).limit(1))
+            document = await session.scalar(
+                document_stmt.order_by(Document.created_at.desc()).limit(1)
+            )
             if document:
                 triggered = True
                 body = f"发现新文档：{document.title_zh or document.title}。"
@@ -158,18 +165,25 @@ async def evaluate_alerts(session: AsyncSession, *, workspace_id: UUID | None = 
         elif alert.alert_type == "fomc_update" and alert.last_evaluated_at is not None:
             document_stmt = select(Document).where(
                 Document.created_at > alert.last_evaluated_at,
-                Document.document_type.in_(["statement", "minutes", "projection", "press_conference", "meeting_material"]),
+                Document.document_type.in_(
+                    ["statement", "minutes", "projection", "press_conference", "meeting_material"]
+                ),
             )
             if alert.target_id:
                 document_stmt = document_stmt.where(
                     Document.metadata_json.contains({"fomc_meeting_id": str(alert.target_id)})
                 )
-            document = await session.scalar(document_stmt.order_by(Document.created_at.desc()).limit(1))
+            document = await session.scalar(
+                document_stmt.order_by(Document.created_at.desc()).limit(1)
+            )
             if document:
                 triggered = True
                 body = f"FOMC材料已更新：{document.title_zh or document.title}。"
                 action_url = f"/fomc?meeting={alert.target_id}" if alert.target_id else "/fomc"
-                payload = {"document_id": str(document.id), "fomc_meeting_id": str(alert.target_id) if alert.target_id else None}
+                payload = {
+                    "document_id": str(document.id),
+                    "fomc_meeting_id": str(alert.target_id) if alert.target_id else None,
+                }
 
         elif alert.alert_type == "digest" and _digest_due(alert.rule, now, alert.last_evaluated_at):
             triggered = True

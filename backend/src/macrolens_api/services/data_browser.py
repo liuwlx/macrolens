@@ -15,6 +15,8 @@ from sqlalchemy import Date as SQLDate
 from sqlalchemy import and_, case, cast, func, or_, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from ..catalog_registry import get_catalog_registry, validate_catalog_projection
+from ..config import get_settings
 from ..errors import AppError
 from ..models import (
     Dataset,
@@ -44,6 +46,7 @@ from ..schemas import (
     ContributionPeriod,
     ContributionResult,
     LicenseInfo,
+    LineageInfo,
     NextRelease,
     ProviderInfo,
     SeriesAnalyticsResponse,
@@ -75,7 +78,9 @@ class SourceBinding:
 class BrowserCandidate:
     series: Series
     sources: dict[int, SourceBinding] = field(default_factory=dict)
+    catalog_sources: dict[int, SourceBinding] = field(default_factory=dict)
     node_ids: set[UUID] = field(default_factory=set)
+    node_codes: set[str] = field(default_factory=set)
     taxonomy_order: int = 2_147_483_647
     aliases: list[str] = field(default_factory=list)
 
@@ -88,6 +93,12 @@ class BrowserCandidate:
     @property
     def binding(self) -> SourceBinding | None:
         return next(iter(self.sources.values())) if len(self.sources) == 1 else None
+
+    @property
+    def catalog_binding(self) -> SourceBinding | None:
+        if len(self.catalog_sources) == 1:
+            return next(iter(self.catalog_sources.values()))
+        return self.binding
 
 
 @dataclass(frozen=True, slots=True)
@@ -142,7 +153,7 @@ def _summary(
     candidate: BrowserCandidate,
     current: Point | None,
 ) -> SeriesSummary:
-    binding = candidate.binding
+    binding = candidate.catalog_binding
     provider = binding.provider if binding else None
     series = candidate.series
     return SeriesSummary(
@@ -221,6 +232,22 @@ def build_browser_item(
 ) -> SeriesBrowserItem:
     series = candidate.series
     reason_code, reason = _source_reason(candidate)
+    availability_reason = (
+        {
+            "pending_mapping": ("source_mapping_not_ready", "官方来源映射尚未完成。"),
+            "pending_credentials": ("source_credentials_not_ready", "采集凭据尚未配置。"),
+            "pending_license": ("source_license_not_ready", "许可或法务审核尚未完成。"),
+            "not_ingested": ("source_not_ingested", "该指标尚未采集观测数据。"),
+            "not_available_as_of": (
+                "source_not_available_as_of",
+                "该指标在所选数据快照时点尚不可用。",
+            ),
+        }.get(availability)
+        if availability is not None
+        else None
+    )
+    if availability_reason is not None:
+        reason_code, reason = availability_reason
     display_denied = license_info is not None and not license_info.display_allowed
     if display_denied:
         reason_code, reason = "license_display_denied", "当前许可策略不允许展示该指标数值。"
@@ -286,6 +313,10 @@ def build_browser_item(
             value=_round_value(point.value, series.decimal_places),
             published_at=point.published_at if isinstance(point.published_at, datetime) else None,
             vintage_at=point.vintage_at,
+            source_series_id=point.source_series_id,
+            run_id=point.run_id,
+            publication_batch_id=point.publication_batch_id,
+            raw_object_id=point.raw_object_id,
         )
 
     return SeriesBrowserItem(
@@ -309,29 +340,40 @@ async def _load_candidates(
     *,
     series_id: UUID | None = None,
 ) -> list[BrowserCandidate]:
-    source_join = (
-        (SourceSeries.series_id == Series.id)
-        & SourceSeries.is_primary.is_(True)
-        & (SourceSeries.mapping_status == "verified")
-    )
+    registry = get_catalog_registry()
+    catalog_codes = tuple(indicator.canonical_code for indicator in registry.indicators)
+    source_join = SourceSeries.series_id == Series.id
     statement = (
-        select(Series, SourceSeries, Dataset, Provider, TaxonomySeries)
+        select(Series, SourceSeries, Dataset, Provider, TaxonomySeries, TaxonomyNode)
         .outerjoin(SourceSeries, source_join)
         .outerjoin(Dataset, Dataset.id == SourceSeries.dataset_id)
         .outerjoin(Provider, Provider.id == Dataset.provider_id)
-        .outerjoin(TaxonomySeries, TaxonomySeries.series_id == Series.id)
-        .where(Series.status == "active")
+        .join(
+            TaxonomySeries,
+            (TaxonomySeries.series_id == Series.id) & TaxonomySeries.is_primary.is_(True),
+        )
+        .join(
+            TaxonomyNode,
+            (TaxonomyNode.id == TaxonomySeries.node_id)
+            & (TaxonomyNode.tree_code == registry.tree_code)
+            & TaxonomyNode.visible.is_(True),
+        )
+        .where(Series.canonical_code.in_(catalog_codes))
     )
     if series_id is not None:
         statement = statement.where(Series.id == series_id)
     rows = (await session.execute(statement)).all()
     by_id: dict[UUID, BrowserCandidate] = {}
-    for series, source, dataset, provider, taxonomy in rows:
+    for series, source, dataset, provider, taxonomy, taxonomy_node in rows:
         candidate = by_id.setdefault(series.id, BrowserCandidate(series=series))
         if source is not None and dataset is not None and provider is not None:
-            candidate.sources[source.id] = SourceBinding(source, dataset, provider)
+            binding = SourceBinding(source, dataset, provider)
+            candidate.catalog_sources[source.id] = binding
+            if source.is_primary and source.mapping_status == "verified":
+                candidate.sources[source.id] = binding
         if taxonomy is not None:
             candidate.node_ids.add(taxonomy.node_id)
+            candidate.node_codes.add(taxonomy_node.code)
             candidate.taxonomy_order = min(candidate.taxonomy_order, taxonomy.display_order)
     if by_id:
         aliases = (
@@ -343,6 +385,26 @@ async def _load_candidates(
         ).all()
         for candidate_id, alias in aliases:
             by_id[candidate_id].aliases.append(alias)
+    if series_id is None:
+        nodes = list(
+            (
+                await session.scalars(
+                    select(TaxonomyNode).where(
+                        TaxonomyNode.tree_code == registry.tree_code,
+                        TaxonomyNode.visible.is_(True),
+                    )
+                )
+            ).all()
+        )
+        validate_catalog_projection(
+            registry,
+            tree_code=registry.tree_code,
+            nodes=((node.id, node.code, node.parent_id) for node in nodes),
+            series_owners={
+                candidate.series.canonical_code: candidate.node_codes
+                for candidate in by_id.values()
+            },
+        )
     return list(by_id.values())
 
 
@@ -360,6 +422,11 @@ async def taxonomy_descendant_ids(
                 )
             )
         ).all()
+    )
+    validate_catalog_projection(
+        get_catalog_registry(),
+        tree_code=tree_code,
+        nodes=((node.id, node.code, node.parent_id) for node in nodes),
     )
     if not any(node.id == node_id for node in nodes):
         raise AppError(404, "分类节点不存在", "没有找到指定的分类节点。", "taxonomy_node_not_found")
@@ -393,7 +460,7 @@ async def taxonomy_descendant_ids(
 
 def _matches(candidate: BrowserCandidate, filters: BrowserFilters, skip: str | None = None) -> bool:
     series = candidate.series
-    binding = candidate.binding
+    binding = candidate.catalog_binding
     if filters.node_ids is not None and not (candidate.node_ids & filters.node_ids):
         return False
     if filters.q:
@@ -445,7 +512,7 @@ def build_facets(candidates: list[BrowserCandidate], filters: BrowserFilters) ->
         for candidate in candidates:
             if not _matches(candidate, filters, skip=facet):
                 continue
-            binding = candidate.binding
+            binding = candidate.catalog_binding
             raw = {
                 "provider": binding.provider.code if binding else "",
                 "theme": candidate.series.theme,
@@ -529,6 +596,9 @@ async def _points_by_source(
             ObservationVintage.observation_status,
             ObservationVintage.published_at,
             ObservationVintage.vintage_at,
+            ObservationVintage.run_id,
+            ObservationVintage.publication_batch_id,
+            ObservationVintage.raw_object_id,
             func.row_number()
             .over(
                 partition_by=(
@@ -555,6 +625,9 @@ async def _points_by_source(
             versioned.c.observation_status,
             versioned.c.published_at,
             versioned.c.vintage_at,
+            versioned.c.run_id,
+            versioned.c.publication_batch_id,
+            versioned.c.raw_object_id,
             func.row_number()
             .over(
                 partition_by=versioned.c.source_id,
@@ -583,6 +656,10 @@ async def _points_by_source(
                 status=row["observation_status"],
                 published_at=row["published_at"],
                 vintage_at=row["vintage_at"],
+                source_series_id=int(row["source_id"]),
+                run_id=row["run_id"],
+                publication_batch_id=row["publication_batch_id"],
+                raw_object_id=row["raw_object_id"],
             )
         )
     return dict(grouped)
@@ -624,6 +701,47 @@ async def _lifetime_availability_by_source(
         )
         for source_id in source_ids
     }
+
+
+def _provider_credentials_ready(provider_code: str) -> bool:
+    settings = get_settings()
+    required_credentials = {
+        "BEA_API": settings.bea_api_key,
+        "CENSUS_EITS_API": settings.census_api_key,
+        "EIA_API_V2": settings.eia_api_key,
+        "FRED_API": settings.fred_api_key,
+    }
+    return provider_code not in required_credentials or bool(required_credentials[provider_code])
+
+
+def _has_displayable_point(points: list[Point]) -> bool:
+    return any(point.value is not None for point in points)
+
+
+def _catalog_availability(
+    candidate: BrowserCandidate,
+    points: list[Point],
+    license_info: LicenseInfo | None,
+    lifetime_availability: SeriesAvailability,
+) -> SeriesAvailability:
+    binding = candidate.binding
+    if binding is None:
+        catalog_binding = candidate.catalog_binding
+        if (
+            catalog_binding is not None
+            and catalog_binding.source.mapping_status == "license_required"
+        ):
+            return "pending_license"
+        return "pending_mapping"
+    if license_info is None or not license_info.display_allowed:
+        return "pending_license"
+    if _has_displayable_point(points):
+        return "available"
+    if lifetime_availability == "not_available_as_of":
+        return lifetime_availability
+    if not _provider_credentials_ready(binding.provider.code):
+        return "pending_credentials"
+    return lifetime_availability
 
 
 async def _latest_publications_by_source(
@@ -905,7 +1023,11 @@ async def series_browser(
     )
     page_source_ids = {binding.source.id for binding in bindings}
     points = await _points_by_source(session, page_source_ids, data_as_of=snapshot)
-    empty_source_ids = {source_id for source_id in page_source_ids if not points.get(source_id)}
+    empty_source_ids = {
+        source_id
+        for source_id in page_source_ids
+        if not _has_displayable_point(points.get(source_id, []))
+    }
     availability_by_source = await _lifetime_availability_by_source(
         session,
         empty_source_ids,
@@ -916,10 +1038,15 @@ async def series_browser(
             candidate,
             points.get(candidate.binding.source.id, []) if candidate.binding else [],
             license_by_source.get(candidate.binding.source.id) if candidate.binding else None,
-            (
-                availability_by_source.get(candidate.binding.source.id, "available")
-                if candidate.binding
-                else "not_ingested"
+            _catalog_availability(
+                candidate,
+                points.get(candidate.binding.source.id, []) if candidate.binding else [],
+                license_by_source.get(candidate.binding.source.id) if candidate.binding else None,
+                (
+                    availability_by_source.get(candidate.binding.source.id, "not_ingested")
+                    if candidate.binding
+                    else "not_ingested"
+                ),
             ),
         )
         for candidate in page
@@ -1093,6 +1220,10 @@ async def series_csv(
             "unit",
             "provider",
             "attribution",
+            "source_series_id",
+            "run_id",
+            "publication_batch_id",
+            "raw_object_id",
         ]
     )
     for point in transformed:
@@ -1113,6 +1244,10 @@ async def series_csv(
                 _csv_safe(candidate.series.unit_label_zh),
                 _csv_safe(binding.provider.code),
                 _csv_safe(license_info.attribution_text or binding.provider.attribution_text or ""),
+                point.source_series_id or binding.source.id,
+                point.run_id or "",
+                point.publication_batch_id or "",
+                point.raw_object_id or "",
             ]
         )
     return ("\ufeff" + output.getvalue()).encode("utf-8")
@@ -1457,6 +1592,13 @@ async def series_analytics(
         next_release=await _next_release(session, series_id),
         contributions=contributions,
         capabilities=capabilities,
+        lineage=LineageInfo(
+            provider=binding.provider.code,
+            dataset=binding.dataset.code,
+            provider_series_id=binding.source.provider_series_id,
+            source_series_id=binding.source.id,
+            source_locator=binding.source.source_locator,
+        ),
         data_as_of=snapshot,
         data_mode="live",
     )

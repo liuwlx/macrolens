@@ -263,8 +263,10 @@ def _validate_registry(
     top_level_name: dict[str, str] = {}
     for canonical_code, owner_code in owners.items():
         current = by_code[owner_code]
-        while current.parent_code not in {None, "root"}:
-            current = by_code[current.parent_code]
+        parent_code = current.parent_code
+        while parent_code is not None and parent_code != "root":
+            current = by_code[parent_code]
+            parent_code = current.parent_code
         top_level_name[canonical_code] = current.name_zh
 
     frequency_map = {"日度": "daily", "周度": "weekly", "月度": "monthly", "季度": "quarterly"}

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
+from decimal import Decimal
 from types import SimpleNamespace
 from uuid import uuid4
 
@@ -11,6 +12,7 @@ from macrolens_api.schemas import ContributionResult, LicenseInfo
 from macrolens_api.services import data_browser
 from macrolens_api.services import series as series_service
 from macrolens_api.services.data_browser import BrowserCandidate, BrowserFilters, SourceBinding
+from macrolens_api.services.transforms import Point
 
 
 def _candidate() -> BrowserCandidate:
@@ -45,6 +47,24 @@ def _candidate() -> BrowserCandidate:
     )
     candidate = BrowserCandidate(series=series)  # type: ignore[arg-type]
     candidate.sources[source.id] = SourceBinding(source, dataset, provider)  # type: ignore[arg-type]
+    return candidate
+
+
+def _catalog_candidate(
+    *,
+    mapping_status: str,
+    provider_code: str,
+    verified: bool,
+) -> BrowserCandidate:
+    candidate = _candidate()
+    binding = candidate.binding
+    assert binding is not None
+    binding.source.mapping_status = mapping_status
+    binding.source.is_primary = verified
+    binding.provider.code = provider_code
+    candidate.catalog_sources[binding.source.id] = binding
+    if not verified:
+        candidate.sources.clear()
     return candidate
 
 
@@ -113,6 +133,194 @@ async def test_live_browser_returns_empty_items_with_explicit_availability(
     assert response.data_mode == "live"
 
 
+async def test_live_browser_marks_verified_visible_points_available(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    candidate = _candidate()
+    binding = candidate.binding
+    assert binding is not None
+    observed_at = datetime(2020, 1, 2, tzinfo=UTC)
+
+    async def candidates(_session: object) -> list[BrowserCandidate]:
+        return [candidate]
+
+    async def licenses(_session: object, _bindings: object) -> dict[int, LicenseInfo]:
+        return {binding.source.id: _license()}
+
+    async def points(_session: object, _ids: object, **_kwargs: object) -> dict[int, list[Point]]:
+        return {
+            binding.source.id: [
+                Point(
+                    period_start=date(2020, 1, 1),
+                    period_end=date(2020, 1, 31),
+                    value=Decimal("100"),
+                    value_text=None,
+                    status="normal",
+                    published_at=observed_at,
+                    vintage_at=observed_at,
+                )
+            ]
+        }
+
+    monkeypatch.setattr(data_browser, "_load_candidates", candidates)
+    monkeypatch.setattr(data_browser, "_license_map", licenses)
+    monkeypatch.setattr(data_browser, "_points_by_source", points)
+
+    response = await data_browser.series_browser(
+        object(),  # type: ignore[arg-type]
+        filters=BrowserFilters(),
+        sort="taxonomy",
+        order="asc",
+        limit=20,
+        offset=0,
+        data_as_of=datetime(2020, 1, 3, tzinfo=UTC),
+        published_from=None,
+        published_to=None,
+    )
+
+    assert response.items[0].availability == "available"
+    assert response.items[0].current is not None
+
+
+async def test_live_browser_keeps_all_null_points_data_capabilities_closed(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    candidate = _candidate()
+    binding = candidate.binding
+    assert binding is not None
+    observed_at = datetime(2020, 1, 2, tzinfo=UTC)
+
+    async def candidates(_session: object) -> list[BrowserCandidate]:
+        return [candidate]
+
+    async def licenses(_session: object, _bindings: object) -> dict[int, LicenseInfo]:
+        return {binding.source.id: _license()}
+
+    async def points(_session: object, _ids: object, **_kwargs: object) -> dict[int, list[Point]]:
+        return {
+            binding.source.id: [
+                Point(
+                    period_start=date(2020, 1, 1),
+                    period_end=date(2020, 1, 31),
+                    value=None,
+                    value_text="not published",
+                    status="missing",
+                    published_at=observed_at,
+                    vintage_at=observed_at,
+                )
+            ]
+        }
+
+    async def availability_by_source(
+        _session: object,
+        ids: set[int],
+        *,
+        data_as_of: datetime,
+    ) -> dict[int, str]:
+        assert ids == {binding.source.id}
+        assert data_as_of == datetime(2020, 1, 3, tzinfo=UTC)
+        return {binding.source.id: "not_ingested"}
+
+    monkeypatch.setattr(data_browser, "_load_candidates", candidates)
+    monkeypatch.setattr(data_browser, "_license_map", licenses)
+    monkeypatch.setattr(data_browser, "_points_by_source", points)
+    monkeypatch.setattr(
+        data_browser,
+        "_lifetime_availability_by_source",
+        availability_by_source,
+    )
+
+    response = await data_browser.series_browser(
+        object(),  # type: ignore[arg-type]
+        filters=BrowserFilters(),
+        sort="taxonomy",
+        order="asc",
+        limit=20,
+        offset=0,
+        data_as_of=datetime(2020, 1, 3, tzinfo=UTC),
+        published_from=None,
+        published_to=None,
+    )
+
+    assert response.items[0].availability == "not_ingested"
+    assert response.items[0].current is None
+
+
+@pytest.mark.parametrize(
+    ("mapping_status", "provider_code", "verified", "expected"),
+    [
+        ("needs_review", "BEA_API", False, "pending_mapping"),
+        ("license_required", "LICENSED_VENDOR", False, "pending_license"),
+        ("verified", "FRED_API", True, "pending_credentials"),
+    ],
+)
+async def test_live_browser_keeps_catalog_only_series_visible_with_exact_readiness(
+    monkeypatch: pytest.MonkeyPatch,
+    mapping_status: str,
+    provider_code: str,
+    verified: bool,
+    expected: str,
+) -> None:
+    candidate = _catalog_candidate(
+        mapping_status=mapping_status,
+        provider_code=provider_code,
+        verified=verified,
+    )
+    binding = candidate.binding
+
+    async def candidates(_session: object) -> list[BrowserCandidate]:
+        return [candidate]
+
+    async def licenses(_session: object, _bindings: object) -> dict[int, LicenseInfo]:
+        return {binding.source.id: _license()} if binding is not None else {}
+
+    async def points(_session: object, _ids: object, **_kwargs: object) -> dict[int, list[object]]:
+        return {}
+
+    async def availability_by_source(
+        _session: object,
+        ids: set[int],
+        *,
+        data_as_of: datetime,
+    ) -> dict[int, str]:
+        assert data_as_of == datetime(2020, 1, 1, tzinfo=UTC)
+        return {source_id: "not_ingested" for source_id in ids}
+
+    monkeypatch.setattr(data_browser, "_load_candidates", candidates)
+    monkeypatch.setattr(data_browser, "_license_map", licenses)
+    monkeypatch.setattr(data_browser, "_points_by_source", points)
+    monkeypatch.setattr(
+        data_browser,
+        "_lifetime_availability_by_source",
+        availability_by_source,
+    )
+    monkeypatch.setattr(
+        data_browser,
+        "_provider_credentials_ready",
+        lambda _provider_code: False,
+        raising=False,
+    )
+
+    response = await data_browser.series_browser(
+        object(),  # type: ignore[arg-type]
+        filters=BrowserFilters(provider=provider_code),
+        sort="taxonomy",
+        order="asc",
+        limit=20,
+        offset=0,
+        data_as_of=datetime(2020, 1, 1, tzinfo=UTC),
+        published_from=None,
+        published_to=None,
+    )
+
+    assert response.pagination.total == 1
+    assert response.items[0].availability == expected
+    assert response.items[0].current is None
+    assert response.items[0].series.provider is not None
+    assert response.items[0].series.provider.code == provider_code
+    assert response.facets.provider[0].value == provider_code
+
+
 @pytest.mark.parametrize("operation", ["csv", "analytics"])
 async def test_live_never_ingested_single_series_returns_200_shape(
     monkeypatch: pytest.MonkeyPatch,
@@ -158,10 +366,13 @@ async def test_live_never_ingested_single_series_returns_200_shape(
             transform="level",
             data_as_of=cutoff,
         )
-        assert (
-            content.decode("utf-8-sig")
-            .splitlines()[0]
-            .endswith(",data_mode,transform,unit,provider,attribution")
+        header = content.decode("utf-8-sig").splitlines()[0]
+        assert header.startswith(
+            "series_id,canonical_code,name_zh,period_start,period_end,value,status,"
+            "published_at,vintage_at,data_as_of,data_mode,transform,unit,provider,attribution"
+        )
+        assert header.endswith(
+            ",source_series_id,run_id,publication_batch_id,raw_object_id"
         )
     else:
         response = await data_browser.series_analytics(

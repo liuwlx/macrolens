@@ -55,10 +55,9 @@ def test_correlation() -> None:
 
 
 def test_mapping_transform_applies_declared_scale_factor() -> None:
+    from datetime import UTC, datetime
     from decimal import Decimal
     from types import SimpleNamespace
-
-    from datetime import UTC, datetime
 
     from macrolens_worker.providers.base import NormalizedObservation, apply_mapping_transform
 

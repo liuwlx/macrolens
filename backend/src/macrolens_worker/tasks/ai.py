@@ -15,7 +15,6 @@ from macrolens_api.models import AICitation, AIContext, AIRun
 settings = get_settings()
 
 
-
 def _parse_date(value: Any) -> date | None:
     if value in (None, ""):
         return None
@@ -33,6 +32,7 @@ def _parse_datetime(value: Any) -> datetime | None:
         return value if value.tzinfo is not None else value.replace(tzinfo=UTC)
     parsed = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
     return parsed if parsed.tzinfo is not None else parsed.replace(tzinfo=UTC)
+
 
 SYSTEM_PROMPT = """你是 MacroLens 的宏观研究助手。只能基于提供的上下文进行事实判断。
 要求：
@@ -61,7 +61,10 @@ def _sources_from_contexts(contexts: list[AIContext]) -> tuple[str, list[dict[st
                 "series_id": snapshot.get("id"),
                 "period_start": latest.get("period_start") if latest else None,
                 "vintage_at": latest.get("vintage_at") if latest else None,
-                "quote": f"{snapshot.get('name')} 最近36期数据，最新值 {latest.get('value') if latest else '缺失'} {snapshot.get('unit')}",
+                "quote": (
+                    f"{snapshot.get('name')} 最近36期数据，最新值 "
+                    f"{latest.get('value') if latest else '缺失'} {snapshot.get('unit')}"
+                ),
                 "locator": snapshot.get("lineage") or {},
             }
             blocks.append(f"[{citation_no}] 指标：{snapshot.get('name')}\n{snapshot}")
@@ -85,12 +88,15 @@ def _sources_from_contexts(contexts: list[AIContext]) -> tuple[str, list[dict[st
                         },
                     }
                     blocks.append(
-                        f"[{citation_no}] 文档：{snapshot.get('title')}，页码 {chunk.get('page_start')}\n{chunk.get('content')}"
+                        f"[{citation_no}] 文档：{snapshot.get('title')}，页码 "
+                        f"{chunk.get('page_start')}\n{chunk.get('content')}"
                     )
                     sources.append(source)
                     citation_no += 1
             else:
-                blocks.append(f"[{citation_no}] 文档：{snapshot.get('title')}\n{snapshot.get('summary')}")
+                blocks.append(
+                    f"[{citation_no}] 文档：{snapshot.get('title')}\n{snapshot.get('summary')}"
+                )
                 sources.append(
                     {
                         "citation_no": citation_no,
@@ -135,7 +141,9 @@ async def run_ai_analysis(session: AsyncSession, *, ai_run_id: UUID) -> dict[str
     contexts = list(
         (
             await session.scalars(
-                select(AIContext).where(AIContext.ai_run_id == ai_run_id).order_by(AIContext.context_type)
+                select(AIContext)
+                .where(AIContext.ai_run_id == ai_run_id)
+                .order_by(AIContext.context_type)
             )
         ).all()
     )
@@ -167,7 +175,9 @@ async def run_ai_analysis(session: AsyncSession, *, ai_run_id: UUID) -> dict[str
         response = correction
         cited = {int(value) for value in re.findall(r"\[(\d+)\]", output)}
     if sources and not cited:
-        raise RuntimeError("Model response contains no verifiable citations after one correction attempt")
+        raise RuntimeError(
+            "Model response contains no verifiable citations after one correction attempt"
+        )
     valid_numbers = {source["citation_no"] for source in sources}
     invalid = cited - valid_numbers
     if invalid:

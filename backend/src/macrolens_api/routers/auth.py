@@ -47,24 +47,25 @@ def _set_auth_cookies(response: Response, user: User, session_id: UUID) -> tuple
         token_type=TokenType.REFRESH,
         session_id=session_id,
     )
-    common = {
-        "httponly": True,
-        "secure": settings.cookie_secure,
-        "samesite": settings.cookie_samesite,
-        "path": "/",
-        "domain": settings.cookie_domain,
-    }
     response.set_cookie(
         "macrolens_access",
         access,
         max_age=settings.access_token_ttl_minutes * 60,
-        **common,
+        httponly=True,
+        secure=settings.cookie_secure,
+        samesite=settings.cookie_samesite,
+        path="/",
+        domain=settings.cookie_domain,
     )
     response.set_cookie(
         "macrolens_refresh",
         refresh,
         max_age=settings.refresh_token_ttl_days * 86400,
-        **common,
+        httponly=True,
+        secure=settings.cookie_secure,
+        samesite=settings.cookie_samesite,
+        path="/",
+        domain=settings.cookie_domain,
     )
     return access, refresh
 
@@ -209,6 +210,7 @@ async def refresh(
             await _revoke_refresh_family(session, root_session_id=auth_session.id, revoked_at=now)
             await session.commit()
         raise AppError(401, "刷新凭证已失效", "请重新登录。", "refresh_session_invalid")
+    assert auth_session is not None
     user = await session.get(User, token.sub)
     if user is None or not user.active:
         raise AppError(401, "用户不可用", "请重新登录。", "inactive_user")

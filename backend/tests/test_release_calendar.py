@@ -2,7 +2,6 @@ from datetime import UTC, datetime
 
 from macrolens_worker.tasks.release_calendar import _event_datetime, _match_release, parse_ics
 
-
 SAMPLE = """BEGIN:VCALENDAR\r
 BEGIN:VEVENT\r
 UID:cpi-2026-01\r

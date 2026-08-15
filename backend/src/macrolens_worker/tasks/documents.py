@@ -5,18 +5,18 @@ import ipaddress
 import mimetypes
 import re
 import socket
-from email.utils import parsedate_to_datetime
 from datetime import UTC, datetime
+from email.utils import parsedate_to_datetime
 from io import BytesIO
 from pathlib import PurePosixPath
 from urllib.parse import urljoin, urlparse
 from uuid import UUID
 
-import fitz
+import fitz  # type: ignore[import-untyped]
 import httpx
-from lxml import html
-from openpyxl import load_workbook
-from sqlalchemy import func, select
+from lxml import html  # type: ignore[import-untyped]
+from openpyxl import load_workbook  # type: ignore[import-untyped]
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from macrolens_api.config import get_settings
@@ -71,8 +71,10 @@ async def _validate_public_https_url(value: str, *, allowed_domains: set[str] | 
     def resolve() -> list[str]:
         return list(
             {
-                item[4][0]
-                for item in socket.getaddrinfo(parsed.hostname, parsed.port or 443, type=socket.SOCK_STREAM)
+                str(item[4][0])
+                for item in socket.getaddrinfo(
+                    parsed.hostname, parsed.port or 443, type=socket.SOCK_STREAM
+                )
             }
         )
 
@@ -101,7 +103,9 @@ async def _download_document(
                     location = response.headers.get("location")
                     if not location:
                         raise RuntimeError("Document redirect omitted Location")
-                    current = await _validate_public_https_url(urljoin(current, location), allowed_domains=allowed_domains)
+                    current = await _validate_public_https_url(
+                        urljoin(current, location), allowed_domains=allowed_domains
+                    )
                     continue
                 response.raise_for_status()
                 declared = response.headers.get("content-length")
@@ -116,7 +120,9 @@ async def _download_document(
                     body.extend(chunk)
                     if len(body) > MAX_DOCUMENT_BYTES:
                         raise RuntimeError("Document exceeds the 50 MiB ingestion limit")
-                content_type = response.headers.get("content-type", "application/octet-stream").split(";", 1)[0]
+                content_type = response.headers.get(
+                    "content-type", "application/octet-stream"
+                ).split(";", 1)[0]
                 last_modified = None
                 if response.headers.get("last-modified"):
                     try:
@@ -141,12 +147,16 @@ async def fetch_document(
     copyright_status: str = "official",
     metadata: dict | None = None,
 ) -> dict[str, str | int]:
-    provider = await session.scalar(select(Provider).where(Provider.code == provider_code.upper(), Provider.active))
+    provider = await session.scalar(
+        select(Provider).where(Provider.code == provider_code.upper(), Provider.active)
+    )
     if provider is None:
         raise RuntimeError(f"Active provider not found: {provider_code}")
     allowed_domains = _allowed_document_domains(provider)
     if not allowed_domains:
-        raise RuntimeError("Provider has no approved document domain; configure allowed_document_hosts")
+        raise RuntimeError(
+            "Provider has no approved document domain; configure allowed_document_hosts"
+        )
     body, content_type, final_url, http_status, last_modified = await _download_document(
         source_url, allowed_domains=allowed_domains
     )
@@ -158,7 +168,9 @@ async def fetch_document(
     key = f"raw/documents/{provider.code.lower()}/{date_path}/{digest}{suffix[:12]}"
     stored = await ObjectStorage().put_bytes(key, body, content_type)
     raw_object = await session.scalar(
-        select(RawObject).where(RawObject.provider_id == provider.id, RawObject.sha256 == stored.sha256)
+        select(RawObject).where(
+            RawObject.provider_id == provider.id, RawObject.sha256 == stored.sha256
+        )
     )
     if raw_object is None:
         raw_object = RawObject(
@@ -205,7 +217,11 @@ async def fetch_document(
         document.published_at = parsed_published_at or document.published_at
         document.copyright_status = copyright_status
         document.status = "processing"
-        document.metadata_json = {**document.metadata_json, **(metadata or {}), "final_url": final_url}
+        document.metadata_json = {
+            **document.metadata_json,
+            **(metadata or {}),
+            "final_url": final_url,
+        }
     await enqueue_job(
         session,
         job_type="parse_document",
@@ -282,7 +298,9 @@ def _extract_html(raw: bytes) -> str:
     document = html.fromstring(raw)
     for element in document.xpath("//script|//style|//nav|//footer"):
         element.drop_tree()
-    return _bounded_text("\n".join(line.strip() for line in document.text_content().splitlines() if line.strip()))
+    return _bounded_text(
+        "\n".join(line.strip() for line in document.text_content().splitlines() if line.strip())
+    )
 
 
 def _extract_xlsx(raw: bytes) -> str:
@@ -328,7 +346,9 @@ async def parse_document(
     elif "spreadsheetml" in content_type or lower_url.endswith(".xlsx"):
         extracted = _extract_xlsx(raw)
         page_chunks = [(None, None, chunk) for chunk in _chunk_text(extracted)]
-    elif content_type.startswith("text/") or lower_url.endswith((".txt", ".md", ".csv", ".xml", ".json")):
+    elif content_type.startswith("text/") or lower_url.endswith(
+        (".txt", ".md", ".csv", ".xml", ".json")
+    ):
         extracted = _bounded_text(raw.decode("utf-8", errors="replace"))
         page_chunks = [(None, None, chunk) for chunk in _chunk_text(extracted)]
     else:
@@ -404,7 +424,9 @@ async def parse_document(
     return {"status": "parsed", "chunks": len(page_chunks), "version_id": str(version.id)}
 
 
-async def embed_document(session: AsyncSession, *, document_version_id: UUID) -> dict[str, int | str]:
+async def embed_document(
+    session: AsyncSession, *, document_version_id: UUID
+) -> dict[str, int | str]:
     if not settings.openai_api_key:
         raise RuntimeError("OPENAI_API_KEY is required for embeddings")
     version = await session.get(DocumentVersion, document_version_id)
