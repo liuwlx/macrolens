@@ -4,10 +4,11 @@ import calendar
 import re
 from abc import ABC, abstractmethod
 from collections.abc import Iterable
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 from typing import Any, Literal
+from urllib.parse import urlsplit
 
 import httpx
 
@@ -46,12 +47,30 @@ class ProviderFetchResult:
 
 
 @dataclass(frozen=True, slots=True)
+class MappingProbeEvidence:
+    transport_success: bool
+    http_success: bool
+    business_success: bool
+    identity_match: bool
+    authorization_available: bool
+    details: dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass(frozen=True, slots=True)
+class MappingProbeIssue:
+    stage: Literal["configuration", "transport", "http", "business", "identity", "authorization"]
+    code: str
+    message: str
+    blocking: bool = True
+
+
+@dataclass(frozen=True, slots=True)
 class MappingProbeResult:
     """Read-only evidence for deciding whether a source mapping may be approved."""
 
     provider_code: str
     source_series_id: int
-    provider_series_id: str
+    provider_series_id: str | None
     request_url: str
     http_reachable: bool
     http_status: int | None
@@ -64,6 +83,114 @@ class MappingProbeResult:
     authorization_available: bool
     production_ready: bool
     classification: Literal["PASS", "AUTH_REQUIRED", "BLOCKED"]
+    evidence: MappingProbeEvidence | None = None
+    issues: tuple[MappingProbeIssue, ...] = ()
+
+    def __post_init__(self) -> None:
+        if urlsplit(self.request_url).query:
+            raise ValueError("MappingProbeResult.request_url must not contain a query")
+        evidence = self.evidence
+        if evidence is None:
+            evidence = MappingProbeEvidence(
+                transport_success=self.http_reachable,
+                http_success=(
+                    self.http_reachable
+                    and self.http_status is not None
+                    and 200 <= self.http_status < 300
+                ),
+                business_success=self.business_success,
+                identity_match=self.identity_match,
+                authorization_available=self.authorization_available,
+            )
+            object.__setattr__(self, "evidence", evidence)
+        expected_old_fields = (
+            evidence.transport_success,
+            evidence.business_success,
+            evidence.identity_match,
+            evidence.authorization_available,
+        )
+        if expected_old_fields != (
+            self.http_reachable,
+            self.business_success,
+            self.identity_match,
+            self.authorization_available,
+        ):
+            raise ValueError("MappingProbeResult evidence contradicts legacy fields")
+        expected_http_success = (
+            self.http_reachable and self.http_status is not None and 200 <= self.http_status < 300
+        )
+        if evidence.http_success != expected_http_success:
+            raise ValueError("MappingProbeResult HTTP evidence contradicts status")
+        classification = classify_mapping_probe(evidence, self.issues)
+        if classification != self.classification:
+            raise ValueError("MappingProbeResult classification contradicts evidence and issues")
+        if self.production_ready != (classification == "PASS"):
+            raise ValueError("MappingProbeResult production_ready contradicts classification")
+
+    def to_dict(self) -> dict[str, Any]:
+        serialized = asdict(self)
+        serialized["probed_at"] = self.probed_at.isoformat()
+        serialized["issues"] = [asdict(issue) for issue in self.issues]
+        return serialized
+
+
+def classify_mapping_probe(
+    evidence: MappingProbeEvidence,
+    issues: tuple[MappingProbeIssue, ...],
+) -> Literal["PASS", "AUTH_REQUIRED", "BLOCKED"]:
+    blocking_non_auth = any(issue.blocking and issue.stage != "authorization" for issue in issues)
+    verified_without_auth = (
+        evidence.transport_success
+        and evidence.http_success
+        and evidence.business_success
+        and evidence.identity_match
+        and not blocking_non_auth
+    )
+    if (
+        verified_without_auth
+        and evidence.authorization_available
+        and not any(issue.blocking for issue in issues)
+    ):
+        return "PASS"
+    if verified_without_auth and not evidence.authorization_available:
+        return "AUTH_REQUIRED"
+    return "BLOCKED"
+
+
+def build_mapping_probe_result(
+    *,
+    provider_code: str,
+    source_series_id: int,
+    provider_series_id: str | None,
+    request_url: str,
+    http_status: int | None,
+    content_type: str,
+    official_description: str,
+    response_sha256: str,
+    probed_at: datetime,
+    evidence: MappingProbeEvidence,
+    issues: tuple[MappingProbeIssue, ...] = (),
+) -> MappingProbeResult:
+    classification = classify_mapping_probe(evidence, issues)
+    return MappingProbeResult(
+        provider_code=provider_code,
+        source_series_id=source_series_id,
+        provider_series_id=provider_series_id,
+        request_url=request_url,
+        http_reachable=evidence.transport_success,
+        http_status=http_status,
+        content_type=content_type,
+        business_success=evidence.business_success,
+        identity_match=evidence.identity_match,
+        official_description=official_description,
+        response_sha256=response_sha256,
+        probed_at=probed_at,
+        authorization_available=evidence.authorization_available,
+        production_ready=classification == "PASS",
+        classification=classification,
+        evidence=evidence,
+        issues=issues,
+    )
 
 
 class ProviderAdapter(ABC):
