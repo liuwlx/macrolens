@@ -126,7 +126,7 @@ class BEAAdapter(ProviderAdapter):
                 ),
             )
         try:
-            payload = response.json()
+            payload = _redact_sensitive_data(response.json(), secrets=(settings.bea_api_key,))
         except ValueError:
             payload = None
         errors = self._business_errors(payload)
@@ -355,7 +355,7 @@ class BEAAdapter(ProviderAdapter):
                 request_url=self.endpoint,
                 secrets=(settings.bea_api_key,),
             )
-            payload = response.json()
+            payload = _redact_sensitive_data(response.json(), secrets=(settings.bea_api_key,))
             errors = self._business_errors(payload)
             if errors:
                 raise ProviderDataError("BEA request failed with a business error")

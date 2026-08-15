@@ -1,1 +1,1 @@
-{"response":{"total":"1","frequency":"daily","dateFormat":"YYYY-MM-DD","description":"Cushing, OK WTI Spot Price FOB","data":[{"period":"1986-01-02","series":"PET.RWTC.D","value":"25.56","units":"$/BBL"}]}}
+{"response":{"total":"100","frequency":"daily","dateFormat":"YYYY-MM-DD","description":"Cushing, OK WTI Spot Price FOB","data":[{"period":"1986-01-02","series":"PET.RWTC.D","value":"25.56","units":"$/BBL"}]}}

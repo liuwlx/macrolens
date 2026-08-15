@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from datetime import UTC, datetime
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
@@ -9,6 +10,11 @@ import httpx
 import pytest
 
 from macrolens_api.config import get_settings
+from macrolens_worker.providers.base import (
+    MappingProbeEvidence,
+    MappingProbeResult,
+    ProviderDataError,
+)
 from macrolens_worker.providers.bea import BEAAdapter
 from macrolens_worker.providers.bls import BLSAdapter
 from macrolens_worker.providers.census import CensusEITSAdapter
@@ -33,6 +39,7 @@ def _eia_source() -> SimpleNamespace:
         source_locator={
             "route": "v2/seriesid/PET.RWTC.D",
             "expected_first_period": "1986-01-02",
+            "min_observations_backfill": 100,
         },
     )
 
@@ -128,7 +135,7 @@ async def test_eia_probe_passes_only_on_pinned_minimal_series_evidence(
 
     assert result.classification == "PASS"
     assert result.production_ready is True
-    expected_sha = "f9ebf22c8b5b50a1af8710d606d84aea3f21d1093cd913a0aab5b34e6d342c1d"
+    expected_sha = "3f4d4efd49ae6c7b0397e6cc96fdb6ec2297450758eb625c596434cbcd77c864"
     assert result.response_sha256 == expected_sha
     assert result.request_url == "https://api.eia.gov/v2/seriesid/PET.RWTC.D/"
     assert result.official_description == "Cushing, OK WTI Spot Price FOB"
@@ -144,7 +151,7 @@ async def test_eia_probe_passes_only_on_pinned_minimal_series_evidence(
             "first_period": "1986-01-02",
             "frequency": "daily",
             "row_series": "PET.RWTC.D",
-            "total": 1,
+            "total": 100,
             "units": "$/BBL",
             "value_field": "value",
         },
@@ -307,13 +314,19 @@ async def test_eia_probe_failure_matrix_is_fail_closed_and_secret_safe(
         body = {"error": {"message": secret}}
     elif case == "identity":
         body["response"]["frequency"] = "weekly"
+    raw = secret.encode() if case == "http" else json.dumps(body, separators=(",", ":")).encode()
+    expected_sha = {
+        "auth": "4a43c3b78b144bfcc953f2878f173f1b64642e3a13afefcdd53eeacec5c4eac8",
+        "business": "8bb66af36c2f2000d439e675ffeb39c2376ef1cd7eacaad7f606146beb13e3cf",
+        "http": "d46732b19ee2ee29b26462c07cba60a0e1b65624310eb126831560dbaaa37051",
+        "identity": "57b7838fb58332d1c7e266dff1e4faf66ccbb7b1b635b794fd5d87b4148d183a",
+        "transport": "",
+    }[case]
 
     async def handler(request: httpx.Request) -> httpx.Response:
         if case == "transport":
             raise httpx.ConnectError(secret, request=request)
-        if case == "http":
-            return httpx.Response(503, request=request, content=secret.encode())
-        return httpx.Response(200, request=request, json=body)
+        return httpx.Response(503 if case == "http" else 200, request=request, content=raw)
 
     async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
         result = await EIAAdapter(client).probe(
@@ -323,7 +336,7 @@ async def test_eia_probe_failure_matrix_is_fail_closed_and_secret_safe(
     assert result.classification == expected_classification
     assert result.production_ready is False
     assert expected_code in {issue.code for issue in result.issues}
-    assert result.response_sha256 == ("" if case == "transport" else result.response_sha256)
+    assert result.response_sha256 == expected_sha
     _assert_secret_absent(result.to_dict(), secret)
     get_settings.cache_clear()
 
@@ -354,6 +367,30 @@ async def test_eia_probe_rejects_route_drift_before_http(
     assert result.classification == "BLOCKED"
     assert {issue.code for issue in result.issues} == {"route_not_pinned"}
     assert result.response_sha256 == ""
+    get_settings.cache_clear()
+
+
+@pytest.mark.asyncio
+async def test_eia_probe_blocks_total_below_pinned_backfill_minimum(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("EIA_API_KEY", "probe-secret")
+    get_settings.cache_clear()
+    source = _eia_source()
+    body = json.loads((FIXTURES / "eia_wti_pass.json").read_text())
+    body["response"]["total"] = "99"
+    raw = json.dumps(body, separators=(",", ":")).encode()
+
+    async def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, request=request, content=raw)
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+        result = await EIAAdapter(client).probe(
+            _provider("EIA_API_V2"), source, _dataset("Petroleum")
+        )
+
+    assert result.classification == "BLOCKED"
+    assert {issue.code for issue in result.issues} == {"total_below_minimum"}
     get_settings.cache_clear()
 
 
@@ -536,6 +573,40 @@ async def test_census_probe_blocks_unresolved_locator_before_http(
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "dimensions",
+    [
+        {"seasonally_adj": "yes", "category_code": "TOTAL"},
+        {"seasonally_adj": "yes", "category_code": "TOTAL", "for": "state:*"},
+    ],
+)
+async def test_census_probe_requires_us_country_predicate_before_http(
+    monkeypatch: pytest.MonkeyPatch,
+    dimensions: dict[str, str],
+) -> None:
+    monkeypatch.setenv("CENSUS_API_KEY", "probe-secret")
+    get_settings.cache_clear()
+    called = False
+
+    async def handler(request: httpx.Request) -> httpx.Response:
+        nonlocal called
+        called = True
+        return httpx.Response(200, request=request, json=[])
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+        result = await CensusEITSAdapter(client).probe(
+            _provider("CENSUS_EITS_API"),
+            _census_source(dimensions=dimensions),
+            _dataset("marts"),
+        )
+
+    assert called is False
+    assert result.classification == "BLOCKED"
+    assert {issue.code for issue in result.issues} == {"country_predicate_invalid"}
+    get_settings.cache_clear()
+
+
+@pytest.mark.asyncio
 async def test_bls_probe_preserves_legacy_fields_and_adds_structured_issues(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -582,6 +653,7 @@ async def test_eia_fetch_sends_key_but_never_persists_it(
     monkeypatch.setenv("EIA_API_KEY", secret)
     get_settings.cache_clear()
     body = json.loads((FIXTURES / "eia_wti_pass.json").read_text())
+    body["response"]["total"] = "1"
 
     async def handler(request: httpx.Request) -> httpx.Response:
         assert request.url.params["api_key"] == secret
@@ -629,6 +701,78 @@ async def test_bea_fetch_sends_key_but_never_persists_it(
     _assert_secret_absent(results[0].raw_bytes, secret)
     assert "?" not in results[0].request_url
     get_settings.cache_clear()
+
+
+@pytest.mark.asyncio
+async def test_bea_fetch_conflicting_identity_error_never_exposes_key(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    secret = "bea-conflicting-identity-key-sentinel"
+    monkeypatch.setenv("BEA_API_KEY", secret)
+    get_settings.cache_clear()
+    body = json.loads((FIXTURES / "bea_pce_pass.json").read_text())
+    first = body["BEAAPI"]["Results"]["Data"][0]
+    first["SeriesCode"] = secret
+    conflicting = dict(first)
+    conflicting["LineDescription"] = "Conflicting description"
+    body["BEAAPI"]["Results"]["Data"].append(conflicting)
+
+    async def handler(request: httpx.Request) -> httpx.Response:
+        assert request.url.params["UserID"] == secret
+        return httpx.Response(200, request=request, json=body)
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+        with pytest.raises(ProviderDataError) as captured:
+            await BEAAdapter(client).fetch(
+                _provider("BEA_API"),
+                [(_bea_source(), _dataset("NIUnderlyingDetail"))],
+                mode="backfill",
+            )
+
+    assert secret not in str(captured.value)
+    get_settings.cache_clear()
+
+
+@pytest.mark.parametrize(
+    ("transport", "http", "business", "identity", "http_status"),
+    [
+        (False, False, True, False, None),
+        (True, False, True, False, 503),
+        (True, True, False, True, 200),
+    ],
+)
+def test_mapping_probe_result_rejects_causally_impossible_evidence(
+    transport: bool,
+    http: bool,
+    business: bool,
+    identity: bool,
+    http_status: int | None,
+) -> None:
+    with pytest.raises(ValueError, match="causality"):
+        MappingProbeResult(
+            provider_code="TEST",
+            source_series_id=1,
+            provider_series_id=None,
+            request_url="https://example.test/probe",
+            http_reachable=transport,
+            http_status=http_status,
+            content_type="application/json",
+            business_success=business,
+            identity_match=identity,
+            official_description="",
+            response_sha256="",
+            probed_at=datetime.now(UTC),
+            authorization_available=True,
+            production_ready=False,
+            classification="BLOCKED",
+            evidence=MappingProbeEvidence(
+                transport,
+                http,
+                business,
+                identity,
+                True,
+            ),
+        )
 
 
 @pytest.mark.asyncio

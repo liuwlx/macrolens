@@ -188,9 +188,17 @@ class EIAAdapter(ProviderAdapter):
             total = int(str(response_payload.get("total")))
         except (TypeError, ValueError):
             total = 0
+        try:
+            minimum_total = int(str(source.source_locator.get("min_observations_backfill") or 1))
+        except (TypeError, ValueError):
+            minimum_total = 1
         details["total"] = total
         checks = (
-            (total > 0, "total_invalid", "EIA response total must be positive"),
+            (
+                total >= minimum_total,
+                "total_below_minimum",
+                "EIA response total is below the pinned backfill minimum",
+            ),
             (
                 response_payload.get("frequency") == "daily",
                 "frequency_drift",

@@ -98,6 +98,14 @@ class CensusEITSAdapter(ProviderAdapter):
                     "Census dimensions must be complete before probing",
                 )
             )
+        if not isinstance(dimensions, dict) or dimensions.get("for") != "us:*":
+            configuration_issues.append(
+                MappingProbeIssue(
+                    "configuration",
+                    "country_predicate_invalid",
+                    "Census dimensions['for'] must be pinned to us:* before probing",
+                )
+            )
         probe_period = str(locator.get("probe_period") or date.today().strftime("%Y-%m"))
         if self._parse_period(probe_period) is None or len(probe_period) != 7:
             configuration_issues.append(

@@ -121,6 +121,18 @@ class MappingProbeResult:
         )
         if evidence.http_success != expected_http_success:
             raise ValueError("MappingProbeResult HTTP evidence contradicts status")
+        if (
+            (
+                not evidence.transport_success
+                and any((evidence.http_success, evidence.business_success, evidence.identity_match))
+            )
+            or (
+                not evidence.http_success
+                and any((evidence.business_success, evidence.identity_match))
+            )
+            or (not evidence.business_success and evidence.identity_match)
+        ):
+            raise ValueError("MappingProbeResult evidence violates probe-stage causality")
         if not self.issues:
             inferred_issues: list[MappingProbeIssue] = []
             if not evidence.transport_success:

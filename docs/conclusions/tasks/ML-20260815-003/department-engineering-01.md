@@ -39,7 +39,7 @@
 
 固定 fixture SHA literal：
 
-- EIA：`f9ebf22c8b5b50a1af8710d606d84aea3f21d1093cd913a0aab5b34e6d342c1d`
+- EIA：`3f4d4efd49ae6c7b0397e6cc96fdb6ec2297450758eb625c596434cbcd77c864`
 - BEA：`ec36476c1acbb760139727278c167544b5166ead8baf557773ef95f872695509`
 - Census：`1fe5601cee0c08a4273ed1d57108ab263959ad44f2ea4eb2a488008cbef4c638`
 
@@ -51,6 +51,81 @@
 - 全量 ruff：303 个既有错误，集中在 Alembic 生成文件和旧测试等非所有权文件。
 - 全量 mypy：35 个既有错误、16 个非所有权文件，并有 lxml、boto3、openpyxl、fitz 等缺失 stubs。
 - Web lint/test/build：分别因 `eslint`、`vitest`、`next` 不可用而阻塞；按时限记录，未无限等待或安装依赖。
+
+### 集成独立审查 remediation（2026-08-15）
+
+独立审查的五项 finding 均按 RED→GREEN 收口：BEA fetch 在进入 identity parser 前递归脱敏响应 payload；Census probe 强制 `dimensions['for'] == 'us:*'` 且网络前阻断；EIA probe 以 `min_observations_backfill=100` 校验 total；EIA 非 transport SHA 改为独立固定 literal；`MappingProbeResult` 增加 transport→HTTP→business→identity 因果约束。未重构三源重复请求骨架。本段与 remediation 代码位于同一最终提交，最终 SHA 由交付消息返回。
+
+本席位实际执行的原始命令与原始输出如下（路径均为本任务独立 worktree）：
+
+```powershell
+$env:PYTHONPATH='backend/src'; $env:PYTHONUTF8='1'
+$py='E:\workerspace\projects\20260709\macrolens-worktrees\ML-20260815-002-engineering-01\.venv\Scripts\python.exe'
+& $py --version
+```
+
+```text
+Python 3.12.9
+```
+
+```powershell
+& $py -m pytest backend/tests/test_mapping_probes.py -q --disable-warnings -k "conflicting_identity_error or requires_us_country_predicate or total_below_pinned or causally_impossible or eia_probe_failure_matrix"
+```
+
+```text
+.....FFFFFFF
+7 failed, 5 passed, 41 deselected in 0.71s
+```
+
+失败分别为：EIA below-minimum 仍 PASS；Census no-for/wrong-for 均调用 HTTP；BEA 冲突 identity 异常泄漏哨兵；三个矛盾 evidence 未抛 ValueError。固定 SHA 的五个 failure-matrix 用例在同一 RED 运行中通过。
+
+```powershell
+& $py -m pytest backend/tests/test_mapping_probes.py backend/tests/test_probe_mapping.py backend/tests/test_m0_bls_cpi.py backend/tests/test_runtime_review.py backend/tests/test_ingestion_completeness.py backend/tests/test_ingestion_module_review.py backend/tests/test_providers.py -q --disable-warnings
+```
+
+```text
+........................................................................ [ 52%]
+.................................................................        [100%]
+137 passed, 4 warnings in 5.94s
+```
+
+```powershell
+& $py -m pytest backend/tests/test_m0_bls_cpi.py backend/tests/test_runtime_review.py -q --disable-warnings
+```
+
+```text
+......................................                                   [100%]
+38 passed, 4 warnings in 5.58s
+```
+
+```powershell
+& $py -m ruff check backend/src/macrolens_worker/providers/base.py backend/src/macrolens_worker/providers/eia.py backend/src/macrolens_worker/providers/bea.py backend/src/macrolens_worker/providers/census.py backend/src/macrolens_worker/tasks/mappings.py backend/tests/test_mapping_probes.py backend/tests/test_probe_mapping.py
+```
+
+```text
+All checks passed!
+```
+
+```powershell
+& $py -m mypy --follow-imports=skip backend/src/macrolens_worker/providers/base.py backend/src/macrolens_worker/providers/eia.py backend/src/macrolens_worker/providers/bea.py backend/src/macrolens_worker/providers/census.py backend/src/macrolens_worker/tasks/mappings.py
+```
+
+```text
+Success: no issues found in 5 source files
+```
+
+```powershell
+git diff --check
+```
+
+```text
+warning: in the working copy of 'backend/tests/fixtures/mapping_probes/eia_wti_pass.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'backend/tests/test_mapping_probes.py', LF will be replaced by CRLF the next time Git touches it
+```
+
+该命令退出码为 0；输出只有 Git 行尾提示，没有 whitespace error。
+
+主线程独立复跑记录：首次在未设置 UTF-8 模式时发生 GBK 编码失败；设置 `PYTHONUTF8=1` 后复跑得到 `128 passed`。审查反馈没有携带主线程完整 argv 或更长 pytest 输出，因此本报告原样记录所收到的两条结果，不伪造缺失内容。本席位随后使用上方明确 argv 在 Python 3.12.9 环境复跑，得到 137 passed。
 
 ## 4. Agents、skills、tools 与文档
 
