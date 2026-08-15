@@ -2,16 +2,26 @@ from __future__ import annotations
 
 import json
 from datetime import UTC, date, datetime, timedelta
+from hashlib import sha256
 from typing import Any
+
+import httpx
 
 from macrolens_api.config import get_settings
 from macrolens_api.models import Dataset, Provider, SourceSeries
 
 from .base import (
+    MappingProbeEvidence,
+    MappingProbeIssue,
+    MappingProbeResult,
     NormalizedObservation,
     ProviderAdapter,
     ProviderDataError,
     ProviderFetchResult,
+    _build_mapping_probe_result,
+    _raise_for_status_safely,
+    _redact_sensitive_data,
+    _sanitized_transport_error,
     deduplicate_observations,
     parse_decimal,
     period_end,
@@ -22,6 +32,232 @@ class EIAAdapter(ProviderAdapter):
     code = "EIA_API_V2"
     page_size = 5000
     max_pages = 1000
+
+    async def probe(
+        self,
+        provider: Provider,
+        source: SourceSeries,
+        dataset: Dataset,
+    ) -> MappingProbeResult:
+        del dataset
+        settings = get_settings()
+        authorized = bool(settings.eia_api_key)
+        probed_at = datetime.now(UTC)
+        provider_series_id = str(source.provider_series_id) if source.provider_series_id else None
+        expected_route = f"v2/seriesid/{provider_series_id}" if provider_series_id else None
+        route = str(source.source_locator.get("route") or "")
+        request_url = self._route_url(route.strip("/") or expected_route or "", False)
+        configuration_issues: list[MappingProbeIssue] = []
+        if not provider_series_id:
+            configuration_issues.append(
+                MappingProbeIssue(
+                    "configuration",
+                    "provider_series_id_missing",
+                    "EIA provider_series_id must be pinned before probing",
+                )
+            )
+        if route != expected_route:
+            configuration_issues.append(
+                MappingProbeIssue(
+                    "configuration",
+                    "route_not_pinned",
+                    "EIA route must exactly match the pinned v2 series route",
+                )
+            )
+        expected_first_period = str(source.source_locator.get("expected_first_period") or "")
+        if not expected_first_period:
+            configuration_issues.append(
+                MappingProbeIssue(
+                    "configuration",
+                    "expected_first_period_missing",
+                    "EIA expected_first_period must be pinned before probing",
+                )
+            )
+        if configuration_issues:
+            return _build_mapping_probe_result(
+                provider_code=provider.code,
+                source_series_id=source.id,
+                provider_series_id=provider_series_id,
+                request_url=request_url,
+                http_status=None,
+                content_type="",
+                official_description="",
+                response_sha256="",
+                probed_at=probed_at,
+                evidence=MappingProbeEvidence(False, False, False, False, authorized),
+                issues=tuple(configuration_issues),
+            )
+
+        params: dict[str, Any] = {
+            "length": 1,
+            "sort[0][column]": "period",
+            "sort[0][direction]": "asc",
+        }
+        if settings.eia_api_key:
+            params["api_key"] = settings.eia_api_key
+        try:
+            response = await self.client.get(request_url, params=params)
+        except httpx.TransportError:
+            return _build_mapping_probe_result(
+                provider_code=provider.code,
+                source_series_id=source.id,
+                provider_series_id=provider_series_id,
+                request_url=request_url,
+                http_status=None,
+                content_type="",
+                official_description="",
+                response_sha256="",
+                probed_at=probed_at,
+                evidence=MappingProbeEvidence(False, False, False, False, authorized),
+                issues=(
+                    MappingProbeIssue(
+                        "transport", "transport_error", "EIA request was unreachable"
+                    ),
+                ),
+            )
+
+        raw = response.content
+        digest = sha256(raw).hexdigest()
+        content_type = response.headers.get("content-type", "application/json")
+        if not 200 <= response.status_code < 300:
+            return _build_mapping_probe_result(
+                provider_code=provider.code,
+                source_series_id=source.id,
+                provider_series_id=provider_series_id,
+                request_url=request_url,
+                http_status=response.status_code,
+                content_type=content_type,
+                official_description="",
+                response_sha256=digest,
+                probed_at=probed_at,
+                evidence=MappingProbeEvidence(True, False, False, False, authorized),
+                issues=(
+                    MappingProbeIssue(
+                        "http", "http_status", f"EIA returned HTTP {response.status_code}"
+                    ),
+                ),
+            )
+        try:
+            payload = response.json()
+        except ValueError:
+            payload = None
+        response_payload = payload.get("response") if isinstance(payload, dict) else None
+        if (
+            not isinstance(payload, dict)
+            or payload.get("error")
+            or not isinstance(response_payload, dict)
+            or not isinstance(response_payload.get("data"), list)
+        ):
+            return _build_mapping_probe_result(
+                provider_code=provider.code,
+                source_series_id=source.id,
+                provider_series_id=provider_series_id,
+                request_url=request_url,
+                http_status=response.status_code,
+                content_type=content_type,
+                official_description="",
+                response_sha256=digest,
+                probed_at=probed_at,
+                evidence=MappingProbeEvidence(True, True, False, False, authorized),
+                issues=(
+                    MappingProbeIssue(
+                        "business",
+                        "business_error",
+                        "EIA response did not contain a successful data payload",
+                    ),
+                ),
+            )
+
+        details: dict[str, Any] = {
+            "total": response_payload.get("total"),
+            "frequency": response_payload.get("frequency"),
+            "date_format": response_payload.get("dateFormat"),
+            "value_field": "value",
+        }
+        rows = response_payload["data"]
+        row = rows[0] if len(rows) == 1 and isinstance(rows[0], dict) else {}
+        details.update(
+            {
+                "first_period": row.get("period"),
+                "row_series": row.get("series"),
+                "units": row.get("units"),
+            }
+        )
+        identity_issues: list[MappingProbeIssue] = []
+        try:
+            total = int(str(response_payload.get("total")))
+        except (TypeError, ValueError):
+            total = 0
+        try:
+            minimum_total = int(str(source.source_locator.get("min_observations_backfill") or 1))
+        except (TypeError, ValueError):
+            minimum_total = 1
+        details["total"] = total
+        checks = (
+            (
+                total >= minimum_total,
+                "total_below_minimum",
+                "EIA response total is below the pinned backfill minimum",
+            ),
+            (
+                response_payload.get("frequency") == "daily",
+                "frequency_drift",
+                "EIA response frequency must be daily",
+            ),
+            (
+                response_payload.get("dateFormat") == "YYYY-MM-DD",
+                "date_format_drift",
+                "EIA response dateFormat must be YYYY-MM-DD",
+            ),
+            (len(rows) == 1, "row_count_invalid", "EIA probe must return one row"),
+            (
+                row.get("period") == expected_first_period,
+                "first_period_drift",
+                "EIA first period does not match the pinned boundary",
+            ),
+            (
+                row.get("series") == provider_series_id,
+                "series_identity_drift",
+                "EIA row series does not match provider_series_id",
+            ),
+            (row.get("units") == "$/BBL", "units_drift", "EIA units must be $/BBL"),
+            (
+                "value" in row and parse_decimal(row.get("value")) is not None,
+                "value_invalid",
+                "EIA value field must be present and parseable",
+            ),
+        )
+        for passed, code, message in checks:
+            if not passed:
+                identity_issues.append(MappingProbeIssue("identity", code, message))
+        if not authorized:
+            identity_issues.append(
+                MappingProbeIssue(
+                    "authorization",
+                    "authorization_missing",
+                    "EIA API authorization is unavailable",
+                )
+            )
+        return _build_mapping_probe_result(
+            provider_code=provider.code,
+            source_series_id=source.id,
+            provider_series_id=provider_series_id,
+            request_url=request_url,
+            http_status=response.status_code,
+            content_type=content_type,
+            official_description=str(response_payload.get("description") or "").strip(),
+            response_sha256=digest,
+            probed_at=probed_at,
+            evidence=MappingProbeEvidence(
+                True,
+                True,
+                True,
+                not any(issue.stage == "identity" for issue in identity_issues),
+                authorized,
+                details,
+            ),
+            issues=tuple(identity_issues),
+        )
 
     async def fetch(
         self,
@@ -82,22 +318,32 @@ class EIAAdapter(ProviderAdapter):
 
             for _page in range(self.max_pages):
                 params = {**base_params, "offset": offset}
-                response = await self.client.get(url, params=params)
-                response.raise_for_status()
+                try:
+                    response = await self.client.get(url, params=params)
+                except httpx.TransportError:
+                    raise _sanitized_transport_error(
+                        provider_code=self.code, request_url=url
+                    ) from None
+                _raise_for_status_safely(
+                    response,
+                    provider_code=self.code,
+                    request_url=url,
+                    secrets=(settings.eia_api_key,),
+                )
                 payload = response.json()
                 if not isinstance(payload, dict):
                     raise ProviderDataError("EIA response was not an object")
                 if payload.get("error"):
-                    raise ProviderDataError(f"EIA API error: {payload.get('error')}")
+                    raise ProviderDataError("EIA API reported a business error")
                 response_payload = payload.get("response", {})
                 if not isinstance(response_payload, dict):
                     raise ProviderDataError("EIA response did not contain a response object")
                 rows = response_payload.get("data", []) or []
                 if not isinstance(rows, list):
                     raise ProviderDataError("EIA response.data was not a list")
-                pages.append(payload)
-                request_log.append(params)
-                last_request_url = str(response.request.url)
+                pages.append(_redact_sensitive_data(payload, secrets=(settings.eia_api_key,)))
+                request_log.append(_redact_sensitive_data(params, secrets=(settings.eia_api_key,)))
+                last_request_url = url
                 content_type = response.headers.get("content-type", "application/json")
 
                 signature = tuple(str(row.get("period") or row.get("date") or "") for row in rows)
@@ -114,7 +360,7 @@ class EIAAdapter(ProviderAdapter):
                     period = self._parse_period(period_text)
                     if period is None:
                         raise ProviderDataError(
-                            f"EIA returned an invalid period {period_text!r} for source {source.id}"
+                            f"EIA returned an invalid period for source {source.id}"
                         )
                     if period < cutoff:
                         raise ProviderDataError(
@@ -156,8 +402,8 @@ class EIAAdapter(ProviderAdapter):
 
             if expected_total is not None and offset < expected_total:
                 raise ProviderDataError(
-                    f"EIA pagination incomplete for {route}: received {offset} of "
-                    f"{expected_total} rows"
+                    f"EIA pagination incomplete for {route}: received {offset} "
+                    f"of {expected_total} rows"
                 )
             fetched_at = datetime.now(UTC)
             observations: list[NormalizedObservation] = []

@@ -358,6 +358,10 @@ async def get_observations(
             status=row.observation_status,
             published_at=row.published_at,
             vintage_at=row.vintage_at,
+            source_series_id=getattr(row, "source_series_id", source.id),
+            run_id=getattr(row, "run_id", None),
+            publication_batch_id=getattr(row, "publication_batch_id", None),
+            raw_object_id=getattr(row, "raw_object_id", None),
         )
         for row in rows
     ]
@@ -393,6 +397,10 @@ async def get_observations(
                 status=point.status,
                 published_at=point.published_at,  # type: ignore[arg-type]
                 vintage_at=point.vintage_at,  # type: ignore[arg-type]
+                source_series_id=point.source_series_id,
+                run_id=point.run_id,
+                publication_batch_id=point.publication_batch_id,
+                raw_object_id=point.raw_object_id,
             )
             for point in transformed
         ],
@@ -466,6 +474,10 @@ async def get_revisions(
                 first_vintage_at=first.vintage_at,
                 latest_vintage_at=latest.vintage_at,
                 versions=len(versions),
+                first_run_id=first.run_id,
+                latest_run_id=latest.run_id,
+                first_raw_object_id=first.raw_object_id,
+                latest_raw_object_id=latest.raw_object_id,
             )
         )
     return RevisionResponse(series_id=series_id, items=items, data_as_of=data_as_of)

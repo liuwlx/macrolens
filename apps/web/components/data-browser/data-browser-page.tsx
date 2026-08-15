@@ -10,6 +10,7 @@ import { apiDownload, apiFetch, ApiError, queryString } from "@/lib/api";
 import type { AICapabilitiesResponse, Favorite, SeriesAnalyticsResponse, SeriesBrowserItem, SeriesBrowserResponse, SeriesDetail, TaxonomyBrowserSeries } from "@/lib/types";
 
 import { AnalysisPanel } from "./analysis-panel";
+import { browserDataCapabilityState } from "./browser-availability";
 import { BrowserDrawer } from "./browser-drawers";
 import { BrowserFilterBar } from "./browser-filter-bar";
 import { BrowserTable } from "./browser-table";
@@ -77,9 +78,14 @@ export function DataBrowserPage() {
   }, [browserQuery.data, browserQuery.isPlaceholderData, state.series, state.data_as_of, updateState]);
 
   const selectedItem = browserQuery.data?.items.find((item) => item.series.id === state.series);
-  const detailQuery = useQuery({ queryKey: ["data-browser-detail", permissionKey, state.series], queryFn: ({ signal }) => apiFetch<SeriesDetail>(`/series/${state.series}`, { signal }), enabled: Boolean(state.series), staleTime: 5 * 60_000, retry: shouldRetry });
-  const analyticsQuery = useQuery({ queryKey: ["data-browser-analytics", permissionKey, state.series, state.transform, state.start, state.end, state.data_as_of], queryFn: ({ signal }) => apiFetch<SeriesAnalyticsResponse>(`/series/${state.series}/analytics${queryString({ transform: state.transform, start: state.start, end: state.end, data_as_of: state.data_as_of })}`, { signal }), enabled: Boolean(state.series), staleTime: 5 * 60_000, retry: shouldRetry });
-  const aiQuery = useQuery({ queryKey: ["data-browser-ai-capability", permissionKey, state.series, state.data_as_of], queryFn: ({ signal }) => apiFetch<AICapabilitiesResponse>(`/ai/capabilities${queryString({ series_id: state.series, data_as_of: state.data_as_of })}`, { signal }), enabled: Boolean(state.series), staleTime: 5 * 60_000, retry: shouldRetry });
+  const capabilityState = browserDataCapabilityState(
+    selectedItem,
+    browserQuery.data !== undefined && !browserQuery.isPlaceholderData,
+  );
+  const dataReady = capabilityState === "data_ready";
+  const detailQuery = useQuery({ queryKey: ["data-browser-detail", permissionKey, state.series], queryFn: ({ signal }) => apiFetch<SeriesDetail>(`/series/${state.series}`, { signal }), enabled: Boolean(state.series) && dataReady, staleTime: 5 * 60_000, retry: shouldRetry });
+  const analyticsQuery = useQuery({ queryKey: ["data-browser-analytics", permissionKey, state.series, state.transform, state.start, state.end, state.data_as_of], queryFn: ({ signal }) => apiFetch<SeriesAnalyticsResponse>(`/series/${state.series}/analytics${queryString({ transform: state.transform, start: state.start, end: state.end, data_as_of: state.data_as_of })}`, { signal }), enabled: Boolean(state.series) && dataReady, staleTime: 5 * 60_000, retry: shouldRetry });
+  const aiQuery = useQuery({ queryKey: ["data-browser-ai-capability", permissionKey, state.series, state.data_as_of], queryFn: ({ signal }) => apiFetch<AICapabilitiesResponse>(`/ai/capabilities${queryString({ series_id: state.series, data_as_of: state.data_as_of })}`, { signal }), enabled: Boolean(state.series) && dataReady, staleTime: 5 * 60_000, retry: shouldRetry });
   const favoritesQuery = useQuery({ queryKey: ["favorites", permissionKey], queryFn: ({ signal }) => apiFetch<Favorite[]>("/me/favorites", { signal }), staleTime: 5 * 60_000, retry: shouldRetry });
   const selectedFavorite = favoritesQuery.data?.find((favorite) => favorite.object_type === "series" && favorite.object_id === state.series);
   const favoriteMutation = useMutation({ mutationFn: () => selectedFavorite ? apiFetch(`/me/favorites/${selectedFavorite.id}`, { method: "DELETE" }) : apiFetch("/me/favorites", { method: "POST", body: JSON.stringify({ object_type: "series", object_id: state.series, group_name: "重点指标" }) }), onSuccess: () => queryClient.invalidateQueries({ queryKey: ["favorites", permissionKey] }) });
@@ -115,7 +121,7 @@ export function DataBrowserPage() {
       <MetricTree state={state} onNode={(node) => updateState({ node })} onSeries={selectSeries} />
       <BrowserTable state={state} data={browserQuery.data} isLoading={browserQuery.isLoading} isFetching={browserQuery.isFetching} error={browserQuery.error as Error | null} onRetry={() => void browserQuery.refetch()} onRefresh={refreshAll} onExport={exportBrowser} onSelect={selectItem} onSort={sort} onPage={(page) => updateState({ page })} />
       <SeriesDetailPanel {...detailProps} />
-      <AnalysisPanel state={state} item={selectedItem} analytics={analyticsQuery.data} analyticsLoading={analyticsQuery.isLoading} analyticsError={analyticsQuery.error as Error | null} onChange={updateState} onRetryAnalytics={() => void analyticsQuery.refetch()} />
+      <AnalysisPanel state={state} item={selectedItem} capabilityState={capabilityState} analytics={analyticsQuery.data} analyticsLoading={analyticsQuery.isLoading} analyticsError={analyticsQuery.error as Error | null} onChange={updateState} onRetryAnalytics={() => void analyticsQuery.refetch()} />
     </div>
     <BrowserDrawer open={drawer} title={drawer === "tree" ? "指标树" : drawer === "filters" ? "筛选条件" : "指标详情"} onClose={closeDrawer}>{drawer === "tree" ? <MetricTree state={state} onNode={(node) => { updateState({ node }); closeDrawer(); }} onSeries={(series, node) => { selectSeries(series, node); closeDrawer(); }} /> : drawer === "filters" ? <BrowserFilterBar {...filterProps} /> : <SeriesDetailPanel {...detailProps} />}</BrowserDrawer>
     {availableSnapshot && <div className="data-browser-new-snapshot" role="status"><span>检测到新数据快照，不会自动替换当前研究上下文。</span><button className="btn btn-primary" type="button" onClick={() => { updateState({ data_as_of: availableSnapshot }); setAvailableSnapshot(""); }}>切换到新数据</button><button className="btn btn-ghost" type="button" onClick={() => setAvailableSnapshot("")}>稍后</button></div>}

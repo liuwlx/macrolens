@@ -56,4 +56,22 @@ describe("BrowserTable", () => {
     expect(screen.getByText("尚未采集")).toBeVisible();
     expect(screen.queryByText("明细表加载失败")).not.toBeInTheDocument();
   });
+
+  it.each([
+    ["pending_mapping", "待映射"],
+    ["pending_credentials", "待凭据"],
+    ["pending_license", "待许可"],
+  ] as const)("renders %s as an explicit catalog state", (availability, label) => {
+    const pending: SeriesBrowserResponse = {
+      ...response,
+      items: [{
+        ...response.items[0],
+        availability,
+        current: null,
+        previous: null,
+      }],
+    };
+    render(<BrowserTable state={defaultBrowserState} data={pending} isLoading={false} isFetching={false} onRetry={vi.fn()} onRefresh={vi.fn()} onExport={vi.fn()} onSelect={vi.fn()} onSort={vi.fn()} onPage={vi.fn()} />);
+    expect(screen.getByText(label)).toBeVisible();
+  });
 });

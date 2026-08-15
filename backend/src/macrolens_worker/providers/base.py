@@ -4,10 +4,11 @@ import calendar
 import re
 from abc import ABC, abstractmethod
 from collections.abc import Iterable
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
-from typing import Any
+from typing import Any, Literal
+from urllib.parse import urlsplit, urlunsplit
 
 import httpx
 
@@ -42,6 +43,286 @@ class ProviderFetchResult:
     raw_bytes: bytes
     observations: list[NormalizedObservation]
     source_last_modified: datetime | None = None
+    captured_at: datetime | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class MappingProbeEvidence:
+    transport_success: bool
+    http_success: bool
+    business_success: bool
+    identity_match: bool
+    authorization_available: bool
+    details: dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass(frozen=True, slots=True)
+class MappingProbeIssue:
+    stage: Literal["configuration", "transport", "http", "business", "identity", "authorization"]
+    code: str
+    message: str
+    blocking: bool = True
+
+
+@dataclass(frozen=True, slots=True)
+class MappingProbeResult:
+    """Read-only evidence for deciding whether a source mapping may be approved."""
+
+    provider_code: str
+    source_series_id: int
+    provider_series_id: str | None
+    request_url: str
+    http_reachable: bool
+    http_status: int | None
+    content_type: str
+    business_success: bool
+    identity_match: bool
+    official_description: str
+    response_sha256: str
+    probed_at: datetime
+    authorization_available: bool
+    production_ready: bool
+    classification: Literal["PASS", "AUTH_REQUIRED", "BLOCKED"]
+    evidence: MappingProbeEvidence | None = None
+    issues: tuple[MappingProbeIssue, ...] = ()
+
+    def __post_init__(self) -> None:
+        if urlsplit(self.request_url).query:
+            raise ValueError("MappingProbeResult.request_url must not contain a query")
+        evidence = self.evidence
+        if evidence is None:
+            evidence = MappingProbeEvidence(
+                transport_success=self.http_reachable,
+                http_success=(
+                    self.http_reachable
+                    and self.http_status is not None
+                    and 200 <= self.http_status < 300
+                ),
+                business_success=self.business_success,
+                identity_match=self.identity_match,
+                authorization_available=self.authorization_available,
+            )
+            object.__setattr__(self, "evidence", evidence)
+        expected_old_fields = (
+            evidence.transport_success,
+            evidence.business_success,
+            evidence.identity_match,
+            evidence.authorization_available,
+        )
+        if expected_old_fields != (
+            self.http_reachable,
+            self.business_success,
+            self.identity_match,
+            self.authorization_available,
+        ):
+            raise ValueError("MappingProbeResult evidence contradicts legacy fields")
+        expected_http_success = (
+            self.http_reachable and self.http_status is not None and 200 <= self.http_status < 300
+        )
+        if evidence.http_success != expected_http_success:
+            raise ValueError("MappingProbeResult HTTP evidence contradicts status")
+        if (
+            (
+                not evidence.transport_success
+                and any((evidence.http_success, evidence.business_success, evidence.identity_match))
+            )
+            or (
+                not evidence.http_success
+                and any((evidence.business_success, evidence.identity_match))
+            )
+            or (not evidence.business_success and evidence.identity_match)
+        ):
+            raise ValueError("MappingProbeResult evidence violates probe-stage causality")
+        if not self.issues:
+            inferred_issues: list[MappingProbeIssue] = []
+            if not evidence.transport_success:
+                inferred_issues.append(
+                    MappingProbeIssue(
+                        "transport",
+                        "transport_error",
+                        "Provider request was unreachable",
+                    )
+                )
+            elif not evidence.http_success:
+                inferred_issues.append(
+                    MappingProbeIssue("http", "http_status", "Provider returned a non-2xx status")
+                )
+            elif not evidence.business_success:
+                inferred_issues.append(
+                    MappingProbeIssue(
+                        "business",
+                        "business_error",
+                        "Provider response did not report business success",
+                    )
+                )
+            elif not evidence.identity_match:
+                inferred_issues.append(
+                    MappingProbeIssue(
+                        "identity",
+                        "identity_mismatch",
+                        "Provider response did not match the pinned identity",
+                    )
+                )
+            if not evidence.authorization_available:
+                inferred_issues.append(
+                    MappingProbeIssue(
+                        "authorization",
+                        "authorization_missing",
+                        "Provider API authorization is unavailable",
+                    )
+                )
+            if inferred_issues:
+                object.__setattr__(self, "issues", tuple(inferred_issues))
+        classification = _classify_mapping_probe(evidence, self.issues)
+        if classification != self.classification:
+            raise ValueError("MappingProbeResult classification contradicts evidence and issues")
+        if self.production_ready != (classification == "PASS"):
+            raise ValueError("MappingProbeResult production_ready contradicts classification")
+
+    def to_dict(self) -> dict[str, Any]:
+        serialized = asdict(self)
+        serialized["probed_at"] = self.probed_at.isoformat()
+        serialized["issues"] = [asdict(issue) for issue in self.issues]
+        return serialized
+
+
+def _classify_mapping_probe(
+    evidence: MappingProbeEvidence,
+    issues: tuple[MappingProbeIssue, ...],
+) -> Literal["PASS", "AUTH_REQUIRED", "BLOCKED"]:
+    blocking_non_auth = any(issue.blocking and issue.stage != "authorization" for issue in issues)
+    verified_without_auth = (
+        evidence.transport_success
+        and evidence.http_success
+        and evidence.business_success
+        and evidence.identity_match
+        and not blocking_non_auth
+    )
+    if (
+        verified_without_auth
+        and evidence.authorization_available
+        and not any(issue.blocking for issue in issues)
+    ):
+        return "PASS"
+    if verified_without_auth and not evidence.authorization_available:
+        return "AUTH_REQUIRED"
+    return "BLOCKED"
+
+
+def _build_mapping_probe_result(
+    *,
+    provider_code: str,
+    source_series_id: int,
+    provider_series_id: str | None,
+    request_url: str,
+    http_status: int | None,
+    content_type: str,
+    official_description: str,
+    response_sha256: str,
+    probed_at: datetime,
+    evidence: MappingProbeEvidence,
+    issues: tuple[MappingProbeIssue, ...] = (),
+) -> MappingProbeResult:
+    classification = _classify_mapping_probe(evidence, issues)
+    return MappingProbeResult(
+        provider_code=provider_code,
+        source_series_id=source_series_id,
+        provider_series_id=provider_series_id,
+        request_url=request_url,
+        http_reachable=evidence.transport_success,
+        http_status=http_status,
+        content_type=content_type,
+        business_success=evidence.business_success,
+        identity_match=evidence.identity_match,
+        official_description=official_description,
+        response_sha256=response_sha256,
+        probed_at=probed_at,
+        authorization_available=evidence.authorization_available,
+        production_ready=classification == "PASS",
+        classification=classification,
+        evidence=evidence,
+        issues=issues,
+    )
+
+
+_SENSITIVE_PARAMETER_NAMES = {
+    "apikey",
+    "key",
+    "registrationkey",
+    "userid",
+}
+
+
+def _is_sensitive_name(value: object) -> bool:
+    normalized = re.sub(r"[^a-z0-9]", "", str(value).lower())
+    return (
+        normalized in _SENSITIVE_PARAMETER_NAMES
+        or normalized.endswith("apikey")
+        or normalized.endswith("authorization")
+    )
+
+
+def _redact_sensitive_data(value: Any, *, secrets: tuple[str, ...] = ()) -> Any:
+    """Remove credential fields and values from persistable provider evidence."""
+
+    if isinstance(value, dict):
+        return {
+            key: _redact_sensitive_data(item, secrets=secrets)
+            for key, item in value.items()
+            if not _is_sensitive_name(key)
+        }
+    if isinstance(value, list):
+        return [_redact_sensitive_data(item, secrets=secrets) for item in value]
+    if isinstance(value, tuple):
+        return tuple(_redact_sensitive_data(item, secrets=secrets) for item in value)
+    if isinstance(value, str):
+        sanitized = value
+        for secret in secrets:
+            if secret:
+                sanitized = sanitized.replace(secret, "[REDACTED]")
+        return sanitized
+    if isinstance(value, bytes):
+        sanitized_bytes = value
+        for secret in secrets:
+            if secret:
+                sanitized_bytes = sanitized_bytes.replace(secret.encode(), b"[REDACTED]")
+        return sanitized_bytes
+    return value
+
+
+def _strip_url_query(url: str) -> str:
+    parts = urlsplit(url)
+    return urlunsplit((parts.scheme, parts.netloc, parts.path, "", ""))
+
+
+def _raise_for_status_safely(
+    response: httpx.Response,
+    *,
+    provider_code: str,
+    request_url: str,
+    secrets: tuple[str, ...] = (),
+) -> None:
+    if 200 <= response.status_code < 300:
+        return
+    safe_request = httpx.Request(response.request.method, _strip_url_query(request_url))
+    safe_response = httpx.Response(
+        response.status_code,
+        headers=_redact_sensitive_data(dict(response.headers), secrets=secrets),
+        content=_redact_sensitive_data(response.content, secrets=secrets),
+        request=safe_request,
+    )
+    raise httpx.HTTPStatusError(
+        f"{provider_code} request failed with HTTP {response.status_code}",
+        request=safe_request,
+        response=safe_response,
+    )
+
+
+def _sanitized_transport_error(*, provider_code: str, request_url: str) -> httpx.TransportError:
+    return httpx.TransportError(
+        f"{provider_code} transport request failed",
+        request=httpx.Request("GET", _strip_url_query(request_url)),
+    )
 
 
 class ProviderAdapter(ABC):
@@ -49,6 +330,16 @@ class ProviderAdapter(ABC):
 
     def __init__(self, client: httpx.AsyncClient) -> None:
         self.client = client
+
+    async def probe(
+        self,
+        provider: Provider,
+        source: SourceSeries,
+        dataset: Dataset,
+    ) -> MappingProbeResult:
+        """Collect read-only mapping evidence when the provider supports probing."""
+
+        raise NotImplementedError(f"MappingProbe is not implemented for {self.code}")
 
     @abstractmethod
     async def fetch(

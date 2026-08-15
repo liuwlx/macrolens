@@ -176,6 +176,7 @@ async def audit_live_data(
 
     finished_at = datetime.now(UTC)
     executed = [report for report in provider_reports if report["status"] != "skipped"]
+    verdict_reports = provider_reports if requested else executed
     return {
         "mode": mode,
         "started_at": started_at.isoformat(),
@@ -185,7 +186,8 @@ async def audit_live_data(
         "passed_provider_count": sum(report["status"] == "passed" for report in executed),
         "failed_provider_count": sum(report["status"] == "failed" for report in executed),
         "skipped_provider_count": sum(report["status"] == "skipped" for report in provider_reports),
-        "all_executed_passed": bool(executed)
-        and all(report["status"] == "passed" for report in executed),
+        "all_executed_passed": bool(verdict_reports) and all(
+            report["status"] == "passed" for report in verdict_reports
+        ),
         "providers": provider_reports,
     }

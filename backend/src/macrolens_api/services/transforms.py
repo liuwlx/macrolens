@@ -7,6 +7,7 @@ from datetime import date
 from decimal import Decimal
 from math import sqrt
 from statistics import fmean, pstdev
+from uuid import UUID
 
 
 @dataclass(frozen=True, slots=True)
@@ -18,6 +19,10 @@ class Point:
     published_at: object | None
     vintage_at: object
     value_text: str | None = None
+    source_series_id: int | None = None
+    run_id: UUID | None = None
+    publication_batch_id: UUID | None = None
+    raw_object_id: UUID | None = None
 
 
 PERIODS_PER_YEAR = {
@@ -135,6 +140,10 @@ def transform_points(points: list[Point], transform: str, frequency: str) -> lis
                 status=point.status,
                 published_at=point.published_at,
                 vintage_at=point.vintage_at,
+                source_series_id=point.source_series_id,
+                run_id=point.run_id,
+                publication_batch_id=point.publication_batch_id,
+                raw_object_id=point.raw_object_id,
             )
         )
     return result

@@ -62,7 +62,7 @@ async def _raw_object(
     dataset: Dataset | None,
     result: ProviderFetchResult,
 ) -> RawObject:
-    now = datetime.now(UTC)
+    now = result.captured_at or datetime.now(UTC)
     suffix = (
         "json"
         if "json" in result.content_type
@@ -174,6 +174,19 @@ def _same_vintage_payload(existing: ObservationVintage, observation: NormalizedO
     )
 
 
+def _same_raw_payload(
+    existing: ObservationVintage, observation: NormalizedObservation
+) -> bool:
+    return (
+        existing.period_end == observation.period_end
+        and existing.value == observation.value
+        and existing.value_text == observation.value_text
+        and existing.observation_status == observation.status
+        and existing.published_at == observation.published_at
+        and existing.quality_flags == observation.quality_flags
+    )
+
+
 async def _merge_observation(
     session: AsyncSession,
     observation: NormalizedObservation,
@@ -182,6 +195,20 @@ async def _merge_observation(
     raw_object_id: UUID,
     publication_batch_id: UUID,
 ) -> str:
+    replayed_vintage = await session.scalar(
+        select(ObservationVintage).where(
+            ObservationVintage.source_series_id == observation.source_series_id,
+            ObservationVintage.period_start == observation.period_start,
+            ObservationVintage.raw_object_id == raw_object_id,
+        )
+    )
+    if replayed_vintage is not None:
+        if not _same_raw_payload(replayed_vintage, observation):
+            raise ValueError(
+                "The same raw object produced a different immutable observation payload"
+            )
+        return "unchanged"
+
     exact_vintage = await session.scalar(
         select(ObservationVintage)
         .where(
@@ -289,6 +316,7 @@ async def sync_provider(
     provider_code: str,
     mode: str = "incremental",
     job_id: UUID,
+    source_series_ids: list[int] | None = None,
 ) -> dict[str, int | str]:
     provider = await session.scalar(
         select(Provider).where(Provider.code == provider_code, Provider.active.is_(True))
@@ -298,26 +326,38 @@ async def sync_provider(
     adapter_type = ADAPTERS.get(provider_code)
     if adapter_type is None:
         raise RuntimeError(f"No production adapter registered for {provider_code}")
-    mapping_rows = (
-        await session.execute(
-            select(SourceSeries, Dataset)
-            .join(Dataset, Dataset.id == SourceSeries.dataset_id)
-            .where(
-                Dataset.provider_id == provider.id,
-                Dataset.active.is_(True),
-                SourceSeries.mapping_status == "verified",
-                SourceSeries.is_primary.is_(True),
-            )
-            .order_by(Dataset.id, SourceSeries.id)
+    mapping_statement = (
+        select(SourceSeries, Dataset)
+        .join(Dataset, Dataset.id == SourceSeries.dataset_id)
+        .where(
+            Dataset.provider_id == provider.id,
+            Dataset.active.is_(True),
+            SourceSeries.mapping_status == "verified",
+            SourceSeries.is_primary.is_(True),
         )
-    ).tuples().all()
+        .order_by(Dataset.id, SourceSeries.id)
+    )
+    requested_ids = set(source_series_ids or [])
+    if source_series_ids is not None:
+        if not requested_ids or len(requested_ids) != len(source_series_ids):
+            raise RuntimeError("source_series_ids must contain unique positive IDs")
+        mapping_statement = mapping_statement.where(SourceSeries.id.in_(requested_ids))
+    mapping_rows = (await session.execute(mapping_statement)).tuples().all()
     if not mapping_rows:
         raise RuntimeError(f"Provider {provider_code} has no verified source mappings")
+    mapping_pairs = [(row[0], row[1]) for row in mapping_rows]
+    resolved_ids = {source.id for source, _dataset in mapping_pairs}
+    if source_series_ids is not None and resolved_ids != requested_ids:
+        raise RuntimeError(
+            "Scoped sync contains an unknown, inactive, non-primary, or unverified mapping"
+        )
+
+    scope_key = ",".join(str(item) for item in sorted(resolved_ids))
 
     run = IngestionRun(
         provider_id=provider.id,
         run_type="backfill" if mode in {"backfill", "vintage_backfill"} else "incremental",
-        business_key=f"{provider_code}:{mode}:{job_id}",
+        business_key=f"{provider_code}:{mode}:{scope_key}:{job_id}",
         scheduled_at=datetime.now(UTC),
         started_at=datetime.now(UTC),
         status="running",
@@ -332,7 +372,7 @@ async def sync_provider(
         headers={"User-Agent": "MacroLens/1.0 research-data-platform"},
     ) as client:
         adapter = adapter_type(client)
-        results = await adapter.fetch(provider, list(mapping_rows), mode=mode)
+        results = await adapter.fetch(provider, mapping_pairs, mode=mode)
 
     if not results:
         await _quarantine(
@@ -346,7 +386,11 @@ async def sync_provider(
     staged_by_key: dict[tuple[int, object, object], tuple[NormalizedObservation, UUID]] = {}
     for result in results:
         raw = await _raw_object(
-            session, storage, provider=provider, dataset=result.dataset, result=result
+            session,
+            storage,
+            provider=provider,
+            dataset=result.dataset,
+            result=result,
         )
         if run.raw_object_id is None:
             run.raw_object_id = raw.id
@@ -374,7 +418,7 @@ async def sync_provider(
     staged = list(staged_by_key.values())
 
     issues, completeness_metrics = validate_ingestion_completeness(
-        list(mapping_rows),
+        mapping_pairs,
         [observation for observation, _raw_id in staged],
         mode=mode,
     )
@@ -517,4 +561,9 @@ async def sync_provider(
     await session.commit()
     if run.status != "succeeded":
         raise RuntimeError(run.error_message or "Publication was quarantined")
-    return {**counts, "status": run.status, "batch_id": str(batch.id)}
+    return {
+        **counts,
+        "status": run.status,
+        "batch_id": str(batch.id),
+        "source_series_count": len(resolved_ids),
+    }

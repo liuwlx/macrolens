@@ -5,6 +5,7 @@ import { KeyboardEvent } from "react";
 
 import type { SeriesBrowserItem, SeriesBrowserResponse } from "@/lib/types";
 
+import { browserAvailabilityLabels } from "./browser-availability";
 import { formatMetric, formatNumber, metricTitle, metricTone, periodLabel } from "./browser-format";
 import type { BrowserSort, BrowserState } from "./browser-query";
 
@@ -71,11 +72,9 @@ export function BrowserTable({ state, data, isLoading, isFetching, error, onRetr
             {!isLoading && !error && rows.map((item) => {
               const decimals = item.series.decimal_places ?? 2;
               const selected = state.series === item.series.id;
-              const availability = item.availability === "not_ingested"
-                ? <span className="badge badge-yellow">尚未采集</span>
-                : item.availability === "not_available_as_of"
-                  ? <span className="badge badge-yellow">该快照不可用</span>
-                  : null;
+              const availability = item.availability === "available"
+                ? null
+                : <span className="badge badge-yellow">{browserAvailabilityLabels[item.availability]}</span>;
               return <tr key={item.series.id} tabIndex={0} aria-selected={selected} className={selected ? "is-selected" : ""} onClick={() => onSelect(item)} onKeyDown={(event) => rowKeyDown(event, item)}>
                 <td className="data-browser-name-cell"><span className="data-browser-row-caret">›</span><span><strong>{item.series.name_zh}</strong><small>{item.series.canonical_code}</small></span></td>
                 <td className="font-semibold" title={item.current?.period_start ?? undefined}>{item.display_denied ? <span className="badge badge-yellow">展示受限</span> : availability ?? formatNumber(item.current?.value, decimals)}</td>

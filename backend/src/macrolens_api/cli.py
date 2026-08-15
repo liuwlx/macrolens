@@ -3,16 +3,17 @@ from __future__ import annotations
 import asyncio
 import json
 from datetime import UTC, datetime
-from pathlib import Path
 from typing import Any
 
 import typer
 from sqlalchemy import select
 
+from .catalog_registry import get_catalog_registry
 from .config import get_settings
 from .db import SessionLocal
 from .models import (
     Dataset,
+    Job,
     LicensePolicy,
     Provider,
     ReleaseDefinition,
@@ -26,6 +27,7 @@ from .models import (
 )
 from .security import hash_password
 from .services.jobs import enqueue_job
+from .services.source_mapping_identity import source_mapping_fingerprint
 
 app = typer.Typer(no_args_is_help=True)
 settings = get_settings()
@@ -173,14 +175,6 @@ UNIT_MAP = {
 }
 
 
-def _repo_root() -> Path:
-    candidates = [Path("/app"), Path(__file__).resolve().parents[4]]
-    for candidate in candidates:
-        if (candidate / "database/seed/source_registry.json").exists():
-            return candidate
-    raise RuntimeError("Cannot locate repository root")
-
-
 def _theme(code: str) -> str:
     if any(token in code for token in ["PCE", "CPI", "PPI", "BREAKEVEN", "MICHIGAN"]):
         return "通胀"
@@ -219,8 +213,7 @@ def _theme(code: str) -> str:
 
 
 async def seed_all() -> None:
-    root = _repo_root()
-    registry = json.loads((root / "database/seed/source_registry.json").read_text(encoding="utf-8"))
+    registry = get_catalog_registry()
     async with SessionLocal() as session:
         provider_by_code: dict[str, Provider] = {}
         for code, item in PROVIDERS.items():
@@ -267,7 +260,8 @@ async def seed_all() -> None:
 
         dataset_cache: dict[tuple[str, str], Dataset] = {}
         series_by_code: dict[str, Series] = {}
-        for item in registry["indicators"]:
+        for indicator in registry.indicators:
+            item = indicator.payload
             provider = provider_by_code[item["recommended_source"]]
             dataset_code = str(item["dataset"] or "default")
             key = (provider.code, dataset_code)
@@ -352,11 +346,6 @@ async def seed_all() -> None:
                     SourceSeries.dataset_id == dataset.id,
                 )
             )
-            status = {
-                "READY": "verified",
-                "LICENSE_REQUIRED": "license_required",
-                "LEGAL_REVIEW_REQUIRED": "license_required",
-            }.get(item["mapping_status"], "needs_review")
             if source_series is None:
                 source_series = SourceSeries(
                     series_id=series.id,
@@ -366,68 +355,111 @@ async def seed_all() -> None:
             source_series.provider_series_id = item.get("provider_series_id")
             source_series.source_locator = item.get("locator") or {}
             source_series.mapping_type = (item.get("mapping_type") or "direct").lower()
-            source_series.mapping_status = status
-            source_series.is_primary = status == "verified"
             source_series.source_frequency = FREQUENCY_MAP[item["frequency"]]
             source_series.source_unit = item["unit"]
             source_series.source_title = item["name_en"] or item["name_zh"]
             source_series.notes = "; ".join(item.get("notes") or [])
-            source_series.verified_by = "seed-registry" if status == "verified" else None
-            source_series.verified_at = datetime.now(UTC) if status == "verified" else None
-
-        root_node = await session.scalar(
-            select(TaxonomyNode).where(
-                TaxonomyNode.tree_code == "macro-default", TaxonomyNode.code == "root"
-            )
-        )
-        if root_node is None:
-            root_node = TaxonomyNode(
-                tree_code="macro-default",
-                node_type="category",
-                code="root",
-                name_zh="美国宏观",
-                sort_order=0,
-            )
-            session.add(root_node)
             await session.flush()
-        themes = ["通胀", "就业", "增长", "利率与政策", "信贷与银行", "金融市场"]
-        for order, theme in enumerate(themes, start=1):
+            probe_job = (
+                await session.get(Job, source_series.verification_job_id)
+                if source_series.verification_job_id
+                else None
+            )
+            fingerprint = source_mapping_fingerprint(source_series, dataset, provider)
+            approval = probe_job.result.get("approval") if probe_job else None
+            was_probe_approved = bool(
+                probe_job is not None
+                and source_series.mapping_status == "verified"
+                and source_series.is_primary
+                and probe_job.status == "succeeded"
+                and probe_job.result.get("mapping_fingerprint") == fingerprint
+                and source_series.verification_fingerprint == fingerprint
+                and isinstance(approval, dict)
+                and int(approval.get("source_series_id", -1)) == source_series.id
+            )
+            status = {
+                "READY": "verified" if was_probe_approved else "needs_review",
+                "LICENSE_REQUIRED": "license_required",
+                "LEGAL_REVIEW_REQUIRED": "license_required",
+            }.get(item["mapping_status"], "needs_review")
+            source_series.mapping_status = status
+            source_series.is_primary = was_probe_approved and status == "verified"
+            if status != "verified":
+                source_series.verified_by = None
+                source_series.verified_at = None
+                source_series.verification_job_id = None
+                source_series.verification_fingerprint = None
+
+        desired_node_codes = {node.code for node in registry.nodes}
+        legacy_nodes = list(
+            (
+                await session.scalars(
+                    select(TaxonomyNode).where(
+                        TaxonomyNode.tree_code == registry.tree_code,
+                        TaxonomyNode.code.not_in(desired_node_codes),
+                    )
+                )
+            ).all()
+        )
+        for legacy_node in legacy_nodes:
+            legacy_node.visible = False
+
+        nodes_by_code: dict[str, TaxonomyNode] = {}
+        ordered_nodes = sorted(registry.nodes, key=lambda node: len(registry.node_path(node)))
+        for node_spec in ordered_nodes:
             node = await session.scalar(
                 select(TaxonomyNode).where(
-                    TaxonomyNode.tree_code == "macro-default", TaxonomyNode.code == f"theme-{order}"
+                    TaxonomyNode.tree_code == registry.tree_code,
+                    TaxonomyNode.code == node_spec.code,
                 )
             )
             if node is None:
-                node = TaxonomyNode(
-                    tree_code="macro-default",
-                    parent_id=root_node.id,
-                    node_type="topic",
-                    code=f"theme-{order}",
-                    name_zh=theme,
-                    sort_order=order,
-                )
+                node = TaxonomyNode(tree_code=registry.tree_code, code=node_spec.code)
                 session.add(node)
-                await session.flush()
-            for display_order, series in enumerate(
-                sorted(
-                    (value for value in series_by_code.values() if value.theme == theme),
-                    key=lambda value: value.name_zh,
-                )
-            ):
-                exists = await session.scalar(
+            node.parent_id = (
+                nodes_by_code[node_spec.parent_code].id
+                if node_spec.parent_code is not None
+                else None
+            )
+            node.node_type = node_spec.node_type
+            node.name_zh = node_spec.name_zh
+            node.name_en = node_spec.name_en
+            node.sort_order = node_spec.sort_order
+            node.icon_key = node_spec.icon_key
+            node.visible = True
+            node.status = "active"
+            await session.flush()
+            nodes_by_code[node_spec.code] = node
+
+        current_mappings = list(
+            (
+                await session.scalars(
                     select(TaxonomySeries).where(
-                        TaxonomySeries.node_id == node.id, TaxonomySeries.series_id == series.id
+                        TaxonomySeries.node_id.in_([node.id for node in nodes_by_code.values()])
                     )
                 )
-                if exists is None:
-                    session.add(
-                        TaxonomySeries(
-                            node_id=node.id,
-                            series_id=series.id,
-                            display_order=display_order,
-                            is_primary=True,
-                        )
+            ).all()
+        )
+        for mapping in current_mappings:
+            mapping.display_role = "detail"
+            mapping.is_primary = False
+
+        for node_spec in ordered_nodes:
+            node = nodes_by_code[node_spec.code]
+            for display_order, canonical_code in enumerate(node_spec.series_codes):
+                series = series_by_code[canonical_code]
+                taxonomy_mapping = await session.scalar(
+                    select(TaxonomySeries).where(
+                        TaxonomySeries.node_id == node.id,
+                        TaxonomySeries.series_id == series.id,
                     )
+                )
+                if taxonomy_mapping is None:
+                    taxonomy_mapping = TaxonomySeries(node_id=node.id, series_id=series.id)
+                    session.add(taxonomy_mapping)
+                taxonomy_mapping.display_role = "primary"
+                taxonomy_mapping.display_order = display_order
+                taxonomy_mapping.is_primary = True
 
         for code, name in [
             ("PCE", "个人收入与支出"),

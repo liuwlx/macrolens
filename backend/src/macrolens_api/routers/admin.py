@@ -32,10 +32,12 @@ from ..schemas import (
     AdminUserUpdate,
     JobCreate,
     JobPublic,
+    SourceMappingApproval,
     SourceMappingUpdate,
 )
 from ..security import hash_password
 from ..services.jobs import enqueue_job
+from ..services.source_mappings import approve_mapping_from_probe
 
 router = APIRouter(prefix="/admin", tags=["Admin"])
 
@@ -166,6 +168,13 @@ async def retry_job(job_id: UUID, session: SessionDep, _admin: AdminUser) -> Job
     job = await session.get(Job, job_id)
     if job is None:
         raise AppError(404, "任务不存在", "没有找到该任务。", "job_not_found")
+    if job.job_type == "mapping_probe" and isinstance(job.result.get("approval"), dict):
+        raise AppError(
+            409,
+            "探测证据已被使用",
+            "已批准映射的 MappingProbe 是不可变审计证据，不能重试覆盖。",
+            "mapping_probe_already_consumed",
+        )
     job.status = "queued"
     job.locked_by = None
     job.locked_at = None
@@ -274,20 +283,93 @@ async def update_source_mapping(
     source_mapping_id: int,
     payload: SourceMappingUpdate,
     session: SessionDep,
-    admin: AdminUser,
+    _admin: AdminUser,
 ) -> dict[str, Any]:
     mapping = await session.get(SourceSeries, source_mapping_id)
     if mapping is None:
         raise AppError(404, "数据源映射不存在", "没有找到该映射。", "source_mapping_not_found")
     values = payload.model_dump(exclude_unset=True)
+    if values.get("is_primary") is True or values.get("mapping_status") == "verified":
+        raise AppError(
+            409,
+            "数据源映射需要探测证据",
+            "请先运行 MappingProbe，再通过原子批准接口晋级主数据源。",
+            "mapping_probe_required",
+        )
+    if values.get("mapping_status") in {"needs_review", "license_required", "disabled"}:
+        values["is_primary"] = False
+    identity_changed = any(
+        key in values and values[key] != getattr(mapping, key)
+        for key in ("provider_series_id", "source_locator")
+    )
+    approval_revoked = identity_changed or values.get("mapping_status") in {
+        "needs_review",
+        "license_required",
+        "disabled",
+    }
+    if approval_revoked:
+        if identity_changed and "mapping_status" not in values:
+            values["mapping_status"] = "needs_review"
+        values["is_primary"] = False
+        mapping.verified_by = None
+        mapping.verified_at = None
+        mapping.verification_job_id = None
+        mapping.verification_fingerprint = None
     for key, value in values.items():
         setattr(mapping, key, value)
-    if payload.mapping_status == "verified":
-        from datetime import UTC, datetime
-
-        mapping.verified_by = admin.email
-        mapping.verified_at = datetime.now(UTC)
     await session.commit()
+    return {
+        "id": mapping.id,
+        "mapping_status": mapping.mapping_status,
+        "is_primary": mapping.is_primary,
+    }
+
+
+@router.post(
+    "/source-mappings/{source_mapping_id}/probe",
+    response_model=JobPublic,
+    status_code=202,
+)
+async def create_mapping_probe(
+    source_mapping_id: int,
+    session: SessionDep,
+    _admin: AdminUser,
+) -> JobPublic:
+    mapping = await session.get(SourceSeries, source_mapping_id)
+    if mapping is None:
+        raise AppError(404, "数据源映射不存在", "没有找到该映射。", "source_mapping_not_found")
+    job = await enqueue_job(
+        session,
+        job_type="mapping_probe",
+        payload={"source_series_id": mapping.id},
+        idempotency_key=f"mapping-probe:{mapping.id}:{mapping.updated_at.isoformat()}",
+        priority=15,
+        max_attempts=2,
+    )
+    return JobPublic.model_validate(job)
+
+
+@router.post("/source-mappings/{source_mapping_id}/approve")
+async def approve_source_mapping(
+    source_mapping_id: int,
+    payload: SourceMappingApproval,
+    session: SessionDep,
+    admin: AdminUser,
+) -> dict[str, Any]:
+    try:
+        mapping = await approve_mapping_from_probe(
+            session,
+            source_series_id=source_mapping_id,
+            probe_job_id=payload.probe_job_id,
+            verified_by=admin.email,
+        )
+    except RuntimeError as exc:
+        raise AppError(
+            409,
+            "MappingProbe 证据不可用",
+            str(exc),
+            "mapping_probe_not_approved",
+        ) from exc
     return {
         "id": mapping.id,
         "mapping_status": mapping.mapping_status,

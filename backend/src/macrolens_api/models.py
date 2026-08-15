@@ -20,6 +20,7 @@ from sqlalchemy import (
     Time,
     UniqueConstraint,
     func,
+    text,
 )
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
@@ -207,6 +208,12 @@ class SourceSeries(Base, TimestampMixin):
     __tablename__ = "source_series"
     __table_args__ = (
         UniqueConstraint("dataset_id", "provider_series_id", "source_locator"),
+        Index(
+            "one_primary_source_per_series",
+            "series_id",
+            unique=True,
+            postgresql_where=text("is_primary"),
+        ),
         {"schema": "source"},
     )
 
@@ -225,6 +232,10 @@ class SourceSeries(Base, TimestampMixin):
     notes: Mapped[str | None] = mapped_column(Text)
     verified_by: Mapped[str | None] = mapped_column(String(200))
     verified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    verification_job_id: Mapped[UUID | None] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("app.job.id"), unique=True
+    )
+    verification_fingerprint: Mapped[str | None] = mapped_column(String(64))
 
     series: Mapped[Series] = relationship()
     dataset: Mapped[Dataset] = relationship()

@@ -57,6 +57,18 @@ export type ObservationPoint = {
   status: string;
   published_at?: string | null;
   vintage_at: string;
+  source_series_id?: number | null;
+  run_id?: string | null;
+  publication_batch_id?: string | null;
+  raw_object_id?: string | null;
+};
+
+export type SeriesLineage = {
+  provider: string;
+  dataset: string;
+  provider_series_id?: string | null;
+  source_series_id: number;
+  source_locator: Record<string, unknown>;
 };
 
 export type ObservationResponse = {
@@ -69,13 +81,7 @@ export type ObservationResponse = {
     transform: string;
     frequency: string;
     unit: string;
-    lineage?: {
-      provider: string;
-      dataset: string;
-      provider_series_id?: string | null;
-      source_series_id: number;
-      source_locator: Record<string, unknown>;
-    } | null;
+    lineage?: SeriesLineage | null;
     license?: LicenseInfo | null;
   };
 };
@@ -388,7 +394,13 @@ export type TaxonomyChildrenResponse = {
 };
 
 export type BrowserMetricStatus = "available" | "unavailable" | "restricted";
-export type BrowserSeriesAvailability = "available" | "not_ingested" | "not_available_as_of";
+export type BrowserSeriesAvailability =
+  | "available"
+  | "pending_mapping"
+  | "pending_credentials"
+  | "pending_license"
+  | "not_ingested"
+  | "not_available_as_of";
 
 export type BrowserMetricValue = {
   value: number | string | null;
@@ -405,6 +417,10 @@ export type BrowserObservation = {
   value: number | string | null;
   published_at?: string | null;
   vintage_at?: string | null;
+  source_series_id?: number | null;
+  run_id?: string | null;
+  publication_batch_id?: string | null;
+  raw_object_id?: string | null;
 };
 
 export type SeriesBrowserItem = {
@@ -516,6 +532,7 @@ export type SeriesAnalyticsResponse = {
   next_release: NextSeriesRelease | null;
   contributions: ContributionAnalysis;
   capabilities: SeriesAnalyticsCapabilities;
+  lineage?: SeriesLineage | null;
   data_as_of: string;
 };
 
@@ -532,6 +549,10 @@ export type RevisionItem = {
   latest_value?: number | string | null;
   previous_value?: number | string | null;
   absolute_revision?: number | string | null;
+  first_run_id?: string | null;
+  latest_run_id?: string | null;
+  first_raw_object_id?: string | null;
+  latest_raw_object_id?: string | null;
 };
 
 export type RevisionResponse = { items: RevisionItem[] };
