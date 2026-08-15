@@ -145,7 +145,7 @@ class CensusEITSAdapter(ProviderAdapter):
         params: dict[str, Any] = {
             "get": ",".join(get_fields),
             "time": probe_period,
-            **{str(key): str(value) for key, value in dimensions.items()},
+            "for": str(dimensions["for"]),
         }
         if settings.census_api_key:
             params["key"] = settings.census_api_key
@@ -231,6 +231,14 @@ class CensusEITSAdapter(ProviderAdapter):
         }
         for_value = str(dimensions.get("for") or "")
         geography_name = for_value.split(":", 1)[0] if for_value else ""
+        predicate = for_value.split(":", 1)[1] if ":" in for_value else ""
+        expected_geography = (
+            "1"
+            if geography_name == "us" and predicate == "*"
+            else predicate
+            if predicate != "*"
+            else None
+        )
         expected_headers = required_headers | ({geography_name} if geography_name else set())
         if len(headers) != len(set(headers)) or set(headers) != expected_headers:
             identity_issues.append(
@@ -240,16 +248,24 @@ class CensusEITSAdapter(ProviderAdapter):
                     "Census headers do not exactly cover the pinned fields",
                 )
             )
-        if len(raw_rows) != 1 or not raw_rows or not isinstance(raw_rows[0], list):
-            identity_issues.append(
-                MappingProbeIssue(
-                    "identity",
-                    "row_count_invalid",
-                    "Census probe must return exactly one data row",
-                )
+        matching_rows: list[dict[str, Any]] = []
+        malformed_row = False
+        for raw_row in raw_rows:
+            if not isinstance(raw_row, list) or len(raw_row) != len(headers):
+                malformed_row = True
+                continue
+            candidate = dict(zip(headers, raw_row, strict=True))
+            geography_matches = geography_name in candidate and bool(
+                str(candidate.get(geography_name) or "")
             )
-            row: dict[str, Any] = {}
-        elif len(raw_rows[0]) != len(headers):
+            if expected_geography is not None:
+                geography_matches = (
+                    geography_matches
+                    and str(candidate.get(geography_name)) == expected_geography
+                )
+            if self._dimensions_match(candidate, dimensions) and geography_matches:
+                matching_rows.append(candidate)
+        if malformed_row:
             identity_issues.append(
                 MappingProbeIssue(
                     "identity",
@@ -257,9 +273,17 @@ class CensusEITSAdapter(ProviderAdapter):
                     "Census row width does not match the headers",
                 )
             )
-            row = {}
+        if len(matching_rows) != 1:
+            identity_issues.append(
+                MappingProbeIssue(
+                    "identity",
+                    "row_count_invalid",
+                    "Census probe must match exactly one row after pinned-dimension filtering",
+                )
+            )
+            row: dict[str, Any] = {}
         else:
-            row = dict(zip(headers, raw_rows[0], strict=True))
+            row = matching_rows[0]
         response_dimensions = {
             str(key): str(row.get(str(key)) or "") for key in dimensions if key != "for"
         }
@@ -279,14 +303,6 @@ class CensusEITSAdapter(ProviderAdapter):
             geography_value = str(row.get(geography_name) or "")
             if geography_name in row:
                 geography[geography_name] = geography_value
-            predicate = for_value.split(":", 1)[1] if ":" in for_value else ""
-            expected_geography = (
-                "1"
-                if geography_name == "us" and predicate == "*"
-                else predicate
-                if predicate != "*"
-                else None
-            )
             if not geography_value or (
                 expected_geography is not None and geography_value != expected_geography
             ):
@@ -397,18 +413,14 @@ class CensusEITSAdapter(ProviderAdapter):
             if mode not in {"backfill", "vintage_backfill"}:
                 start_value = str(current_year - 5)
             end_value = str(locator.get("end") or current_year)
-            time_value = f"from+{start_value}+to+{end_value}"
+            time_value = f"from {start_value} to {end_value}"
             params: dict[str, Any] = {
                 "get": ",".join(get_fields),
                 "time": time_value,
                 "key": settings.census_api_key,
             }
-            for key, value in dimensions.items():
-                if value is None or value == "":
-                    # Census uses bare predicate variables for some datasets.
-                    params[str(key)] = ""
-                else:
-                    params[str(key)] = str(value)
+            if "for" in dimensions:
+                params["for"] = str(dimensions["for"])
 
             try:
                 response = await self.client.get(url, params=params)
@@ -459,9 +471,7 @@ class CensusEITSAdapter(ProviderAdapter):
                     )
                 row = dict(zip(headers, raw_row, strict=True))
                 if not self._dimensions_match(row, dimensions):
-                    raise ProviderDataError(
-                        f"Census mapping {source.id} returned a row outside pinned dimensions"
-                    )
+                    continue
                 time_text = str(
                     row.get(time_field) or row.get("time_slot_date") or row.get("time") or ""
                 )
@@ -489,6 +499,10 @@ class CensusEITSAdapter(ProviderAdapter):
                         source_updated_at=fetched_at,
                         quality_flags=flags,
                     )
+                )
+            if not observations:
+                raise ProviderDataError(
+                    f"Census mapping {source.id} returned no rows matching pinned dimensions"
                 )
             observations = deduplicate_observations(observations)
             raw_bundle = json.dumps(
@@ -519,6 +533,17 @@ class CensusEITSAdapter(ProviderAdapter):
     def _dimensions_match(row: dict[str, Any], dimensions: dict[str, Any]) -> bool:
         for key, expected in dimensions.items():
             if key == "for":
+                geography_name, separator, predicate = str(expected).partition(":")
+                if not separator or geography_name not in row:
+                    return False
+                actual = str(row.get(geography_name) or "")
+                if not actual:
+                    return False
+                if geography_name == "us" and predicate == "*":
+                    if actual != "1":
+                        return False
+                elif predicate != "*" and actual != predicate:
+                    return False
                 continue
             if expected is None or expected == "":
                 continue

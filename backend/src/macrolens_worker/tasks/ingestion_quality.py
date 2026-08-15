@@ -108,14 +108,47 @@ def validate_ingestion_completeness(
         )
         allowed_null_periods = int(source.source_locator.get("allowed_null_periods", 0))
         null_rows = [row for row in latest_rows if row.value is None and row.value_text is None]
-        unexpected_nulls = null_rows[allowed_leading_nulls:]
-        if len(unexpected_nulls) > allowed_null_periods:
-            first = unexpected_nulls[allowed_null_periods]
+        candidate_nulls = null_rows[allowed_leading_nulls:]
+        allowed_null_dates_raw = source.source_locator.get("allowed_null_periods_by_date")
+        if allowed_null_dates_raw is None:
+            unexpected_nulls = candidate_nulls[allowed_null_periods:]
+            allowed_nulls_description = str(allowed_null_periods)
+        else:
+            allowed_null_dates: set[date] = set()
+            if isinstance(allowed_null_dates_raw, list):
+                try:
+                    allowed_null_dates = {
+                        date.fromisoformat(str(value)) for value in allowed_null_dates_raw
+                    }
+                except ValueError:
+                    issues.append(
+                        CompletenessIssue(
+                            "invalid_allowed_null_periods",
+                            f"Source {source_id} allowed_null_periods_by_date contains "
+                            "an invalid ISO date.",
+                            source_id,
+                        )
+                    )
+            else:
+                issues.append(
+                    CompletenessIssue(
+                        "invalid_allowed_null_periods",
+                        f"Source {source_id} allowed_null_periods_by_date must be a list "
+                        "of ISO dates.",
+                        source_id,
+                    )
+                )
+            unexpected_nulls = [
+                row for row in candidate_nulls if row.period_start not in allowed_null_dates
+            ]
+            allowed_nulls_description = str(sorted(allowed_null_dates))
+        if unexpected_nulls:
+            first = unexpected_nulls[0]
             issues.append(
                 CompletenessIssue(
                     "missing_observation_value",
                     f"Source {source_id} has {len(unexpected_nulls)} missing latest values; "
-                    f"allowed {allowed_null_periods} after {allowed_leading_nulls} "
+                    f"allowed {allowed_nulls_description} after {allowed_leading_nulls} "
                     "leading periods.",
                     source_id,
                     first.period_start,

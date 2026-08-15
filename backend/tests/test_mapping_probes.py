@@ -114,20 +114,34 @@ async def test_eia_probe_passes_only_on_pinned_minimal_series_evidence(
 ) -> None:
     monkeypatch.setenv("EIA_API_KEY", "probe-secret")
     get_settings.cache_clear()
-    raw = (FIXTURES / "eia_wti_pass.json").read_bytes()
+    latest_raw = (
+        b'{"response":{"total":"10225","frequency":"daily",'
+        b'"dateFormat":"YYYY-MM-DD","description":"Cushing, OK WTI Spot Price FOB",'
+        b'"data":[{"period":"2026-08-10","series":"RWTC","value":"63.96",'
+        b'"units":"$/BBL"}]}}'
+    )
+    first_raw = (
+        b'{"response":{"total":"10225","frequency":"daily",'
+        b'"dateFormat":"YYYY-MM-DD","description":"Cushing, OK WTI Spot Price FOB",'
+        b'"data":[{"period":"1986-01-02","series":"RWTC","value":"25.56",'
+        b'"units":"$/BBL"}]}}'
+    )
+    offsets: list[int] = []
 
     async def handler(request: httpx.Request) -> httpx.Response:
         assert request.url.path == "/v2/seriesid/PET.RWTC.D/"
         assert request.url.params["api_key"] == "probe-secret"
         assert request.url.params["length"] == "1"
-        assert request.url.params["sort[0][column]"] == "period"
-        assert request.url.params["sort[0][direction]"] == "asc"
+        assert "sort[0][column]" not in request.url.params
+        assert "sort[0][direction]" not in request.url.params
         assert "start" not in request.url.params
+        offset = int(request.url.params["offset"])
+        offsets.append(offset)
         return httpx.Response(
             200,
             request=request,
             headers={"content-type": "application/json"},
-            content=raw,
+            content=latest_raw if offset == 0 else first_raw,
         )
 
     async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
@@ -137,7 +151,8 @@ async def test_eia_probe_passes_only_on_pinned_minimal_series_evidence(
 
     assert result.classification == "PASS"
     assert result.production_ready is True
-    expected_sha = "3f4d4efd49ae6c7b0397e6cc96fdb6ec2297450758eb625c596434cbcd77c864"
+    assert offsets == [0, 10224]
+    expected_sha = "823278703dfb98583d719927d7f008fbf5fe3376fe16fc357ef5d4cac243b452"
     assert result.response_sha256 == expected_sha
     assert result.request_url == "https://api.eia.gov/v2/seriesid/PET.RWTC.D/"
     assert result.official_description == "Cushing, OK WTI Spot Price FOB"
@@ -151,9 +166,10 @@ async def test_eia_probe_passes_only_on_pinned_minimal_series_evidence(
         "details": {
             "date_format": "YYYY-MM-DD",
             "first_period": "1986-01-02",
+            "first_value": "25.56",
             "frequency": "daily",
-            "row_series": "PET.RWTC.D",
-            "total": 100,
+            "row_series": "RWTC",
+            "total": 10225,
             "units": "$/BBL",
             "value_field": "value",
         },
@@ -241,20 +257,51 @@ async def test_census_probe_passes_on_one_exact_month_and_identity(
 ) -> None:
     monkeypatch.setenv("CENSUS_API_KEY", "probe-secret")
     get_settings.cache_clear()
-    raw = (FIXTURES / "census_retail_pass.json").read_bytes()
-    source = _census_source()
+    body = [
+        [
+            "cell_value",
+            "time",
+            "data_type_code",
+            "seasonally_adj",
+            "category_code",
+            "error_data",
+            "us",
+        ],
+        ["9.9", "2025-01", "SM", "yes", "441", "no", "1"],
+        ["42.5", "2025-01", "SM", "yes", "44X72", "no", "1"],
+    ]
+    raw = json.dumps(body, separators=(",", ":")).encode()
+    source = _census_source(
+        required_variables=[
+            "data_type_code",
+            "seasonally_adj",
+            "category_code",
+            "cell_value",
+            "error_data",
+        ],
+        dimensions={
+            "data_type_code": "SM",
+            "seasonally_adj": "yes",
+            "category_code": "44X72",
+            "error_data": "no",
+            "for": "us:*",
+        },
+    )
 
     async def handler(request: httpx.Request) -> httpx.Response:
         assert request.url.path == "/data/timeseries/eits/marts"
         assert request.url.params["key"] == "probe-secret"
         assert request.url.params["time"] == "2025-01"
         assert request.url.params["for"] == "us:*"
+        assert set(request.url.params) == {"get", "time", "key", "for"}
         requested = set(request.url.params["get"].split(","))
         assert requested == {
             "cell_value",
             "time",
+            "data_type_code",
             "seasonally_adj",
             "category_code",
+            "error_data",
         }
         return httpx.Response(200, request=request, content=raw)
 
@@ -265,18 +312,25 @@ async def test_census_probe_passes_on_one_exact_month_and_identity(
 
     assert result.classification == "PASS"
     assert result.provider_series_id is None
-    expected_sha = "1fe5601cee0c08a4273ed1d57108ab263959ad44f2ea4eb2a488008cbef4c638"
+    expected_sha = "4b95060ef479502408927650e8fd2741a28b185677c5a0916b9968aa7b0901f8"
     assert result.response_sha256 == expected_sha
     assert result.request_url == "https://api.census.gov/data/timeseries/eits/marts"
     assert result.evidence is not None
     assert result.evidence.details == {
-        "dimensions": {"category_code": "TOTAL", "seasonally_adj": "yes"},
+        "dimensions": {
+            "category_code": "44X72",
+            "data_type_code": "SM",
+            "error_data": "no",
+            "seasonally_adj": "yes",
+        },
         "geography": {"us": "1"},
         "headers": [
             "cell_value",
             "time",
+            "data_type_code",
             "seasonally_adj",
             "category_code",
+            "error_data",
             "us",
         ],
         "time": "2025-01",
@@ -312,16 +366,17 @@ async def test_eia_probe_failure_matrix_is_fail_closed_and_secret_safe(
         monkeypatch.setenv("EIA_API_KEY", secret)
     get_settings.cache_clear()
     body = json.loads((FIXTURES / "eia_wti_pass.json").read_text())
+    body["response"]["data"][0]["series"] = "RWTC"
     if case == "business":
         body = {"error": {"message": secret}}
     elif case == "identity":
         body["response"]["frequency"] = "weekly"
     raw = secret.encode() if case == "http" else json.dumps(body, separators=(",", ":")).encode()
     expected_sha = {
-        "auth": "4a43c3b78b144bfcc953f2878f173f1b64642e3a13afefcdd53eeacec5c4eac8",
+        "auth": "9c10cbd5f5e646d0ae1f70d175b9d9f9fcd4fb3dafc1018a16d0d554bc4ff007",
         "business": "8bb66af36c2f2000d439e675ffeb39c2376ef1cd7eacaad7f606146beb13e3cf",
         "http": "d46732b19ee2ee29b26462c07cba60a0e1b65624310eb126831560dbaaa37051",
-        "identity": "57b7838fb58332d1c7e266dff1e4faf66ccbb7b1b635b794fd5d87b4148d183a",
+        "identity": "385d9b45da68e6e3299b5a314e37e14a98c1fb94a6bd82a2234d2e3ec29d77b8",
         "transport": "",
     }[case]
 
@@ -381,6 +436,7 @@ async def test_eia_probe_blocks_total_below_pinned_backfill_minimum(
     source = _eia_source()
     body = json.loads((FIXTURES / "eia_wti_pass.json").read_text())
     body["response"]["total"] = "99"
+    body["response"]["data"][0]["series"] = "RWTC"
     raw = json.dumps(body, separators=(",", ":")).encode()
 
     async def handler(request: httpx.Request) -> httpx.Response:
@@ -444,12 +500,11 @@ async def test_eia_probe_requires_fixed_backfill_minimum_before_http(
 async def test_eia_probe_redacts_success_payload_before_extracting_evidence(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from hashlib import sha256
-
     secret = "eia-success-payload-secret"
     monkeypatch.setenv("EIA_API_KEY", secret)
     get_settings.cache_clear()
     body = json.loads((FIXTURES / "eia_wti_pass.json").read_text())
+    body["response"]["data"][0]["series"] = "RWTC"
     body["response"]["description"] = f"description echoed {secret}"
     body["response"]["data"][0]["value"] = secret
     raw = json.dumps(body, separators=(",", ":")).encode()
@@ -462,7 +517,8 @@ async def test_eia_probe_redacts_success_payload_before_extracting_evidence(
             _provider("EIA_API_V2"), _eia_source(), _dataset("Petroleum")
         )
 
-    assert result.response_sha256 == sha256(raw).hexdigest()
+    expected_sha = "a3d0642a8ef9bcb0d14cf4ba1c3de45438af4a8a013b9a43071d00efcbd99788"
+    assert result.response_sha256 == expected_sha
     assert result.classification == "BLOCKED"
     assert "value_invalid" in {issue.code for issue in result.issues}
     _assert_secret_absent(result.to_dict(), secret)
@@ -783,6 +839,96 @@ async def test_eia_fetch_sends_key_but_never_persists_it(
 
 
 @pytest.mark.asyncio
+async def test_eia_seriesid_incremental_fetch_filters_locally_after_complete_pagination(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from datetime import date, timedelta
+
+    monkeypatch.setenv("EIA_API_KEY", "test-key")
+    get_settings.cache_clear()
+    recent_period = date.today() - timedelta(days=1)
+    rows = [
+        {
+            "period": recent_period.isoformat(),
+            "series": "RWTC",
+            "value": "63.96",
+            "units": "$/BBL",
+        },
+        {
+            "period": "1986-01-03",
+            "series": "RWTC",
+            "value": "26.00",
+            "units": "$/BBL",
+        },
+        {
+            "period": "1986-01-02",
+            "series": "RWTC",
+            "value": "25.56",
+            "units": "$/BBL",
+        },
+    ]
+    offsets: list[int] = []
+
+    async def handler(request: httpx.Request) -> httpx.Response:
+        assert "start" not in request.url.params
+        assert "sort[0][column]" not in request.url.params
+        assert "sort[0][direction]" not in request.url.params
+        offset = int(request.url.params["offset"])
+        length = int(request.url.params["length"])
+        offsets.append(offset)
+        return httpx.Response(
+            200,
+            request=request,
+            json={"response": {"total": "3", "data": rows[offset : offset + length]}},
+        )
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+        adapter = EIAAdapter(client)
+        adapter.page_size = 2
+        results = await adapter.fetch(
+            _provider("EIA_API_V2"),
+            [(_eia_source(), _dataset("Petroleum"))],
+            mode="incremental",
+        )
+
+    assert offsets == [0, 2]
+    assert [row.period_start for row in results[0].observations] == [recent_period]
+    get_settings.cache_clear()
+
+
+@pytest.mark.asyncio
+async def test_eia_non_seriesid_incremental_fetch_rejects_rows_before_cutoff(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("EIA_API_KEY", "test-key")
+    get_settings.cache_clear()
+    source = _eia_source(route="v2/petroleum/pri/spt/data")
+
+    async def handler(request: httpx.Request) -> httpx.Response:
+        assert "start" in request.url.params
+        assert request.url.params["sort[0][column]"] == "period"
+        return httpx.Response(
+            200,
+            request=request,
+            json={
+                "response": {
+                    "total": "1",
+                    "data": [{"period": "1986-01-02", "value": "25.56"}],
+                }
+            },
+        )
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+        with pytest.raises(ProviderDataError, match="before requested cutoff"):
+            await EIAAdapter(client).fetch(
+                _provider("EIA_API_V2"),
+                [(source, _dataset("Petroleum"))],
+                mode="incremental",
+            )
+    get_settings.cache_clear()
+
+
+@pytest.mark.asyncio
 async def test_bea_fetch_sends_key_but_never_persists_it(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -907,6 +1053,67 @@ async def test_census_fetch_sends_key_but_never_persists_it(
     _assert_secret_absent(results[0].request_parameters, secret)
     _assert_secret_absent(results[0].raw_bytes, secret)
     assert "?" not in results[0].request_url
+    get_settings.cache_clear()
+
+
+@pytest.mark.asyncio
+async def test_census_fetch_filters_full_pinned_identity_from_unfiltered_matrix(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from datetime import date
+
+    monkeypatch.setenv("CENSUS_API_KEY", "test-key")
+    get_settings.cache_clear()
+    source = _census_source(
+        start_year=1992,
+        required_variables=[
+            "data_type_code",
+            "seasonally_adj",
+            "category_code",
+            "cell_value",
+            "error_data",
+        ],
+        dimensions={
+            "data_type_code": "SM",
+            "seasonally_adj": "yes",
+            "category_code": "44X72",
+            "error_data": "no",
+            "for": "us:*",
+        },
+    )
+    body = [
+        [
+            "cell_value",
+            "time",
+            "time_slot_date",
+            "data_type_code",
+            "seasonally_adj",
+            "category_code",
+            "error_data",
+            "us",
+        ],
+        ["9.9", "2025-01", "2025-01-01", "SM", "yes", "441", "no", "1"],
+        ["42.5", "2025-01", "2025-01-01", "SM", "yes", "44X72", "no", "1"],
+        ["8.8", "2025-02", "2025-02-01", "IM", "yes", "44X72", "no", "1"],
+        ["43.0", "2025-02", "2025-02-01", "SM", "yes", "44X72", "no", "1"],
+    ]
+
+    async def handler(request: httpx.Request) -> httpx.Response:
+        assert set(request.url.params) == {"get", "time", "key", "for"}
+        assert request.url.params["time"] == f"from 1992 to {date.today().year}"
+        assert request.url.params["for"] == "us:*"
+        return httpx.Response(200, request=request, json=body)
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+        results = await CensusEITSAdapter(client).fetch(
+            _provider("CENSUS_EITS_API"),
+            [(source, _dataset("marts"))],
+            mode="backfill",
+        )
+
+    assert [
+        (row.period_start.isoformat(), str(row.value)) for row in results[0].observations
+    ] == [("2025-01-01", "42.5"), ("2025-02-01", "43.0")]
     get_settings.cache_clear()
 
 

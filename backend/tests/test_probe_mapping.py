@@ -126,8 +126,10 @@ async def test_probe_mapping_dispatches_all_supported_providers_and_binds_finger
     get_settings.cache_clear()
     source, dataset, provider = _source(provider_code)
     bls_body = json.loads(BLS_FIXTURE.read_text())["responses"][0]
+    eia_body = json.loads((FIXTURES / "eia_wti_pass.json").read_text())
+    eia_body["response"]["data"][0]["series"] = "RWTC"
     response_by_provider = {
-        "EIA_API_V2": (FIXTURES / "eia_wti_pass.json").read_bytes(),
+        "EIA_API_V2": json.dumps(eia_body, separators=(",", ":")).encode(),
         "BEA_API": (FIXTURES / "bea_pce_pass.json").read_bytes(),
         "CENSUS_EITS_API": (FIXTURES / "census_retail_pass.json").read_bytes(),
     }
