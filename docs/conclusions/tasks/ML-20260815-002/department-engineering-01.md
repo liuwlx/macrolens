@@ -36,18 +36,22 @@ FAILED ... assert True is False
 GREEN 证据：
 
 ```text
-$env:PYTHONPATH='backend/src'; python -m pytest backend/tests/test_live_audit.py -q
+$env:PYTHONPATH='backend/src'
+.venv\Scripts\python.exe --version
+Python 3.12.9
+
+.venv\Scripts\python.exe -m pytest backend/tests/test_live_audit.py -q
 ......... [100%]
-9 passed, 1 warning in 5.43s
+9 passed in 9.52s
 
 py -3.12 -m compileall -q backend/src/macrolens_worker/live_audit.py backend/tests/test_live_audit.py
 exit 0
 
-git diff --check
-exit 0（仅 Git 提示未来可能进行 LF→CRLF 转换）
+git diff --check a34901c14337a66fdf523da583205f776758a577...HEAD
+exit 0
 ```
 
-警告来自系统 pytest 7.4.3 不识别项目 `asyncio_mode`；本文件的用例没有被跳过。
+上述 Python 3.12 GREEN 由主线程在同一独立 worktree 中复跑确认，无 warning、error 或 skipped。研发席位此前使用系统 Python 3.11.9 得到的 `9 passed, 1 warning` 仅是早期辅助执行，不再作为目标版本 GREEN 证据。
 
 ## 4. Agents、skills、tools 与文档
 
@@ -79,10 +83,11 @@ exit 0（仅 Git 提示未来可能进行 LF→CRLF 转换）
 
 - `ruff check backend`：未运行成功，`ruff` 命令不存在。
 - `mypy backend/src`：未运行成功，`mypy` 命令不存在。
-- `pytest backend/tests`：收集失败；系统为 Python 3.11.9/pytest 7.4.3，项目包未安装且未设置 `PYTHONPATH`，16 个模块报 `ModuleNotFoundError: macrolens_api/macrolens_worker`。
+- 目标测试已在 Python 3.12.9 下通过；但 `pytest backend/tests` 全量门禁尚未在完整 Python 3.12 项目依赖环境中完成。研发席位此前直接调用系统 `pytest backend/tests` 时落入 Python 3.11.9/pytest 7.4.3，且项目包未安装、未设置 `PYTHONPATH`，收集阶段出现 16 个 `ModuleNotFoundError: macrolens_api/macrolens_worker`。该结果仅说明当时全量门禁环境不可用，不影响上述目标测试的 Python 3.12 GREEN，也不能视为有效的 Python 3.12 全量测试结果。
 - `npm --workspace apps/web run lint`：失败，`eslint` 不存在。
 - `npm --workspace apps/web run test`：失败，`vitest` 不存在。
 - `npm --workspace apps/web run build`：失败，`next` 不存在。
 - 未继续安装大型依赖，符合用户收口指令。
-- 风险：返回字段名 `all_executed_passed` 在显式模式下现在代表“全部请求项通过”，名称不完全精确，但保持了 JSON/CLI 契约兼容。未过滤模式已有专门回归测试。
+- 风险：返回字段名 `all_executed_passed` 在显式模式下现在代表“全部请求项通过”，名称语义失真；这是为保持现有 JSON/CLI 兼容契约而有意保留，未过滤模式已有专门回归测试。
+- 非阻塞审查项：`test_live_audit.py` 的场景 setup 存在重复。测试行为清晰且本票要求最小范围修复，因此不在 remediation 中重构；可在后续独立测试维护票中提取 fixture/helper。
 - 集成发布部可直接 cherry-pick 本报告所列提交；无需修改 CLI 文件、数据库、registry、seed、adapter 或部署配置。集成环境应使用 Python 3.12 完整依赖重跑根规则六条门禁。
