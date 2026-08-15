@@ -100,11 +100,7 @@ class EIAAdapter(ProviderAdapter):
                 issues=tuple(configuration_issues),
             )
 
-        params: dict[str, Any] = {
-            "length": 1,
-            "sort[0][column]": "period",
-            "sort[0][direction]": "asc",
-        }
+        params: dict[str, Any] = {"length": 1, "offset": 0}
         if settings.eia_api_key:
             params["api_key"] = settings.eia_api_key
         try:
@@ -181,28 +177,155 @@ class EIAAdapter(ProviderAdapter):
                 ),
             )
 
-        details: dict[str, Any] = {
-            "total": response_payload.get("total"),
-            "frequency": response_payload.get("frequency"),
-            "date_format": response_payload.get("dateFormat"),
-            "value_field": "value",
-        }
-        rows = response_payload["data"]
-        row = rows[0] if len(rows) == 1 and isinstance(rows[0], dict) else {}
-        details.update(
-            {
-                "first_period": row.get("period"),
-                "row_series": row.get("series"),
-                "units": row.get("units"),
-            }
-        )
-        identity_issues: list[MappingProbeIssue] = []
         try:
             total = int(str(response_payload.get("total")))
         except (TypeError, ValueError):
             total = 0
+        if total < 1:
+            return _build_mapping_probe_result(
+                provider_code=provider.code,
+                source_series_id=source.id,
+                provider_series_id=provider_series_id,
+                request_url=request_url,
+                http_status=response.status_code,
+                content_type=content_type,
+                official_description=str(response_payload.get("description") or "").strip(),
+                response_sha256=digest,
+                probed_at=probed_at,
+                evidence=MappingProbeEvidence(
+                    True,
+                    True,
+                    True,
+                    False,
+                    authorized,
+                    {"total": total},
+                ),
+                issues=(
+                    MappingProbeIssue(
+                        "identity",
+                        "total_invalid",
+                        "EIA response total must be a positive integer",
+                    ),
+                ),
+            )
+
+        boundary_params = {**params, "offset": total - 1}
+        try:
+            boundary_response = await self.client.get(request_url, params=boundary_params)
+        except httpx.TransportError:
+            return _build_mapping_probe_result(
+                provider_code=provider.code,
+                source_series_id=source.id,
+                provider_series_id=provider_series_id,
+                request_url=request_url,
+                http_status=None,
+                content_type=content_type,
+                official_description="",
+                response_sha256=digest,
+                probed_at=probed_at,
+                evidence=MappingProbeEvidence(True, True, True, False, authorized),
+                issues=(
+                    MappingProbeIssue(
+                        "transport",
+                        "transport_error",
+                        "EIA historical-boundary request was unreachable",
+                    ),
+                ),
+            )
+        boundary_raw = boundary_response.content
+        digest = sha256(raw + b"\n" + boundary_raw).hexdigest()
+        boundary_content_type = boundary_response.headers.get(
+            "content-type", "application/json"
+        )
+        if not 200 <= boundary_response.status_code < 300:
+            return _build_mapping_probe_result(
+                provider_code=provider.code,
+                source_series_id=source.id,
+                provider_series_id=provider_series_id,
+                request_url=request_url,
+                http_status=boundary_response.status_code,
+                content_type=boundary_content_type,
+                official_description="",
+                response_sha256=digest,
+                probed_at=probed_at,
+                evidence=MappingProbeEvidence(True, False, False, False, authorized),
+                issues=(
+                    MappingProbeIssue(
+                        "http",
+                        "http_status",
+                        f"EIA returned HTTP {boundary_response.status_code} for the "
+                        "historical boundary",
+                    ),
+                ),
+            )
+        try:
+            boundary_payload = boundary_response.json()
+        except ValueError:
+            boundary_payload = None
+        boundary_payload = _redact_sensitive_data(
+            boundary_payload, secrets=(settings.eia_api_key or "",)
+        )
+        boundary_response_payload = (
+            boundary_payload.get("response") if isinstance(boundary_payload, dict) else None
+        )
+        if (
+            not isinstance(boundary_payload, dict)
+            or boundary_payload.get("error")
+            or not isinstance(boundary_response_payload, dict)
+            or not isinstance(boundary_response_payload.get("data"), list)
+        ):
+            return _build_mapping_probe_result(
+                provider_code=provider.code,
+                source_series_id=source.id,
+                provider_series_id=provider_series_id,
+                request_url=request_url,
+                http_status=boundary_response.status_code,
+                content_type=boundary_content_type,
+                official_description="",
+                response_sha256=digest,
+                probed_at=probed_at,
+                evidence=MappingProbeEvidence(True, True, False, False, authorized),
+                issues=(
+                    MappingProbeIssue(
+                        "business",
+                        "business_error",
+                        "EIA historical-boundary response did not contain a successful "
+                        "data payload",
+                    ),
+                ),
+            )
+
+        latest_rows = response_payload["data"]
+        latest_row = (
+            latest_rows[0]
+            if len(latest_rows) == 1 and isinstance(latest_rows[0], dict)
+            else {}
+        )
+        boundary_rows = boundary_response_payload["data"]
+        first_row = (
+            boundary_rows[0]
+            if len(boundary_rows) == 1 and isinstance(boundary_rows[0], dict)
+            else {}
+        )
+        assert provider_series_id is not None
+        series_parts = provider_series_id.split(".")
+        expected_row_series = series_parts[-2] if len(series_parts) >= 2 else provider_series_id
+        details: dict[str, Any] = {
+            "total": total,
+            "frequency": response_payload.get("frequency"),
+            "date_format": response_payload.get("dateFormat"),
+            "value_field": "value",
+            "first_period": first_row.get("period"),
+            "first_value": str(first_row.get("value") or ""),
+            "row_series": first_row.get("series"),
+            "units": first_row.get("units"),
+        }
+        identity_issues: list[MappingProbeIssue] = []
+        try:
+            boundary_total = int(str(boundary_response_payload.get("total")))
+        except (TypeError, ValueError):
+            boundary_total = 0
         assert minimum_total is not None
-        details["total"] = total
         checks = (
             (
                 total >= minimum_total,
@@ -219,22 +342,49 @@ class EIAAdapter(ProviderAdapter):
                 "date_format_drift",
                 "EIA response dateFormat must be YYYY-MM-DD",
             ),
-            (len(rows) == 1, "row_count_invalid", "EIA probe must return one row"),
             (
-                row.get("period") == expected_first_period,
+                boundary_total == total,
+                "total_drift",
+                "EIA response total changed between probe requests",
+            ),
+            (
+                boundary_response_payload.get("frequency") == "daily",
+                "frequency_drift",
+                "EIA historical-boundary response frequency must be daily",
+            ),
+            (
+                boundary_response_payload.get("dateFormat") == "YYYY-MM-DD",
+                "date_format_drift",
+                "EIA historical-boundary response dateFormat must be YYYY-MM-DD",
+            ),
+            (
+                len(latest_rows) == 1 and len(boundary_rows) == 1,
+                "row_count_invalid",
+                "EIA probe requests must each return one row",
+            ),
+            (
+                first_row.get("period") == expected_first_period,
                 "first_period_drift",
                 "EIA first period does not match the pinned boundary",
             ),
             (
-                row.get("series") == provider_series_id,
+                latest_row.get("series") == expected_row_series
+                and first_row.get("series") == expected_row_series,
                 "series_identity_drift",
-                "EIA row series does not match provider_series_id",
+                "EIA row series does not match the legacy series identity",
             ),
-            (row.get("units") == "$/BBL", "units_drift", "EIA units must be $/BBL"),
             (
-                "value" in row and parse_decimal(row.get("value")) is not None,
+                latest_row.get("units") == "$/BBL" and first_row.get("units") == "$/BBL",
+                "units_drift",
+                "EIA units must be $/BBL",
+            ),
+            (
+                "value" in latest_row
+                and parse_decimal(latest_row.get("value")) is not None
+                and "value" in first_row
+                and parse_decimal(first_row.get("value")) is not None,
                 "value_invalid",
-                "EIA value field must be present and parseable",
+                "EIA latest and first values must be present and parseable",
             ),
         )
         for passed, code, message in checks:
@@ -253,8 +403,8 @@ class EIAAdapter(ProviderAdapter):
             source_series_id=source.id,
             provider_series_id=provider_series_id,
             request_url=request_url,
-            http_status=response.status_code,
-            content_type=content_type,
+            http_status=boundary_response.status_code,
+            content_type=boundary_content_type,
             official_description=str(response_payload.get("description") or "").strip(),
             response_sha256=digest,
             probed_at=probed_at,
@@ -285,6 +435,8 @@ class EIAAdapter(ProviderAdapter):
             route = locator.get("route")
             if not route:
                 raise ProviderDataError(f"EIA mapping {source.id} has no route")
+            clean_route = str(route).strip("/")
+            is_seriesid_route = clean_route.startswith("v2/seriesid/")
             url = self._route_url(str(route), bool(locator.get("append_data_path", False)))
             cutoff = (
                 date.min
@@ -300,9 +452,14 @@ class EIAAdapter(ProviderAdapter):
             base_params: dict[str, Any] = {
                 "api_key": settings.eia_api_key,
                 "length": self.page_size,
-                "sort[0][column]": str(locator.get("sort_column") or "period"),
-                "sort[0][direction]": str(locator.get("sort_direction") or "asc"),
             }
+            if not is_seriesid_route:
+                base_params.update(
+                    {
+                        "sort[0][column]": str(locator.get("sort_column") or "period"),
+                        "sort[0][direction]": str(locator.get("sort_direction") or "asc"),
+                    }
+                )
             for index, field in enumerate(data_fields):
                 base_params[f"data[{index}]"] = str(field)
             if locator.get("frequency"):
@@ -314,7 +471,7 @@ class EIAAdapter(ProviderAdapter):
                 values_list = values if isinstance(values, list) else [values]
                 for index, value in enumerate(values_list):
                     base_params[f"facets[{facet}][{index}]"] = str(value)
-            if mode not in {"backfill", "vintage_backfill"}:
+            if mode not in {"backfill", "vintage_backfill"} and not is_seriesid_route:
                 base_params["start"] = cutoff.isoformat()
 
             offset = 0
@@ -325,6 +482,7 @@ class EIAAdapter(ProviderAdapter):
             content_type = "application/json"
             expected_total: int | None = None
             seen_page_signatures: set[tuple[str, ...]] = set()
+            seen_periods: set[date] = set()
 
             for _page in range(self.max_pages):
                 params = {**base_params, "offset": offset}
@@ -372,7 +530,7 @@ class EIAAdapter(ProviderAdapter):
                         raise ProviderDataError(
                             f"EIA returned an invalid period for source {source.id}"
                         )
-                    if period < cutoff:
+                    if period < cutoff and not is_seriesid_route:
                         raise ProviderDataError(
                             f"EIA returned {period} before requested cutoff {cutoff}"
                         )
@@ -380,13 +538,14 @@ class EIAAdapter(ProviderAdapter):
                         raise ProviderDataError(
                             f"EIA row for source {source.id} omitted value field {value_field!r}"
                         )
-                    previous = rows_by_period.get(period)
-                    if previous is not None:
+                    if period in seen_periods:
                         raise ProviderDataError(
                             f"EIA returned more than one row for source {source.id} at {period}; "
                             "pin all facets before enabling the mapping"
                         )
-                    rows_by_period[period] = raw_row
+                    seen_periods.add(period)
+                    if period >= cutoff:
+                        rows_by_period[period] = raw_row
 
                 total_raw = response_payload.get("total")
                 try:

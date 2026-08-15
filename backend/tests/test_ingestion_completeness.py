@@ -287,6 +287,78 @@ async def test_bea_adapter_resolves_exact_line_description(monkeypatch) -> None:
     get_settings.cache_clear()
 
 
+async def test_bea_adapter_applies_configured_platform_unit_scale_exactly(monkeypatch) -> None:
+    from decimal import Decimal
+
+    from macrolens_worker.providers.bea import BEAAdapter
+
+    monkeypatch.setenv("BEA_API_KEY", "test-key")
+    get_settings.cache_clear()
+
+    async def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(
+            200,
+            request=request,
+            json={
+                "BEAAPI": {
+                    "Results": {
+                        "Data": [
+                            {
+                                "SeriesCode": "A191RX",
+                                "LineNumber": "1",
+                                "LineDescription": "Gross domestic product",
+                                "TimePeriod": "2025Q1",
+                                "DataValue": "23,548,210",
+                                "UNIT_MULT": "6",
+                            }
+                        ]
+                    }
+                }
+            },
+        )
+
+    locator = {
+        "table_name": "T10106",
+        "frequency": "Q",
+        "series_code": "A191RX",
+        "line_number": "1",
+        "line_description": "Gross domestic product",
+    }
+    scaled_source = _source(
+        40,
+        frequency="quarterly",
+        locator={**locator, "value_scale_to_platform_unit": "0.001"},
+        title="Gross domestic product",
+    )
+    unscaled_source = _source(
+        41,
+        frequency="quarterly",
+        locator=locator,
+        title="Gross domestic product",
+    )
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+        adapter = BEAAdapter(client)
+        scaled = await adapter.fetch(
+            SimpleNamespace(code="BEA_API"),
+            [(scaled_source, _dataset(40, "NIPA"))],
+            mode="incremental",
+        )
+        unscaled = await adapter.fetch(
+            SimpleNamespace(code="BEA_API"),
+            [(unscaled_source, _dataset(41, "NIPA"))],
+            mode="incremental",
+        )
+
+    assert scaled[0].observations[0].value == Decimal("23548.210")
+    assert scaled[0].observations[0].quality_flags == [
+        "scaled_to_platform_unit:0.001"
+    ]
+    assert unscaled[0].observations[0].value == Decimal("23548210")
+    assert unscaled[0].observations[0].quality_flags == []
+    get_settings.cache_clear()
+
+
 async def test_eia_rejects_repeated_pagination_page(monkeypatch) -> None:
     from macrolens_worker.providers.eia import EIAAdapter
 
@@ -446,10 +518,10 @@ def test_source_registry_readiness_is_explicit_and_no_unmapped_series_is_enabled
         check_credentials=True,
     )
     assert report["indicator_count"] == 61
-    assert report["ready_count"] == 31
-    assert report["blocked_count"] == 30
-    assert report["enabled_indicator_count"] == 31
-    assert report["enabled_ready_count"] == 31
+    assert report["ready_count"] == 33
+    assert report["blocked_count"] == 28
+    assert report["enabled_indicator_count"] == 33
+    assert report["enabled_ready_count"] == 33
     assert report["enabled_blocked_count"] == 0
     assert report["all_enabled_ready"]
     assert not report["all_production_ready"]
@@ -458,6 +530,68 @@ def test_source_registry_readiness_is_explicit_and_no_unmapped_series_is_enabled
     assert by_code["US.MICHIGAN.1Y"]["status"] in {"blocked_license", "blocked_adapter"}
     assert by_code["US.SP500"]["status"] == "blocked_license"
     get_settings.cache_clear()
+
+
+def test_four_source_registry_pins_approved_bls_census_and_bea_identity() -> None:
+    registry = json.loads(
+        (REPO_ROOT / "database/seed/source_registry.json").read_text(encoding="utf-8")
+    )
+    by_code = {item["canonical_code"]: item for item in registry["indicators"]}
+
+    assert by_code["US.CPI.HEADLINE"]["locator"]["allowed_null_periods_by_date"] == {
+        "2025-10-01": "Data unavailable due to the 2025 lapse in appropriations"
+    }
+
+    retail = by_code["US.RETAIL.SALES"]
+    assert retail["mapping_status"] == "READY"
+    assert "resolve_dimensions_from_dictionary" not in retail["locator"]
+    assert retail["locator"] == {
+        "path": "timeseries/eits/marts",
+        "max_staleness_days": 90,
+        "min_observations_incremental": 24,
+        "min_observations_backfill": 60,
+        "require_contiguous": True,
+        "value_field": "cell_value",
+        "time_field": "time",
+        "required_variables": [
+            "data_type_code",
+            "seasonally_adj",
+            "category_code",
+            "cell_value",
+            "error_data",
+        ],
+        "dimensions": {
+            "data_type_code": "SM",
+            "seasonally_adj": "yes",
+            "category_code": "44X72",
+            "error_data": "no",
+            "for": "us:*",
+        },
+        "probe_period": "2025-01",
+        "start_year": 1992,
+        "expected_first_period": "1992-01-01",
+    }
+
+    real_gdp = by_code["US.REAL.GDP"]
+    assert real_gdp["mapping_status"] == "READY"
+    assert real_gdp["locator"] == {
+        "table_name": "T10106",
+        "frequency": "Q",
+        "year": "ALL",
+        "series_code": "A191RX",
+        "line_number": "1",
+        "line_description": "Gross domestic product",
+        "probe_year": "2025",
+        "metric_name": "Chained Dollars",
+        "cl_unit": "Level",
+        "unit_mult": "6",
+        "value_scale_to_platform_unit": "0.001",
+        "max_staleness_days": 180,
+        "min_observations_incremental": 8,
+        "min_observations_backfill": 20,
+        "require_contiguous": True,
+        "expected_first_period": "1947-01-01",
+    }
 
 
 def test_completeness_rejects_missing_latest_values_but_allows_derived_bootstrap() -> None:
@@ -508,6 +642,117 @@ def test_completeness_rejects_missing_latest_values_but_allows_derived_bootstrap
         [(derived, _dataset(21))], derived_rows, mode="incremental", now=now
     )
     assert "missing_observation_value" not in {issue.code for issue in derived_issues}
+
+
+def test_completeness_allows_only_explicit_bls_null_period() -> None:
+    from decimal import Decimal
+
+    now = datetime(2025, 12, 15, tzinfo=UTC)
+    official_footnote = "Data unavailable due to the 2025 lapse in appropriations"
+    source = _source(
+        22,
+        frequency="monthly",
+        locator={
+            "min_observations_incremental": 2,
+            "max_staleness_days": 90,
+            "require_contiguous": True,
+            "allowed_null_periods_by_date": {"2025-10-01": official_footnote},
+        },
+    )
+    rows = [
+        NormalizedObservation(
+            22,
+            date(2025, 10, 1),
+            date(2025, 10, 31),
+            None,
+            vintage_at=now,
+            quality_flags=["missing_value", official_footnote],
+        ),
+        NormalizedObservation(
+            22,
+            date(2025, 11, 1),
+            date(2025, 11, 30),
+            Decimal("1"),
+            vintage_at=now,
+        ),
+        NormalizedObservation(
+            22,
+            date(2025, 12, 1),
+            date(2025, 12, 31),
+            Decimal("2"),
+            vintage_at=now,
+        ),
+    ]
+
+    issues, _metrics = validate_ingestion_completeness(
+        [(source, _dataset(22))], rows, mode="incremental", now=now
+    )
+    assert "missing_observation_value" not in {issue.code for issue in issues}
+
+    for quality_flags in (["missing_value"], ["missing_value", "Unrelated footnote"]):
+        rows[0] = NormalizedObservation(
+            22,
+            date(2025, 10, 1),
+            date(2025, 10, 31),
+            None,
+            vintage_at=now,
+            quality_flags=quality_flags,
+        )
+        issues, _metrics = validate_ingestion_completeness(
+            [(source, _dataset(22))], rows, mode="incremental", now=now
+        )
+        assert "missing_observation_value" in {issue.code for issue in issues}
+
+
+@pytest.mark.parametrize(
+    "invalid_policy",
+    [
+        ["2025-10-01"],
+        {"2025-10": "Data unavailable"},
+        {"2025-10-01": ""},
+        {"2025-10-01": ["Data unavailable"]},
+    ],
+)
+def test_completeness_rejects_invalid_allowed_null_period_schema(
+    invalid_policy: object,
+) -> None:
+    from decimal import Decimal
+
+    now = datetime(2025, 12, 15, tzinfo=UTC)
+    source = _source(
+        23,
+        frequency="monthly",
+        locator={
+            "min_observations_incremental": 1,
+            "max_staleness_days": 90,
+            "require_contiguous": True,
+            "allowed_null_periods_by_date": invalid_policy,
+        },
+    )
+    rows = [
+        NormalizedObservation(
+            23,
+            date(2025, 10, 1),
+            date(2025, 10, 31),
+            None,
+            vintage_at=now,
+            quality_flags=["missing_value", "Data unavailable"],
+        ),
+        NormalizedObservation(
+            23,
+            date(2025, 11, 1),
+            date(2025, 11, 30),
+            Decimal("1"),
+            vintage_at=now,
+        ),
+    ]
+
+    issues, _metrics = validate_ingestion_completeness(
+        [(source, _dataset(23))], rows, mode="incremental", now=now
+    )
+    codes = {issue.code for issue in issues}
+    assert "invalid_allowed_null_periods" in codes
+    assert "missing_observation_value" in codes
 
 
 async def test_fred_metadata_identity_and_frequency_are_enforced(monkeypatch) -> None:

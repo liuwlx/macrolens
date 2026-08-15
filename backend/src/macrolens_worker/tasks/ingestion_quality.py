@@ -108,14 +108,44 @@ def validate_ingestion_completeness(
         )
         allowed_null_periods = int(source.source_locator.get("allowed_null_periods", 0))
         null_rows = [row for row in latest_rows if row.value is None and row.value_text is None]
-        unexpected_nulls = null_rows[allowed_leading_nulls:]
-        if len(unexpected_nulls) > allowed_null_periods:
-            first = unexpected_nulls[allowed_null_periods]
+        candidate_nulls = null_rows[allowed_leading_nulls:]
+        allowed_null_dates_raw = source.source_locator.get("allowed_null_periods_by_date")
+        if allowed_null_dates_raw is None:
+            unexpected_nulls = candidate_nulls[allowed_null_periods:]
+            allowed_nulls_description = str(allowed_null_periods)
+        else:
+            allowed_null_requirements = _parse_allowed_null_periods_by_date(
+                allowed_null_dates_raw
+            )
+            if allowed_null_requirements is None:
+                issues.append(
+                    CompletenessIssue(
+                        "invalid_allowed_null_periods",
+                        f"Source {source_id} allowed_null_periods_by_date must map exact "
+                        "ISO dates to non-empty required quality flags.",
+                        source_id,
+                    )
+                )
+                unexpected_nulls = candidate_nulls
+                allowed_nulls_description = "no exemptions (invalid policy)"
+            else:
+                unexpected_nulls = [
+                    row
+                    for row in candidate_nulls
+                    if (
+                        (required_flag := allowed_null_requirements.get(row.period_start))
+                        is None
+                        or required_flag not in row.quality_flags
+                    )
+                ]
+                allowed_nulls_description = str(sorted(allowed_null_requirements))
+        if unexpected_nulls:
+            first = unexpected_nulls[0]
             issues.append(
                 CompletenessIssue(
                     "missing_observation_value",
                     f"Source {source_id} has {len(unexpected_nulls)} missing latest values; "
-                    f"allowed {allowed_null_periods} after {allowed_leading_nulls} "
+                    f"allowed {allowed_nulls_description} after {allowed_leading_nulls} "
                     "leading periods.",
                     source_id,
                     first.period_start,
@@ -249,6 +279,25 @@ def validate_ingestion_completeness(
         "blocking_issue_count": len(issues),
     }
     return issues, metrics
+
+
+def _parse_allowed_null_periods_by_date(value: object) -> dict[date, str] | None:
+    if not isinstance(value, dict):
+        return None
+    parsed: dict[date, str] = {}
+    for raw_date, required_flag in value.items():
+        if not isinstance(raw_date, str) or not isinstance(required_flag, str):
+            return None
+        if not required_flag or required_flag != required_flag.strip():
+            return None
+        try:
+            period = date.fromisoformat(raw_date)
+        except ValueError:
+            return None
+        if raw_date != period.isoformat():
+            return None
+        parsed[period] = required_flag
+    return parsed
 
 
 def _missing_regular_periods(periods: set[date], frequency: str) -> list[date]:

@@ -527,7 +527,7 @@ async def test_census_adapter_requires_dimensions_and_parses_matrix(monkeypatch)
     current_year = dt_date.today().year
 
     async def handler(request: httpx.Request) -> httpx.Response:
-        assert request.url.params["time"] == f"from+{current_year - 5}+to+{current_year}"
+        assert request.url.params["time"] == f"from {current_year - 5} to {current_year}"
         payload = [
             ["cell_value", "time", "time_slot_date", "seasonally_adj"],
             ["42.5", f"{current_year}-01", f"{current_year}-01-01", "yes"],

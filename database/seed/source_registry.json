@@ -867,6 +867,9 @@
         "require_contiguous": true,
         "start_year": 1947,
         "expected_first_period": "1947-01-01",
+        "allowed_null_periods_by_date": {
+          "2025-10-01": "Data unavailable due to the 2025 lapse in appropriations"
+        },
         "expected_catalog_title": "All items in U.S. city average, all urban consumers, seasonally adjusted",
         "expected_catalog": {
           "series_id": "CUSR0000SA0",
@@ -1305,16 +1308,22 @@
         "table_name": "T10106",
         "frequency": "Q",
         "year": "ALL",
-        "line_match": "Gross domestic product",
+        "series_code": "A191RX",
+        "line_number": "1",
+        "line_description": "Gross domestic product",
+        "probe_year": "2025",
+        "metric_name": "Chained Dollars",
+        "cl_unit": "Level",
+        "unit_mult": "6",
+        "value_scale_to_platform_unit": "0.001",
         "max_staleness_days": 180,
         "min_observations_incremental": 8,
         "min_observations_backfill": 20,
         "require_contiguous": true,
-        "target_description_en": "Real Gross Domestic Product",
-        "allow_contains_match": false
+        "expected_first_period": "1947-01-01"
       },
       "mapping_type": "DIRECT",
-      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "mapping_status": "READY",
       "license_class": "US_GOV_PUBLIC",
       "fallback": "FRED: GDPC1",
       "notes": [
@@ -1366,14 +1375,32 @@
       "provider_series_id": null,
       "locator": {
         "path": "timeseries/eits/marts",
-        "resolve_dimensions_from_dictionary": true,
         "max_staleness_days": 90,
         "min_observations_incremental": 24,
         "min_observations_backfill": 60,
-        "require_contiguous": true
+        "require_contiguous": true,
+        "value_field": "cell_value",
+        "time_field": "time",
+        "required_variables": [
+          "data_type_code",
+          "seasonally_adj",
+          "category_code",
+          "cell_value",
+          "error_data"
+        ],
+        "dimensions": {
+          "data_type_code": "SM",
+          "seasonally_adj": "yes",
+          "category_code": "44X72",
+          "error_data": "no",
+          "for": "us:*"
+        },
+        "probe_period": "2025-01",
+        "start_year": 1992,
+        "expected_first_period": "1992-01-01"
       },
       "mapping_type": "DIRECT",
-      "mapping_status": "NEEDS_DIMENSION_MAPPING",
+      "mapping_status": "READY",
       "license_class": "US_GOV_PUBLIC_ATTRIBUTION",
       "fallback": null,
       "notes": [

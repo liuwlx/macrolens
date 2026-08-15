@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 from collections import defaultdict
 from datetime import UTC, date, datetime
+from decimal import Decimal, InvalidOperation
 from hashlib import sha256
 from typing import Any
 
@@ -375,6 +376,7 @@ class BEAAdapter(ProviderAdapter):
             observations: list[NormalizedObservation] = []
             for source in sources:
                 identity = identities[source.id]
+                platform_unit_scale = self._platform_unit_scale(source)
                 for row in data_rows:
                     if not isinstance(row, dict):
                         raise ProviderDataError("BEA Data contained a non-object row")
@@ -390,6 +392,9 @@ class BEAAdapter(ProviderAdapter):
                     flags: list[str] = []
                     if value is None:
                         flags.append("missing_value")
+                    elif platform_unit_scale is not None:
+                        value *= platform_unit_scale
+                        flags.append(f"scaled_to_platform_unit:{platform_unit_scale}")
                     observations.append(
                         NormalizedObservation(
                             source_series_id=source.id,
@@ -427,6 +432,23 @@ class BEAAdapter(ProviderAdapter):
                 )
             )
         return results
+
+    @staticmethod
+    def _platform_unit_scale(source: SourceSeries) -> Decimal | None:
+        raw_scale = source.source_locator.get("value_scale_to_platform_unit")
+        if raw_scale is None:
+            return None
+        try:
+            scale = Decimal(str(raw_scale))
+        except InvalidOperation as exc:
+            raise ProviderDataError(
+                f"BEA mapping {source.id} has invalid value_scale_to_platform_unit"
+            ) from exc
+        if not scale.is_finite() or scale <= 0:
+            raise ProviderDataError(
+                f"BEA mapping {source.id} value_scale_to_platform_unit must be positive"
+            )
+        return scale
 
     @staticmethod
     def _frequency_code(source: SourceSeries) -> str:
