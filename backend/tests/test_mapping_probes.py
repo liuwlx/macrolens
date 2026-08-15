@@ -329,6 +329,7 @@ async def test_census_probe_passes_on_one_exact_month_and_identity(
             "category_code",
             "cell_value",
             "error_data",
+            "time",
         ],
         dimensions={
             "data_type_code": "SM",
@@ -348,7 +349,6 @@ async def test_census_probe_passes_on_one_exact_month_and_identity(
         requested = set(request.url.params["get"].split(","))
         assert requested == {
             "cell_value",
-            "time",
             "data_type_code",
             "seasonally_adj",
             "category_code",
@@ -1123,6 +1123,7 @@ async def test_census_fetch_filters_full_pinned_identity_from_unfiltered_matrix(
             "category_code",
             "cell_value",
             "error_data",
+            "time",
         ],
         dimensions={
             "data_type_code": "SM",
@@ -1153,6 +1154,9 @@ async def test_census_fetch_filters_full_pinned_identity_from_unfiltered_matrix(
         assert set(request.url.params) == {"get", "time", "key", "for"}
         assert request.url.params["time"] == f"from 1992 to {date.today().year}"
         assert request.url.params["for"] == "us:*"
+        requested = set(request.url.params["get"].split(","))
+        assert "time" not in requested
+        assert "time_slot_date" in requested
         return httpx.Response(200, request=request, json=body)
 
     async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:

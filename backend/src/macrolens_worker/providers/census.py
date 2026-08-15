@@ -132,8 +132,9 @@ class CensusEITSAdapter(ProviderAdapter):
 
         assert isinstance(required_variables, list)
         assert isinstance(dimensions, dict)
-        get_fields = list(
-            dict.fromkeys(
+        get_fields = [
+            field
+            for field in dict.fromkeys(
                 [
                     value_field,
                     time_field,
@@ -141,7 +142,8 @@ class CensusEITSAdapter(ProviderAdapter):
                     *[str(key) for key in dimensions if key != "for"],
                 ]
             )
-        )
+            if field != "time"
+        ]
         params: dict[str, Any] = {
             "get": ",".join(get_fields),
             "time": probe_period,
@@ -396,8 +398,9 @@ class CensusEITSAdapter(ProviderAdapter):
                 raise ProviderDataError(
                     f"Census mapping {source.id} required_variables must be a list"
                 )
-            get_fields = list(
-                dict.fromkeys(
+            get_fields = [
+                field
+                for field in dict.fromkeys(
                     [
                         value_field,
                         time_field,
@@ -406,7 +409,8 @@ class CensusEITSAdapter(ProviderAdapter):
                         *[key for key in dimensions if key != "for"],
                     ]
                 )
-            )
+                if field != "time"
+            ]
             path = str(locator.get("path") or f"timeseries/eits/{dataset.code}").strip("/")
             url = f"https://api.census.gov/data/{path}"
             start_value = str(locator.get("start") or (locator.get("start_year") or 1990))
