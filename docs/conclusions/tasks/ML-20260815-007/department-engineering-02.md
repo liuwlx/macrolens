@@ -42,4 +42,3 @@ Alembic CLI 能否导入应用包必须由 CI 工作目录和导入路径共同�
 ## 7. 当前场景的一次性更优方案提示词
 
 > 在 ML-20260815-007 候选上读取 PR #11 backend 失败日志，用不连接数据库的静态测试复现 `backend/` 下 Alembic 缺少 `src` 导入路径。将 workflow 改为 `working-directory: backend` 且步骤级 `PYTHONPATH: src`，保持 upgrade→downgrade→upgrade 命令不变；运行静态测试、项目六门禁和 diff check，记录本地 Docker/migration/seed/sync 均为零，再推送同一 PR 等待完整远程 CI。
-

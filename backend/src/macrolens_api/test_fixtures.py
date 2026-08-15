@@ -5,6 +5,7 @@ import os
 from calendar import monthrange
 from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
+from uuid import uuid4
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -27,6 +28,7 @@ from .models import (
     FomcProjection,
     ForecastSnapshot,
     IngestionRun,
+    Job,
     MarketReaction,
     Note,
     Notification,
@@ -46,8 +48,11 @@ from .models import (
     User,
     Workspace,
 )
+from .services.source_mapping_identity import source_mapping_fingerprint
+from .services.source_mappings import approve_mapping_from_probe
 
 FIXTURE_VERSION = "runtime-acceptance-v1"
+SourceRow = tuple[SourceSeries, Series, Dataset, Provider]
 
 
 def _month_sequence(start: date, count: int) -> list[date]:
@@ -78,6 +83,56 @@ def _fixture_value(series: Series, series_index: int, point_index: int) -> Decim
     if "usd" in series.unit_code:
         return Decimal(50 + series_index * 5) + Decimal(point_index) / Decimal(2)
     return Decimal(90 + series_index * 10) + Decimal(point_index) / Decimal(3)
+
+
+async def _approve_runtime_acceptance_mappings(
+    session: AsyncSession,
+    source_rows: list[SourceRow],
+) -> None:
+    """Create explicit test-only Probe lineage for mappings from a clean catalog seed."""
+
+    for source, _series, dataset, provider in source_rows:
+        if source.mapping_status == "verified" and source.is_primary:
+            continue
+        fingerprint = source_mapping_fingerprint(source, dataset, provider)
+        probe_job = Job(
+            id=uuid4(),
+            job_type="mapping_probe",
+            status="succeeded",
+            priority=0,
+            payload={"source_series_id": source.id, "fixture": True},
+            idempotency_key=f"{FIXTURE_VERSION}:mapping-probe:{source.id}",
+            attempts=1,
+            max_attempts=1,
+            started_at=datetime.now(UTC),
+            finished_at=datetime.now(UTC),
+            result={
+                "source_series_id": source.id,
+                "provider_code": provider.code,
+                "provider_series_id": source.provider_series_id,
+                "http_reachable": True,
+                "http_status": 200,
+                "business_success": True,
+                "identity_match": True,
+                "authorization_available": True,
+                "production_ready": True,
+                "classification": "PASS",
+                "response_sha256": hashlib.sha256(
+                    f"{FIXTURE_VERSION}:{fingerprint}".encode()
+                ).hexdigest(),
+                "mapping_fingerprint": fingerprint,
+                "issues": [],
+                "evidence": {"fixture": True},
+            },
+        )
+        session.add(probe_job)
+        await session.flush()
+        await approve_mapping_from_probe(
+            session,
+            source_series_id=source.id,
+            probe_job_id=probe_job.id,
+            verified_by="runtime-acceptance-fixture",
+        )
 
 
 async def seed_runtime_acceptance_fixtures(session: AsyncSession) -> dict[str, int | str]:
@@ -113,17 +168,17 @@ async def seed_runtime_acceptance_fixtures(session: AsyncSession) -> dict[str, i
                 .join(Dataset, Dataset.id == SourceSeries.dataset_id)
                 .join(Provider, Provider.id == Dataset.provider_id)
                 .where(
-                    SourceSeries.is_primary.is_(True),
-                    SourceSeries.mapping_status == "verified",
+                    SourceSeries.mapping_status.in_(("needs_review", "verified")),
                     Series.status == "active",
                 )
                 .order_by(Series.theme, Series.canonical_code)
                 .limit(12)
             )
-        ).all()
+        ).tuples().all()
     )
     if len(source_rows) < 3:
-        raise RuntimeError("Acceptance fixtures require at least three verified source mappings")
+        raise RuntimeError("Acceptance fixtures require at least three active source mappings")
+    await _approve_runtime_acceptance_mappings(session, source_rows)
 
     provider = source_rows[0][3]
     run = IngestionRun(
