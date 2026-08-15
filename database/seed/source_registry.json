@@ -867,9 +867,9 @@
         "require_contiguous": true,
         "start_year": 1947,
         "expected_first_period": "1947-01-01",
-        "allowed_null_periods_by_date": [
-          "2025-10-01"
-        ],
+        "allowed_null_periods_by_date": {
+          "2025-10-01": "Data unavailable due to the 2025 lapse in appropriations"
+        },
         "expected_catalog_title": "All items in U.S. city average, all urban consumers, seasonally adjusted",
         "expected_catalog": {
           "series_id": "CUSR0000SA0",
@@ -1315,6 +1315,7 @@
         "metric_name": "Chained Dollars",
         "cl_unit": "Level",
         "unit_mult": "6",
+        "value_scale_to_platform_unit": "0.001",
         "max_staleness_days": 180,
         "min_observations_incremental": 8,
         "min_observations_backfill": 20,

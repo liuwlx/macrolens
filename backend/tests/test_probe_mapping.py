@@ -110,6 +110,17 @@ def _source(
     return source, dataset, provider
 
 
+def test_bea_platform_unit_scale_is_bound_to_mapping_fingerprint() -> None:
+    source, dataset, provider = _source("BEA_API")
+    original = source_mapping_fingerprint(source, dataset, provider)
+    source.source_locator = {
+        **source.source_locator,
+        "value_scale_to_platform_unit": "0.001",
+    }
+
+    assert source_mapping_fingerprint(source, dataset, provider) != original
+
+
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     "provider_code",

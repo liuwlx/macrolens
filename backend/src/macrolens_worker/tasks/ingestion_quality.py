@@ -114,34 +114,31 @@ def validate_ingestion_completeness(
             unexpected_nulls = candidate_nulls[allowed_null_periods:]
             allowed_nulls_description = str(allowed_null_periods)
         else:
-            allowed_null_dates: set[date] = set()
-            if isinstance(allowed_null_dates_raw, list):
-                try:
-                    allowed_null_dates = {
-                        date.fromisoformat(str(value)) for value in allowed_null_dates_raw
-                    }
-                except ValueError:
-                    issues.append(
-                        CompletenessIssue(
-                            "invalid_allowed_null_periods",
-                            f"Source {source_id} allowed_null_periods_by_date contains "
-                            "an invalid ISO date.",
-                            source_id,
-                        )
-                    )
-            else:
+            allowed_null_requirements = _parse_allowed_null_periods_by_date(
+                allowed_null_dates_raw
+            )
+            if allowed_null_requirements is None:
                 issues.append(
                     CompletenessIssue(
                         "invalid_allowed_null_periods",
-                        f"Source {source_id} allowed_null_periods_by_date must be a list "
-                        "of ISO dates.",
+                        f"Source {source_id} allowed_null_periods_by_date must map exact "
+                        "ISO dates to non-empty required quality flags.",
                         source_id,
                     )
                 )
-            unexpected_nulls = [
-                row for row in candidate_nulls if row.period_start not in allowed_null_dates
-            ]
-            allowed_nulls_description = str(sorted(allowed_null_dates))
+                unexpected_nulls = candidate_nulls
+                allowed_nulls_description = "no exemptions (invalid policy)"
+            else:
+                unexpected_nulls = [
+                    row
+                    for row in candidate_nulls
+                    if (
+                        (required_flag := allowed_null_requirements.get(row.period_start))
+                        is None
+                        or required_flag not in row.quality_flags
+                    )
+                ]
+                allowed_nulls_description = str(sorted(allowed_null_requirements))
         if unexpected_nulls:
             first = unexpected_nulls[0]
             issues.append(
@@ -282,6 +279,25 @@ def validate_ingestion_completeness(
         "blocking_issue_count": len(issues),
     }
     return issues, metrics
+
+
+def _parse_allowed_null_periods_by_date(value: object) -> dict[date, str] | None:
+    if not isinstance(value, dict):
+        return None
+    parsed: dict[date, str] = {}
+    for raw_date, required_flag in value.items():
+        if not isinstance(raw_date, str) or not isinstance(required_flag, str):
+            return None
+        if not required_flag or required_flag != required_flag.strip():
+            return None
+        try:
+            period = date.fromisoformat(raw_date)
+        except ValueError:
+            return None
+        if raw_date != period.isoformat():
+            return None
+        parsed[period] = required_flag
+    return parsed
 
 
 def _missing_regular_periods(periods: set[date], frequency: str) -> list[date]:

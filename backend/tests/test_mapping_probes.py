@@ -251,6 +251,57 @@ async def test_bea_probe_compares_numeric_zero_unit_multiplier_strictly(
     get_settings.cache_clear()
 
 
+async def test_bea_probe_keeps_unit_multiplier_identity_with_platform_scale(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("BEA_API_KEY", "probe-secret")
+    get_settings.cache_clear()
+    body = {
+        "BEAAPI": {
+            "Results": {
+                "Data": [
+                    {
+                        "SeriesCode": "A191RX",
+                        "LineNumber": "1",
+                        "LineDescription": "Gross domestic product",
+                        "TimePeriod": "2025Q1",
+                        "DataValue": "23,548,210",
+                        "METRIC_NAME": "Chained Dollars",
+                        "CL_UNIT": "Level",
+                        "UNIT_MULT": "6",
+                    }
+                ]
+            }
+        }
+    }
+
+    async def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, request=request, json=body)
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+        result = await BEAAdapter(client).probe(
+            _provider("BEA_API"),
+            _bea_source(
+                table_name="T10106",
+                frequency="Q",
+                series_code="A191RX",
+                line_number="1",
+                line_description="Gross domestic product",
+                probe_year="2025",
+                metric_name="Chained Dollars",
+                cl_unit="Level",
+                unit_mult="6",
+                value_scale_to_platform_unit="0.001",
+            ),
+            _dataset("NIPA"),
+        )
+
+    assert result.classification == "PASS"
+    assert result.evidence is not None
+    assert result.evidence.details["unit_mult"] == "6"
+    get_settings.cache_clear()
+
+
 @pytest.mark.asyncio
 async def test_census_probe_passes_on_one_exact_month_and_identity(
     monkeypatch: pytest.MonkeyPatch,

@@ -50,3 +50,20 @@
 ## 7. 一次解决的更优方案提示词
 
 > 从 `origin/master=97f20a8` 创建/使用任务指定 worktree，先输出四个公开测试 seam 和预期 RED 信号。逐切片完成：1）质量门禁只允许 `US.CPI.HEADLINE/2025-10-01` 空值；2）EIA probe 用 offset 0 与 total-1，两响应哈希，legacy identity 为 `RWTC`，seriesid 增量全分页后本地 cutoff，普通路由保持 fail-closed；3）Census 请求参数只含 `get,time,key,for`，空格时间范围，按 `SM/yes/44X72/no/us:*` 过滤并要求每期唯一；4）固定 Census 和 BEA registry locator/status。每个切片先单测 RED 再 GREEN，随后运行相邻 provider 回归、全量 ruff/mypy/pytest、JSON/diff/秘密/范围检查。禁止 Docker、migration、seed、sync/backfill、直接 SQL、调度与服务器写入；报告实际未跑项和后续 probe/approval/audit-live 解锁条件，最后只暂存授权文件并提交。
+
+## 8. 双轴 Spec 审查 remediation
+
+第二轮 Spec 审查指出两项阻断。第一，BEA `A191RX/2025Q1` 官方值为 `DataValue='23,548,210'`、`UNIT_MULT='6'`，而平台 `US.REAL.GDP` 单位为十亿美元；原 adapter 直接产出 `23548210`，单位量级错误。第二，BLS CPI 的日期白名单只校验 `2025-10-01`，同日缺失或伪造脚注也会通过，证据约束不足。
+
+按 `tdd` skill 再拆两个公共 seam：`BEAAdapter.fetch` 的数值归一化与 `validate_ingestion_completeness` 的缺值证据门禁。BEA RED 为精确断言期望 `Decimal('23548.210')`、实际 `Decimal('23548210')`，`1 failed`；BLS RED 为新日期到脚注映射被旧实现拒绝，同时旧 list schema 仍错误放行，定向结果 `2 failed, 3 passed`。测试未使用 float，也未调用真实 Provider。
+
+remediation 结果：
+
+- BEA locator 新增语义明确的 `value_scale_to_platform_unit: '0.001'`。adapter 仅在该字段存在时用 `Decimal` 乘法换算，并记录 `scaled_to_platform_unit:0.001`；未配置映射保持原值。非有限值、零或负数 fail closed。`source_mapping_fingerprint` 已覆盖完整 locator，新增测试证明 scale 变更会改变 mapping fingerprint。
+- BEA Probe 继续独立校验官方 `METRIC_NAME='Chained Dollars'`、`CL_UNIT='Level'`、`UNIT_MULT='6'`；scale 不替代、不放宽官方身份验证。新增 GDP 实值用例证明配置 scale 时 Probe 证据仍绑定 `unit_mult='6'`。
+- BLS `allowed_null_periods_by_date` 改为严格的 `ISO 日期 -> 必需 quality flag` 映射。只有 period 精确为 `2025-10-01` 且 `quality_flags` 精确包含官方脚注 `Data unavailable due to the 2025 lapse in appropriations` 才豁免。相同日期缺脚注或错脚注均产生 `missing_observation_value`。
+- BLS schema 对旧 list、非完整 ISO 日期、空/带边界空白字符串和非字符串 flag 均产生 `invalid_allowed_null_periods`，并取消所有该策略豁免，继续产生 `missing_observation_value`。
+
+remediation 验证证据：相关三个测试文件 `102 passed`；`ruff check backend` 为 `All checks passed!`；`mypy backend/src` 为 `Success: no issues found in 70 source files`；完整 `pytest backend/tests -q` 为 `254 passed, 5 warnings in 14.91s`；`git diff --check` 通过。5 条 warning 均为既有 FastAPI/Starlette deprecation warning。
+
+本轮重新读取 `AGENTS.md`、组织配置/README、任务卡、开发宪法索引与 `01-local-development-and-freeze.md`，并复核 registry、taxonomy/source 文档和 active experience；未调用子 Agent。使用 TDD skill、PowerShell 只读检查、`apply_patch`、pytest、ruff、mypy 和 Git。没有执行 Docker、服务器访问、migration、seed、sync/backfill、approval、数据库写入、部署或重启；未跟踪任务卡保持原样。任务总体仍需由获授权席位在合并后完成真实 Probe/approval 与四源 `audit-live`，本次 remediation 不改变该运行态风险。
