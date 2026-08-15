@@ -18,13 +18,13 @@ from .base import (
     ProviderAdapter,
     ProviderDataError,
     ProviderFetchResult,
-    build_mapping_probe_result,
+    _build_mapping_probe_result,
+    _raise_for_status_safely,
+    _redact_sensitive_data,
+    _sanitized_transport_error,
     deduplicate_observations,
     parse_decimal,
     period_end,
-    raise_for_status_safely,
-    redact_sensitive_data,
-    sanitized_transport_error,
 )
 
 
@@ -45,8 +45,8 @@ class EIAAdapter(ProviderAdapter):
         probed_at = datetime.now(UTC)
         provider_series_id = str(source.provider_series_id) if source.provider_series_id else None
         expected_route = f"v2/seriesid/{provider_series_id}" if provider_series_id else None
-        route = str(source.source_locator.get("route") or "").strip("/")
-        request_url = self._route_url(route or expected_route or "", False)
+        route = str(source.source_locator.get("route") or "")
+        request_url = self._route_url(route.strip("/") or expected_route or "", False)
         configuration_issues: list[MappingProbeIssue] = []
         if not provider_series_id:
             configuration_issues.append(
@@ -74,7 +74,7 @@ class EIAAdapter(ProviderAdapter):
                 )
             )
         if configuration_issues:
-            return build_mapping_probe_result(
+            return _build_mapping_probe_result(
                 provider_code=provider.code,
                 source_series_id=source.id,
                 provider_series_id=provider_series_id,
@@ -98,7 +98,7 @@ class EIAAdapter(ProviderAdapter):
         try:
             response = await self.client.get(request_url, params=params)
         except httpx.TransportError:
-            return build_mapping_probe_result(
+            return _build_mapping_probe_result(
                 provider_code=provider.code,
                 source_series_id=source.id,
                 provider_series_id=provider_series_id,
@@ -120,7 +120,7 @@ class EIAAdapter(ProviderAdapter):
         digest = sha256(raw).hexdigest()
         content_type = response.headers.get("content-type", "application/json")
         if not 200 <= response.status_code < 300:
-            return build_mapping_probe_result(
+            return _build_mapping_probe_result(
                 provider_code=provider.code,
                 source_series_id=source.id,
                 provider_series_id=provider_series_id,
@@ -148,7 +148,7 @@ class EIAAdapter(ProviderAdapter):
             or not isinstance(response_payload, dict)
             or not isinstance(response_payload.get("data"), list)
         ):
-            return build_mapping_probe_result(
+            return _build_mapping_probe_result(
                 provider_code=provider.code,
                 source_series_id=source.id,
                 provider_series_id=provider_series_id,
@@ -230,7 +230,7 @@ class EIAAdapter(ProviderAdapter):
                     "EIA API authorization is unavailable",
                 )
             )
-        return build_mapping_probe_result(
+        return _build_mapping_probe_result(
             provider_code=provider.code,
             source_series_id=source.id,
             provider_series_id=provider_series_id,
@@ -313,10 +313,10 @@ class EIAAdapter(ProviderAdapter):
                 try:
                     response = await self.client.get(url, params=params)
                 except httpx.TransportError:
-                    raise sanitized_transport_error(
+                    raise _sanitized_transport_error(
                         provider_code=self.code, request_url=url
                     ) from None
-                raise_for_status_safely(
+                _raise_for_status_safely(
                     response,
                     provider_code=self.code,
                     request_url=url,
@@ -333,8 +333,8 @@ class EIAAdapter(ProviderAdapter):
                 rows = response_payload.get("data", []) or []
                 if not isinstance(rows, list):
                     raise ProviderDataError("EIA response.data was not a list")
-                pages.append(redact_sensitive_data(payload, secrets=(settings.eia_api_key,)))
-                request_log.append(redact_sensitive_data(params, secrets=(settings.eia_api_key,)))
+                pages.append(_redact_sensitive_data(payload, secrets=(settings.eia_api_key,)))
+                request_log.append(_redact_sensitive_data(params, secrets=(settings.eia_api_key,)))
                 last_request_url = url
                 content_type = response.headers.get("content-type", "application/json")
 

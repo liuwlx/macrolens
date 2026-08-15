@@ -202,6 +202,31 @@ async def test_bea_probe_passes_only_on_unique_fully_pinned_identity(
 
 
 @pytest.mark.asyncio
+async def test_bea_probe_compares_numeric_zero_unit_multiplier_strictly(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("BEA_API_KEY", "probe-secret")
+    get_settings.cache_clear()
+    body = json.loads((FIXTURES / "bea_pce_pass.json").read_text())
+    body["BEAAPI"]["Results"]["Data"][0]["UNIT_MULT"] = 0
+
+    async def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, request=request, json=body)
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+        result = await BEAAdapter(client).probe(
+            _provider("BEA_API"),
+            _bea_source(unit_mult=0),
+            _dataset("NIUnderlyingDetail"),
+        )
+
+    assert result.classification == "PASS"
+    assert result.evidence is not None
+    assert result.evidence.details["unit_mult"] == "0"
+    get_settings.cache_clear()
+
+
+@pytest.mark.asyncio
 async def test_census_probe_passes_on_one_exact_month_and_identity(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -304,8 +329,10 @@ async def test_eia_probe_failure_matrix_is_fail_closed_and_secret_safe(
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize("route", ["v2/petroleum/pri/spt/data", "/v2/seriesid/PET.RWTC.D/"])
 async def test_eia_probe_rejects_route_drift_before_http(
     monkeypatch: pytest.MonkeyPatch,
+    route: str,
 ) -> None:
     monkeypatch.setenv("EIA_API_KEY", "probe-secret")
     get_settings.cache_clear()
@@ -317,7 +344,7 @@ async def test_eia_probe_rejects_route_drift_before_http(
         return httpx.Response(200, request=request)
 
     source = _eia_source()
-    source.source_locator["route"] = "v2/petroleum/pri/spt/data"
+    source.source_locator["route"] = route
     async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
         result = await EIAAdapter(client).probe(
             _provider("EIA_API_V2"), source, _dataset("Petroleum")
@@ -421,6 +448,7 @@ async def test_bea_probe_blocks_unpinned_identity_without_http(
         ("transport", "transport_error", "BLOCKED"),
         ("http", "http_status", "BLOCKED"),
         ("business", "business_error", "BLOCKED"),
+        ("geography", "geography_drift", "BLOCKED"),
         ("headers", "headers_mismatch", "BLOCKED"),
         ("identity", "dimensions_drift", "BLOCKED"),
         ("duplicate", "row_count_invalid", "BLOCKED"),
@@ -441,6 +469,8 @@ async def test_census_probe_failure_matrix_is_fail_closed_and_secret_safe(
     body = json.loads((FIXTURES / "census_retail_pass.json").read_text())
     if case == "business":
         body = {"error": secret}
+    elif case == "geography":
+        body[1][4] = "2"
     elif case == "headers":
         body[0].append("unexpected_field")
         body[1].append("unexpected")
@@ -651,7 +681,12 @@ async def test_fetch_http_errors_never_expose_key(
 
     async def handler(request: httpx.Request) -> httpx.Response:
         assert secret in str(request.url)
-        return httpx.Response(500, request=request, content=secret.encode())
+        return httpx.Response(
+            500,
+            request=request,
+            headers={"X-Api-Key": secret, "X-Echo": secret},
+            content=secret.encode(),
+        )
 
     async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
         with pytest.raises(httpx.HTTPStatusError) as captured:
@@ -661,6 +696,7 @@ async def test_fetch_http_errors_never_expose_key(
 
     assert secret not in str(captured.value)
     assert "?" not in str(captured.value.request.url)
+    assert secret not in str(captured.value.response.headers)
     get_settings.cache_clear()
 
 

@@ -161,7 +161,7 @@ class MappingProbeResult:
                 )
             if inferred_issues:
                 object.__setattr__(self, "issues", tuple(inferred_issues))
-        classification = classify_mapping_probe(evidence, self.issues)
+        classification = _classify_mapping_probe(evidence, self.issues)
         if classification != self.classification:
             raise ValueError("MappingProbeResult classification contradicts evidence and issues")
         if self.production_ready != (classification == "PASS"):
@@ -174,7 +174,7 @@ class MappingProbeResult:
         return serialized
 
 
-def classify_mapping_probe(
+def _classify_mapping_probe(
     evidence: MappingProbeEvidence,
     issues: tuple[MappingProbeIssue, ...],
 ) -> Literal["PASS", "AUTH_REQUIRED", "BLOCKED"]:
@@ -197,7 +197,7 @@ def classify_mapping_probe(
     return "BLOCKED"
 
 
-def build_mapping_probe_result(
+def _build_mapping_probe_result(
     *,
     provider_code: str,
     source_series_id: int,
@@ -211,7 +211,7 @@ def build_mapping_probe_result(
     evidence: MappingProbeEvidence,
     issues: tuple[MappingProbeIssue, ...] = (),
 ) -> MappingProbeResult:
-    classification = classify_mapping_probe(evidence, issues)
+    classification = _classify_mapping_probe(evidence, issues)
     return MappingProbeResult(
         provider_code=provider_code,
         source_series_id=source_series_id,
@@ -241,19 +241,28 @@ _SENSITIVE_PARAMETER_NAMES = {
 }
 
 
-def redact_sensitive_data(value: Any, *, secrets: tuple[str, ...] = ()) -> Any:
+def _is_sensitive_name(value: object) -> bool:
+    normalized = re.sub(r"[^a-z0-9]", "", str(value).lower())
+    return (
+        normalized in _SENSITIVE_PARAMETER_NAMES
+        or normalized.endswith("apikey")
+        or normalized.endswith("authorization")
+    )
+
+
+def _redact_sensitive_data(value: Any, *, secrets: tuple[str, ...] = ()) -> Any:
     """Remove credential fields and values from persistable provider evidence."""
 
     if isinstance(value, dict):
         return {
-            key: redact_sensitive_data(item, secrets=secrets)
+            key: _redact_sensitive_data(item, secrets=secrets)
             for key, item in value.items()
-            if re.sub(r"[^a-z0-9]", "", str(key).lower()) not in _SENSITIVE_PARAMETER_NAMES
+            if not _is_sensitive_name(key)
         }
     if isinstance(value, list):
-        return [redact_sensitive_data(item, secrets=secrets) for item in value]
+        return [_redact_sensitive_data(item, secrets=secrets) for item in value]
     if isinstance(value, tuple):
-        return tuple(redact_sensitive_data(item, secrets=secrets) for item in value)
+        return tuple(_redact_sensitive_data(item, secrets=secrets) for item in value)
     if isinstance(value, str):
         sanitized = value
         for secret in secrets:
@@ -269,12 +278,12 @@ def redact_sensitive_data(value: Any, *, secrets: tuple[str, ...] = ()) -> Any:
     return value
 
 
-def strip_url_query(url: str) -> str:
+def _strip_url_query(url: str) -> str:
     parts = urlsplit(url)
     return urlunsplit((parts.scheme, parts.netloc, parts.path, "", ""))
 
 
-def raise_for_status_safely(
+def _raise_for_status_safely(
     response: httpx.Response,
     *,
     provider_code: str,
@@ -283,11 +292,11 @@ def raise_for_status_safely(
 ) -> None:
     if 200 <= response.status_code < 300:
         return
-    safe_request = httpx.Request(response.request.method, strip_url_query(request_url))
+    safe_request = httpx.Request(response.request.method, _strip_url_query(request_url))
     safe_response = httpx.Response(
         response.status_code,
-        headers=response.headers,
-        content=redact_sensitive_data(response.content, secrets=secrets),
+        headers=_redact_sensitive_data(dict(response.headers), secrets=secrets),
+        content=_redact_sensitive_data(response.content, secrets=secrets),
         request=safe_request,
     )
     raise httpx.HTTPStatusError(
@@ -297,10 +306,10 @@ def raise_for_status_safely(
     )
 
 
-def sanitized_transport_error(*, provider_code: str, request_url: str) -> httpx.TransportError:
+def _sanitized_transport_error(*, provider_code: str, request_url: str) -> httpx.TransportError:
     return httpx.TransportError(
         f"{provider_code} transport request failed",
-        request=httpx.Request("GET", strip_url_query(request_url)),
+        request=httpx.Request("GET", _strip_url_query(request_url)),
     )
 
 

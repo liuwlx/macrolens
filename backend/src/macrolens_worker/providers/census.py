@@ -18,13 +18,13 @@ from .base import (
     ProviderAdapter,
     ProviderDataError,
     ProviderFetchResult,
-    build_mapping_probe_result,
+    _build_mapping_probe_result,
+    _raise_for_status_safely,
+    _redact_sensitive_data,
+    _sanitized_transport_error,
     deduplicate_observations,
     parse_decimal,
     period_end,
-    raise_for_status_safely,
-    redact_sensitive_data,
-    sanitized_transport_error,
 )
 
 
@@ -108,7 +108,7 @@ class CensusEITSAdapter(ProviderAdapter):
                 )
             )
         if configuration_issues:
-            return build_mapping_probe_result(
+            return _build_mapping_probe_result(
                 provider_code=provider.code,
                 source_series_id=source.id,
                 provider_series_id=provider_series_id,
@@ -144,7 +144,7 @@ class CensusEITSAdapter(ProviderAdapter):
         try:
             response = await self.client.get(request_url, params=params)
         except httpx.TransportError:
-            return build_mapping_probe_result(
+            return _build_mapping_probe_result(
                 provider_code=provider.code,
                 source_series_id=source.id,
                 provider_series_id=provider_series_id,
@@ -167,7 +167,7 @@ class CensusEITSAdapter(ProviderAdapter):
         digest = sha256(raw).hexdigest()
         content_type = response.headers.get("content-type", "application/json")
         if not 200 <= response.status_code < 300:
-            return build_mapping_probe_result(
+            return _build_mapping_probe_result(
                 provider_code=provider.code,
                 source_series_id=source.id,
                 provider_series_id=provider_series_id,
@@ -191,7 +191,7 @@ class CensusEITSAdapter(ProviderAdapter):
         except ValueError:
             payload = None
         if not isinstance(payload, list) or not payload or not isinstance(payload[0], list):
-            return build_mapping_probe_result(
+            return _build_mapping_probe_result(
                 provider_code=provider.code,
                 source_series_id=source.id,
                 provider_series_id=provider_series_id,
@@ -265,6 +265,29 @@ class CensusEITSAdapter(ProviderAdapter):
                     "Census response dimensions do not match the pinned identity",
                 )
             )
+        geography: dict[str, str] = {}
+        if for_value:
+            geography_value = str(row.get(geography_name) or "")
+            if geography_name in row:
+                geography[geography_name] = geography_value
+            predicate = for_value.split(":", 1)[1] if ":" in for_value else ""
+            expected_geography = (
+                "1"
+                if geography_name == "us" and predicate == "*"
+                else predicate
+                if predicate != "*"
+                else None
+            )
+            if not geography_value or (
+                expected_geography is not None and geography_value != expected_geography
+            ):
+                identity_issues.append(
+                    MappingProbeIssue(
+                        "identity",
+                        "geography_drift",
+                        "Census response geography does not match the request predicate",
+                    )
+                )
         if str(row.get(time_field) or "") != probe_period:
             identity_issues.append(
                 MappingProbeIssue(
@@ -289,10 +312,6 @@ class CensusEITSAdapter(ProviderAdapter):
                     "Census API authorization is unavailable",
                 )
             )
-        geography: dict[str, str] = {}
-        if for_value:
-            if geography_name in row:
-                geography[geography_name] = str(row[geography_name])
         details = {
             "headers": headers,
             "dimensions": response_dimensions,
@@ -301,7 +320,7 @@ class CensusEITSAdapter(ProviderAdapter):
             "value": str(row.get(value_field) or ""),
             "time": str(row.get(time_field) or ""),
         }
-        return build_mapping_probe_result(
+        return _build_mapping_probe_result(
             provider_code=provider.code,
             source_series_id=source.id,
             provider_series_id=provider_series_id,
@@ -385,8 +404,8 @@ class CensusEITSAdapter(ProviderAdapter):
             try:
                 response = await self.client.get(url, params=params)
             except httpx.TransportError:
-                raise sanitized_transport_error(provider_code=self.code, request_url=url) from None
-            raise_for_status_safely(
+                raise _sanitized_transport_error(provider_code=self.code, request_url=url) from None
+            _raise_for_status_safely(
                 response,
                 provider_code=self.code,
                 request_url=url,
@@ -466,8 +485,8 @@ class CensusEITSAdapter(ProviderAdapter):
             raw_bundle = json.dumps(
                 {
                     "provider": self.code,
-                    "request": redact_sensitive_data(params, secrets=(settings.census_api_key,)),
-                    "response": redact_sensitive_data(payload, secrets=(settings.census_api_key,)),
+                    "request": _redact_sensitive_data(params, secrets=(settings.census_api_key,)),
+                    "response": _redact_sensitive_data(payload, secrets=(settings.census_api_key,)),
                 },
                 ensure_ascii=False,
                 separators=(",", ":"),
@@ -477,7 +496,7 @@ class CensusEITSAdapter(ProviderAdapter):
                     provider=provider,
                     dataset=dataset,
                     request_url=url,
-                    request_parameters=redact_sensitive_data(
+                    request_parameters=_redact_sensitive_data(
                         params, secrets=(settings.census_api_key,)
                     ),
                     content_type=response.headers.get("content-type", "application/json"),

@@ -19,14 +19,14 @@ from .base import (
     ProviderAdapter,
     ProviderDataError,
     ProviderFetchResult,
-    build_mapping_probe_result,
+    _build_mapping_probe_result,
+    _raise_for_status_safely,
+    _redact_sensitive_data,
+    _sanitized_transport_error,
     deduplicate_observations,
     normalize_label,
     parse_decimal,
     period_end,
-    raise_for_status_safely,
-    redact_sensitive_data,
-    sanitized_transport_error,
 )
 
 
@@ -54,7 +54,7 @@ class BEAAdapter(ProviderAdapter):
         }
         missing = [name for name, value in pinned.items() if not value.strip()]
         if missing:
-            return build_mapping_probe_result(
+            return _build_mapping_probe_result(
                 provider_code=provider.code,
                 source_series_id=source.id,
                 provider_series_id=provider_series_id,
@@ -87,7 +87,7 @@ class BEAAdapter(ProviderAdapter):
         try:
             response = await self.client.get(self.endpoint, params=params)
         except httpx.TransportError:
-            return build_mapping_probe_result(
+            return _build_mapping_probe_result(
                 provider_code=provider.code,
                 source_series_id=source.id,
                 provider_series_id=provider_series_id,
@@ -108,7 +108,7 @@ class BEAAdapter(ProviderAdapter):
         digest = sha256(raw).hexdigest()
         content_type = response.headers.get("content-type", "application/json")
         if not 200 <= response.status_code < 300:
-            return build_mapping_probe_result(
+            return _build_mapping_probe_result(
                 provider_code=provider.code,
                 source_series_id=source.id,
                 provider_series_id=provider_series_id,
@@ -132,7 +132,7 @@ class BEAAdapter(ProviderAdapter):
         errors = self._business_errors(payload)
         data_rows = self._data_rows(payload)
         if errors or data_rows is None:
-            return build_mapping_probe_result(
+            return _build_mapping_probe_result(
                 provider_code=provider.code,
                 source_series_id=source.id,
                 provider_series_id=provider_series_id,
@@ -203,7 +203,10 @@ class BEAAdapter(ProviderAdapter):
             expected = locator.get(locator_name)
             if expected is not None and (
                 not identity_rows
-                or any(str(row.get(response_name) or "") != str(expected) for row in identity_rows)
+                or any(
+                    self._string_value(row.get(response_name)) != str(expected)
+                    for row in identity_rows
+                )
             ):
                 issue_specs.append(
                     (
@@ -229,11 +232,11 @@ class BEAAdapter(ProviderAdapter):
                 str(first_row.get("LineDescription") or "")
             ),
             "time_period": str(first_row.get("TimePeriod") or ""),
-            "metric_name": str(first_row.get("METRIC_NAME") or ""),
-            "cl_unit": str(first_row.get("CL_UNIT") or ""),
-            "unit_mult": str(first_row.get("UNIT_MULT") or ""),
+            "metric_name": self._string_value(first_row.get("METRIC_NAME")),
+            "cl_unit": self._string_value(first_row.get("CL_UNIT")),
+            "unit_mult": self._string_value(first_row.get("UNIT_MULT")),
         }
-        return build_mapping_probe_result(
+        return _build_mapping_probe_result(
             provider_code=provider.code,
             source_series_id=source.id,
             provider_series_id=provider_series_id,
@@ -257,6 +260,10 @@ class BEAAdapter(ProviderAdapter):
     @staticmethod
     def _normalize_whitespace(value: str) -> str:
         return " ".join(value.split())
+
+    @staticmethod
+    def _string_value(value: Any) -> str:
+        return "" if value is None else str(value)
 
     @staticmethod
     def _business_errors(payload: Any) -> list[Any]:
@@ -339,10 +346,10 @@ class BEAAdapter(ProviderAdapter):
             try:
                 response = await self.client.get(self.endpoint, params=params)
             except httpx.TransportError:
-                raise sanitized_transport_error(
+                raise _sanitized_transport_error(
                     provider_code=self.code, request_url=self.endpoint
                 ) from None
-            raise_for_status_safely(
+            _raise_for_status_safely(
                 response,
                 provider_code=self.code,
                 request_url=self.endpoint,
@@ -399,7 +406,7 @@ class BEAAdapter(ProviderAdapter):
                 {
                     "provider": self.code,
                     "resolved_identities": identities,
-                    "response": redact_sensitive_data(payload, secrets=(settings.bea_api_key,)),
+                    "response": _redact_sensitive_data(payload, secrets=(settings.bea_api_key,)),
                 },
                 ensure_ascii=False,
                 separators=(",", ":"),
@@ -410,7 +417,7 @@ class BEAAdapter(ProviderAdapter):
                     provider=provider,
                     dataset=dataset,
                     request_url=self.endpoint,
-                    request_parameters=redact_sensitive_data(
+                    request_parameters=_redact_sensitive_data(
                         params, secrets=(settings.bea_api_key,)
                     ),
                     content_type=response.headers.get("content-type", "application/json"),
