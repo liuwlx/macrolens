@@ -9,7 +9,13 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from macrolens_api.config import get_settings
-from macrolens_api.models import Provider, ReleaseDefinition, ReleaseEvent, ReleaseEventSeries, Series
+from macrolens_api.models import (
+    Provider,
+    ReleaseDefinition,
+    ReleaseEvent,
+    ReleaseEventSeries,
+    Series,
+)
 
 settings = get_settings()
 
@@ -81,7 +87,9 @@ def _event_datetime(event: dict[str, str]) -> datetime | None:
 
 def _match_release(summary: str) -> tuple[str, str, int, tuple[str, ...]] | None:
     normalized = " ".join(summary.lower().split())
-    return next((definition for token, definition in BLS_RELEASES.items() if token in normalized), None)
+    return next(
+        (definition for token, definition in BLS_RELEASES.items() if token in normalized), None
+    )
 
 
 async def sync_bls_release_calendar(session: AsyncSession) -> dict[str, int]:
@@ -113,7 +121,9 @@ async def sync_bls_release_calendar(session: AsyncSession) -> dict[str, int]:
             raise RuntimeError(f"BLS release event has invalid DTSTART: {calendar_event}")
         matched_events += 1
         code, title_zh, importance, canonical_codes = matched
-        definition = await session.scalar(select(ReleaseDefinition).where(ReleaseDefinition.code == code))
+        definition = await session.scalar(
+            select(ReleaseDefinition).where(ReleaseDefinition.code == code)
+        )
         if definition is None:
             definition = ReleaseDefinition(
                 code=code,
@@ -132,7 +142,9 @@ async def sync_bls_release_calendar(session: AsyncSession) -> dict[str, int]:
                 f"BLS release calendar contains duplicate recognized event id {external_id!r}"
             )
         seen_external_ids.add(external_id)
-        event = await session.scalar(select(ReleaseEvent).where(ReleaseEvent.external_event_id == external_id))
+        event = await session.scalar(
+            select(ReleaseEvent).where(ReleaseEvent.external_event_id == external_id)
+        )
         official_url = calendar_event.get("URL") or definition.schedule_source_url
         status = "released" if scheduled_at < datetime.now(UTC) else "scheduled"
         if event is None:
@@ -161,13 +173,19 @@ async def sync_bls_release_calendar(session: AsyncSession) -> dict[str, int]:
             updated += 1
         series_rows = list(
             (
-                await session.scalars(select(Series).where(Series.canonical_code.in_(canonical_codes)))
+                await session.scalars(
+                    select(Series).where(Series.canonical_code.in_(canonical_codes))
+                )
             ).all()
         )
         for series in series_rows:
             mapping = await session.get(
                 ReleaseEventSeries,
-                {"event_id": event.id, "series_id": series.id, "transform_code": series.default_transform},
+                {
+                    "event_id": event.id,
+                    "series_id": series.id,
+                    "transform_code": series.default_transform,
+                },
             )
             if mapping is None:
                 session.add(

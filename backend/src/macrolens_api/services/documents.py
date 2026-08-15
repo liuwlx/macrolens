@@ -20,7 +20,6 @@ from ..schemas import (
     DocumentChunkPublic,
     DocumentDetail,
     DocumentSummary,
-    ProviderInfo,
     SeriesSummary,
 )
 from .licenses import get_license_for_provider
@@ -91,7 +90,9 @@ async def list_documents(
         content_match = exists(
             select(DocumentVersion.id).where(
                 DocumentVersion.document_id == Document.id,
-                func.to_tsvector("simple", func.coalesce(DocumentVersion.extracted_text, "")).op("@@")(ts_query),
+                func.to_tsvector("simple", func.coalesce(DocumentVersion.extracted_text, "")).op(
+                    "@@"
+                )(ts_query),
             )
         )
         filters.append(
@@ -110,10 +111,14 @@ async def list_documents(
         stmt = stmt.join(DocumentSeries, DocumentSeries.document_id == Document.id)
         filters.append(DocumentSeries.series_id == series_id)
     stmt = stmt.where(*filters)
-    total = int(await session.scalar(select(func.count()).select_from(stmt.order_by(None).subquery())) or 0)
+    total = int(
+        await session.scalar(select(func.count()).select_from(stmt.order_by(None).subquery())) or 0
+    )
     rows = (
         await session.execute(
-            stmt.order_by(Document.published_at.desc().nullslast(), Document.title).offset(offset).limit(limit)
+            stmt.order_by(Document.published_at.desc().nullslast(), Document.title)
+            .offset(offset)
+            .limit(limit)
         )
     ).all()
     items: list[DocumentSummary] = []
@@ -145,7 +150,9 @@ async def list_documents(
     return items, total
 
 
-async def get_document(session: AsyncSession, document_id: UUID, include_content: bool) -> DocumentDetail:
+async def get_document(
+    session: AsyncSession, document_id: UUID, include_content: bool
+) -> DocumentDetail:
     row = (
         await session.execute(
             select(Document, Provider)
@@ -158,7 +165,9 @@ async def get_document(session: AsyncSession, document_id: UUID, include_content
     document, provider = row
     license_info = await get_license_for_provider(session, provider.id)
     if not license_info.display_allowed:
-        raise AppError(403, "文档许可限制", "该文档来源当前不允许在产品中展示。", "license_display_denied")
+        raise AppError(
+            403, "文档许可限制", "该文档来源当前不允许在产品中展示。", "license_display_denied"
+        )
     version = await session.scalar(
         select(DocumentVersion)
         .where(DocumentVersion.document_id == document.id)

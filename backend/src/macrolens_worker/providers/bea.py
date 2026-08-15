@@ -75,7 +75,9 @@ class BEAAdapter(ProviderAdapter):
             results_payload = payload.get("BEAAPI", {}).get("Results", {})
             if isinstance(results_payload, list):
                 # Some BEA methods wrap Results in a list. GetData normally returns a mapping.
-                results_payload = next((item for item in results_payload if isinstance(item, dict)), {})
+                results_payload = next(
+                    (item for item in results_payload if isinstance(item, dict)), {}
+                )
             data_rows = results_payload.get("Data", []) if isinstance(results_payload, dict) else []
             if not isinstance(data_rows, list):
                 raise ProviderDataError("BEA response did not contain a Data list")
@@ -171,7 +173,9 @@ class BEAAdapter(ProviderAdapter):
             if series_code or line_number:
                 key = (series_code, line_number)
                 previous = metadata.get(key)
-                if previous is not None and normalize_label(previous) != normalize_label(description):
+                if previous is not None and normalize_label(previous) != normalize_label(
+                    description
+                ):
                     raise ProviderDataError(
                         f"BEA row identity {key} has conflicting descriptions: "
                         f"{previous!r} vs {description!r}"
@@ -191,7 +195,9 @@ class BEAAdapter(ProviderAdapter):
                     and (not explicit_line or line_number == explicit_line)
                 ]
             else:
-                raw_aliases = locator.get("line_aliases") or locator.get("description_aliases") or []
+                raw_aliases = (
+                    locator.get("line_aliases") or locator.get("description_aliases") or []
+                )
                 if isinstance(raw_aliases, str):
                     raw_aliases = [raw_aliases]
                 aliases = [
@@ -204,7 +210,9 @@ class BEAAdapter(ProviderAdapter):
                     ]
                     if value
                 ]
-                normalized_aliases = {normalize_label(alias) for alias in aliases if normalize_label(alias)}
+                normalized_aliases = {
+                    normalize_label(alias) for alias in aliases if normalize_label(alias)
+                }
                 exact = [
                     (series_code, line_number, description)
                     for (series_code, line_number), description in metadata.items()
@@ -221,7 +229,10 @@ class BEAAdapter(ProviderAdapter):
                             for alias in normalized_aliases
                         )
                     ]
-            unique = {(series_code, line_number, description) for series_code, line_number, description in matches}
+            unique = {
+                (series_code, line_number, description)
+                for series_code, line_number, description in matches
+            }
             if len(unique) != 1:
                 candidates = sorted(description for _, _, description in unique)[:10]
                 raise ProviderDataError(

@@ -9,7 +9,11 @@ def test_no_direct_update_of_observation_vintage() -> None:
     for path in ROOT.rglob("*.py"):
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
         for node in ast.walk(tree):
-            if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "update":
+            if (
+                isinstance(node, ast.Call)
+                and isinstance(node.func, ast.Name)
+                and node.func.id == "update"
+            ):
                 if node.args and getattr(node.args[0], "id", None) == "ObservationVintage":
                     violations.append(str(path))
     assert not violations, f"ObservationVintage must be append-only: {violations}"

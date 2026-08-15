@@ -69,13 +69,18 @@ async def get_strict_license_for_provider(
     return _license_info(selected[0])
 
 
-async def get_license_for_source(session: AsyncSession, source_series: SourceSeries) -> LicenseInfo | None:
+async def get_license_for_source(
+    session: AsyncSession, source_series: SourceSeries
+) -> LicenseInfo | None:
     today = date.today()
     policy = await session.scalar(
         select(LicensePolicy)
         .where(
             LicensePolicy.provider_id == source_series.dataset.provider_id,
-            or_(LicensePolicy.dataset_id == source_series.dataset_id, LicensePolicy.dataset_id.is_(None)),
+            or_(
+                LicensePolicy.dataset_id == source_series.dataset_id,
+                LicensePolicy.dataset_id.is_(None),
+            ),
             or_(LicensePolicy.effective_from.is_(None), LicensePolicy.effective_from <= today),
             or_(LicensePolicy.effective_to.is_(None), LicensePolicy.effective_to >= today),
         )

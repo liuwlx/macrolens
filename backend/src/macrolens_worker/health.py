@@ -29,7 +29,8 @@ async def health_server(role: str) -> None:
         writer.close()
         await writer.wait_closed()
 
-    server = await asyncio.start_server(handle, host="0.0.0.0", port=port)
+    # The worker health endpoint must be reachable by the process supervisor.
+    server = await asyncio.start_server(handle, host="0.0.0.0", port=port)  # noqa: S104
     logger.info("worker_health_server_started", role=role, port=port)
     async with server:
         await server.serve_forever()

@@ -39,7 +39,11 @@ class FREDAdapter(ProviderAdapter):
         if not settings.fred_api_key:
             raise RuntimeError("FRED_API_KEY is required")
         results: list[ProviderFetchResult] = []
-        default_start = date(1900, 1, 1) if mode in {"backfill", "vintage_backfill"} else date.today() - timedelta(days=365 * 5)
+        default_start = (
+            date(1900, 1, 1)
+            if mode in {"backfill", "vintage_backfill"}
+            else date.today() - timedelta(days=365 * 5)
+        )
         for source, dataset in mappings:
             if not source.provider_series_id:
                 raise ProviderDataError(f"FRED mapping {source.id} has no provider_series_id")
@@ -107,7 +111,6 @@ class FREDAdapter(ProviderAdapter):
             )
         return results
 
-
     @staticmethod
     def _validate_backfill_start(
         source: SourceSeries,
@@ -150,7 +153,9 @@ class FREDAdapter(ProviderAdapter):
                 f"FRED metadata for {source.provider_series_id} did not resolve to one series"
             )
         metadata = series_rows[0]
-        if not isinstance(metadata, dict) or str(metadata.get("id")) != str(source.provider_series_id):
+        if not isinstance(metadata, dict) or str(metadata.get("id")) != str(
+            source.provider_series_id
+        ):
             raise ProviderDataError(
                 f"FRED metadata identity mismatch for {source.provider_series_id}: {metadata}"
             )
@@ -164,7 +169,11 @@ class FREDAdapter(ProviderAdapter):
             "annual": "A",
         }.get((source.source_frequency or "").lower())
         actual_frequency = str(metadata.get("frequency_short") or "").upper()
-        if expected_frequency and actual_frequency and not actual_frequency.startswith(expected_frequency):
+        if (
+            expected_frequency
+            and actual_frequency
+            and not actual_frequency.startswith(expected_frequency)
+        ):
             raise ProviderDataError(
                 f"FRED frequency mismatch for {source.provider_series_id}: "
                 f"expected {expected_frequency}, received {actual_frequency}"
@@ -184,7 +193,10 @@ class FREDAdapter(ProviderAdapter):
                 f"registry expects {expected_first}, metadata reports {metadata_first}"
             )
         expected_title = source.source_locator.get("expected_title")
-        if expected_title and str(metadata.get("title") or "").strip() != str(expected_title).strip():
+        if (
+            expected_title
+            and str(metadata.get("title") or "").strip() != str(expected_title).strip()
+        ):
             raise ProviderDataError(
                 f"FRED title mismatch for {source.provider_series_id}: {metadata.get('title')}"
             )
@@ -217,7 +229,10 @@ class FREDAdapter(ProviderAdapter):
         }
         rows = await self._fetch_observation_pages(base_params, request_log, responses)
         fetched_at = datetime.now(UTC)
-        return [self._normalize_row(source, row, fetched_at=fetched_at, use_source_vintage=False) for row in rows]
+        return [
+            self._normalize_row(source, row, fetched_at=fetched_at, use_source_vintage=False)
+            for row in rows
+        ]
 
     async def _fetch_vintage_dates(
         self,
@@ -230,7 +245,7 @@ class FREDAdapter(ProviderAdapter):
         values: list[str] = []
         expected_count: int | None = None
         for _ in range(self.max_pages):
-            params = {
+            params: dict[str, str | int] = {
                 "series_id": series_id,
                 "api_key": api_key,
                 "file_type": "json",
@@ -255,7 +270,9 @@ class FREDAdapter(ProviderAdapter):
             if expected_count is None:
                 expected_count = count
             elif count != expected_count:
-                raise ProviderDataError(f"FRED vintage count changed during pagination for {series_id}")
+                raise ProviderDataError(
+                    f"FRED vintage count changed during pagination for {series_id}"
+                )
             offset += len(page)
             if not page or offset >= count:
                 break
@@ -339,10 +356,12 @@ class FREDAdapter(ProviderAdapter):
                             f"FRED returned conflicting duplicate observation {identity}"
                         )
                     raise ProviderDataError(
-                        f"FRED pagination repeated observation {identity}; refusing incomplete history"
+                        f"FRED pagination repeated observation {identity}; refusing "
+                        "incomplete history"
                     )
                 seen_identities[identity] = value_text
                 rows.append(row)
+            count: int | None
             try:
                 count = int(payload.get("count"))
             except (TypeError, ValueError):
@@ -352,7 +371,11 @@ class FREDAdapter(ProviderAdapter):
             elif count is not None and expected_count is not None and count != expected_count:
                 raise ProviderDataError("FRED count changed during pagination")
             offset += len(page)
-            if not page or (count is not None and offset >= count) or len(page) < int(base_params["limit"]):
+            if (
+                not page
+                or (count is not None and offset >= count)
+                or len(page) < int(base_params["limit"])
+            ):
                 break
         else:
             raise ProviderDataError("FRED pagination exceeded configured maximum")

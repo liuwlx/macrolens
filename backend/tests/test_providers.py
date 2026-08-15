@@ -17,7 +17,7 @@ def test_census_period_parser() -> None:
 
 
 def test_treasury_xml_parser() -> None:
-    raw = b'''<?xml version="1.0" encoding="utf-8"?>
+    raw = b"""<?xml version="1.0" encoding="utf-8"?>
     <feed xmlns:m="http://schemas.microsoft.com/ado/2007/08/dataservices/metadata"
           xmlns:d="http://schemas.microsoft.com/ado/2007/08/dataservices">
       <entry><content><m:properties>
@@ -25,9 +25,15 @@ def test_treasury_xml_parser() -> None:
         <d:BC_2YEAR>4.10</d:BC_2YEAR>
         <d:BC_10YEAR>4.35</d:BC_10YEAR>
       </m:properties></content></entry>
-    </feed>'''
+    </feed>"""
     adapter = TreasuryAdapter(client=None)  # type: ignore[arg-type]
-    rows = adapter._parse(raw, [(source(1, "2Y_PAR_NOMINAL"), SimpleNamespace()), (source(2, "10Y_PAR_NOMINAL"), SimpleNamespace())])
+    rows = adapter._parse(
+        raw,
+        [
+            (source(1, "2Y_PAR_NOMINAL"), SimpleNamespace()),
+            (source(2, "10Y_PAR_NOMINAL"), SimpleNamespace()),
+        ],
+    )
     assert len(rows) == 2
     assert rows[0].period_start == date(2026, 7, 31)
     assert str(rows[0].value) == "4.10"

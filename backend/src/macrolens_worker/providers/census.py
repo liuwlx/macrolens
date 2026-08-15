@@ -44,7 +44,8 @@ class CensusEITSAdapter(ProviderAdapter):
             locator = source.source_locator
             if locator.get("resolve_dimensions_from_dictionary"):
                 raise ProviderDataError(
-                    f"Census mapping {source.id} is unresolved; approve official dictionary dimensions first"
+                    f"Census mapping {source.id} is unresolved; approve official dictionary "
+                    "dimensions first"
                 )
             value_field = str(locator.get("value_field") or "cell_value")
             time_field = str(locator.get("time_field") or "time")
@@ -54,7 +55,9 @@ class CensusEITSAdapter(ProviderAdapter):
 
             required_variables = locator.get("required_variables") or []
             if not isinstance(required_variables, list):
-                raise ProviderDataError(f"Census mapping {source.id} required_variables must be a list")
+                raise ProviderDataError(
+                    f"Census mapping {source.id} required_variables must be a list"
+                )
             get_fields = list(
                 dict.fromkeys(
                     [
@@ -91,20 +94,25 @@ class CensusEITSAdapter(ProviderAdapter):
             fetched_at = datetime.now(UTC)
             observations: list[NormalizedObservation] = []
             if not isinstance(payload, list) or not payload:
-                raise ProviderDataError(f"Census mapping {source.id} returned an invalid matrix payload")
+                raise ProviderDataError(
+                    f"Census mapping {source.id} returned an invalid matrix payload"
+                )
             headers = [str(item) for item in payload[0]]
             required_headers = {value_field}
-            if time_field not in headers and "time" not in headers and "time_slot_date" not in headers:
+            if (
+                time_field not in headers
+                and "time" not in headers
+                and "time_slot_date" not in headers
+            ):
                 required_headers.add(time_field)
             required_headers.update(
-                str(key)
-                for key, expected in dimensions.items()
-                if expected not in {None, ""}
+                str(key) for key, expected in dimensions.items() if expected not in {None, ""}
             )
             missing_headers = required_headers - set(headers)
             if missing_headers:
                 raise ProviderDataError(
-                    f"Census mapping {source.id} response is missing fields {sorted(missing_headers)}"
+                    f"Census mapping {source.id} response is missing fields "
+                    f"{sorted(missing_headers)}"
                 )
             seen_periods: set[date] = set()
             for raw_row in payload[1:]:
@@ -120,13 +128,11 @@ class CensusEITSAdapter(ProviderAdapter):
                 row = dict(zip(headers, raw_row, strict=True))
                 if not self._dimensions_match(row, dimensions):
                     raise ProviderDataError(
-                        f"Census mapping {source.id} returned a row outside pinned dimensions: {row}"
+                        f"Census mapping {source.id} returned a row outside pinned "
+                        f"dimensions: {row}"
                     )
                 time_text = str(
-                    row.get(time_field)
-                    or row.get("time_slot_date")
-                    or row.get("time")
-                    or ""
+                    row.get(time_field) or row.get("time_slot_date") or row.get("time") or ""
                 )
                 period = self._parse_period(time_text)
                 if period is None:

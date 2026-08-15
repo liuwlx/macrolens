@@ -3,10 +3,11 @@ from __future__ import annotations
 import calendar
 import re
 from abc import ABC, abstractmethod
+from collections.abc import Iterable
 from dataclasses import dataclass, field
 from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
-from typing import Any, Iterable
+from typing import Any
 
 import httpx
 

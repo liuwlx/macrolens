@@ -184,11 +184,34 @@ def _repo_root() -> Path:
 def _theme(code: str) -> str:
     if any(token in code for token in ["PCE", "CPI", "PPI", "BREAKEVEN", "MICHIGAN"]):
         return "通胀"
-    if any(token in code for token in ["PAYROLL", "UNEMPLOY", "PARTICIPATION", "HOURLY", "JOB.OPENINGS", "CLAIMS", "ECI"]):
+    if any(
+        token in code
+        for token in [
+            "PAYROLL",
+            "UNEMPLOY",
+            "PARTICIPATION",
+            "HOURLY",
+            "JOB.OPENINGS",
+            "CLAIMS",
+            "ECI",
+        ]
+    ):
         return "就业"
     if any(token in code for token in ["GDP", "RETAIL", "DURABLE", "INDUSTRIAL", "CONSUMPTION"]):
         return "增长"
-    if any(token in code for token in ["FED.FUNDS", "SOFR", "TREASURY", "REAL.10Y", "FED.ASSETS", "RESERVES", "REVERSE.REPO", "FED.MBS"]):
+    if any(
+        token in code
+        for token in [
+            "FED.FUNDS",
+            "SOFR",
+            "TREASURY",
+            "REAL.10Y",
+            "FED.ASSETS",
+            "RESERVES",
+            "REVERSE.REPO",
+            "FED.MBS",
+        ]
+    ):
         return "利率与政策"
     if any(token in code for token in ["BANK", "CREDIT", "DELINQUENCY", "SLOOS"]):
         return "信贷与银行"
@@ -251,7 +274,9 @@ async def seed_all() -> None:
             dataset = dataset_cache.get(key)
             if dataset is None:
                 dataset = await session.scalar(
-                    select(Dataset).where(Dataset.provider_id == provider.id, Dataset.code == dataset_code)
+                    select(Dataset).where(
+                        Dataset.provider_id == provider.id, Dataset.code == dataset_code
+                    )
                 )
                 if dataset is None:
                     dataset = Dataset(
@@ -280,15 +305,11 @@ async def seed_all() -> None:
                     short_name_zh=item["name_zh"],
                     description="；".join(item.get("notes") or []) or None,
                     theme=_theme(item["canonical_code"]),
-                    series_type=(
-                        "derived" if item.get("locator", {}).get("transform") else "raw"
-                    ),
+                    series_type=("derived" if item.get("locator", {}).get("transform") else "raw"),
                     frequency=FREQUENCY_MAP[item["frequency"]],
                     unit_code=unit_code,
                     unit_label_zh=unit_label,
-                    seasonal_adjustment=(
-                        item.get("seasonal_adjustment") or "not_specified"
-                    ),
+                    seasonal_adjustment=(item.get("seasonal_adjustment") or "not_specified"),
                     default_transform="level",
                     decimal_places=2,
                     status="active" if item["mapping_status"] == "READY" else "draft",
@@ -300,15 +321,11 @@ async def seed_all() -> None:
             series.short_name_zh = item["name_zh"]
             series.description = "；".join(item.get("notes") or []) or None
             series.theme = _theme(item["canonical_code"])
-            series.series_type = (
-                "derived" if item.get("locator", {}).get("transform") else "raw"
-            )
+            series.series_type = "derived" if item.get("locator", {}).get("transform") else "raw"
             series.frequency = FREQUENCY_MAP[item["frequency"]]
             series.unit_code = unit_code
             series.unit_label_zh = unit_label
-            series.seasonal_adjustment = (
-                item.get("seasonal_adjustment") or "not_specified"
-            )
+            series.seasonal_adjustment = item.get("seasonal_adjustment") or "not_specified"
             series.default_transform = "level"
             series.decimal_places = 2
             series.status = "active" if item["mapping_status"] == "READY" else "draft"
@@ -326,9 +343,7 @@ async def seed_all() -> None:
                     )
                 )
                 if existing_alias is None:
-                    session.add(
-                        SeriesAlias(series_id=series.id, alias=alias, language=language)
-                    )
+                    session.add(SeriesAlias(series_id=series.id, alias=alias, language=language))
             series_by_code[series.canonical_code] = series
 
             source_series = await session.scalar(
@@ -361,7 +376,9 @@ async def seed_all() -> None:
             source_series.verified_at = datetime.now(UTC) if status == "verified" else None
 
         root_node = await session.scalar(
-            select(TaxonomyNode).where(TaxonomyNode.tree_code == "macro-default", TaxonomyNode.code == "root")
+            select(TaxonomyNode).where(
+                TaxonomyNode.tree_code == "macro-default", TaxonomyNode.code == "root"
+            )
         )
         if root_node is None:
             root_node = TaxonomyNode(
@@ -392,7 +409,10 @@ async def seed_all() -> None:
                 session.add(node)
                 await session.flush()
             for display_order, series in enumerate(
-                sorted((value for value in series_by_code.values() if value.theme == theme), key=lambda value: value.name_zh)
+                sorted(
+                    (value for value in series_by_code.values() if value.theme == theme),
+                    key=lambda value: value.name_zh,
+                )
             ):
                 exists = await session.scalar(
                     select(TaxonomySeries).where(
@@ -425,7 +445,9 @@ async def seed_all() -> None:
                 if code in {"CPI", "PPI", "EMPLOYMENT", "ECI", "JOLTS"}
                 else "FEDERAL_RESERVE"
             ]
-            existing = await session.scalar(select(ReleaseDefinition).where(ReleaseDefinition.code == code))
+            existing = await session.scalar(
+                select(ReleaseDefinition).where(ReleaseDefinition.code == code)
+            )
             if existing is None:
                 session.add(
                     ReleaseDefinition(
@@ -437,7 +459,9 @@ async def seed_all() -> None:
                     )
                 )
 
-        admin = await session.scalar(select(User).where(User.email == settings.bootstrap_admin_email.lower()))
+        admin = await session.scalar(
+            select(User).where(User.email == settings.bootstrap_admin_email.lower())
+        )
         if admin is None:
             admin = User(
                 email=settings.bootstrap_admin_email.lower(),
@@ -472,7 +496,9 @@ def seed_test_fixtures() -> None:
 
 
 @app.command("enqueue-sync")
-def enqueue_sync(provider: str = typer.Option(..., help="Provider code, for example FRED_API")) -> None:
+def enqueue_sync(
+    provider: str = typer.Option(..., help="Provider code, for example FRED_API"),
+) -> None:
     async def _enqueue() -> None:
         async with SessionLocal() as session:
             await enqueue_job(
@@ -482,6 +508,7 @@ def enqueue_sync(provider: str = typer.Option(..., help="Provider code, for exam
                 idempotency_key=f"manual-sync:{provider}:{datetime.now(UTC).strftime('%Y%m%d%H%M')}",
                 priority=10,
             )
+
     asyncio.run(_enqueue())
     typer.echo(f"Sync job queued for {provider}.")
 

@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
 from bisect import bisect_right
 from calendar import monthrange
+from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
 from math import sqrt
@@ -120,7 +120,11 @@ def transform_points(points: list[Point], transform: str, frequency: str) -> lis
                 window = [float(v) for v in values[max(0, index - 59) : index + 1] if v is not None]
                 if len(window) >= 2:
                     deviation = pstdev(window)
-                    transformed = Decimal(str((float(current) - fmean(window)) / deviation)) if deviation else Decimal(0)
+                    transformed = (
+                        Decimal(str((float(current) - fmean(window)) / deviation))
+                        if deviation
+                        else Decimal(0)
+                    )
 
         result.append(
             Point(
@@ -136,8 +140,14 @@ def transform_points(points: list[Point], transform: str, frequency: str) -> lis
     return result
 
 
-def correlation(left: list[Decimal | None], right: list[Decimal | None]) -> tuple[float | None, int]:
-    pairs = [(float(a), float(b)) for a, b in zip(left, right, strict=False) if a is not None and b is not None]
+def correlation(
+    left: list[Decimal | None], right: list[Decimal | None]
+) -> tuple[float | None, int]:
+    pairs = [
+        (float(a), float(b))
+        for a, b in zip(left, right, strict=False)
+        if a is not None and b is not None
+    ]
     if len(pairs) < 3:
         return None, len(pairs)
     xs = [pair[0] for pair in pairs]

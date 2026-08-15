@@ -67,7 +67,9 @@ async def create_report(
             )
         )
         if run is None or run.status != "completed" or not run.result_markdown:
-            raise AppError(409, "AI分析尚不可用", "只能从已完成的AI分析创建报告。", "ai_run_not_ready")
+            raise AppError(
+                409, "AI分析尚不可用", "只能从已完成的AI分析创建报告。", "ai_run_not_ready"
+            )
         content = content or run.result_markdown
         citations = list(
             (
@@ -85,7 +87,9 @@ async def create_report(
             "citation_count": len(citations),
         }
     if not content:
-        raise AppError(422, "报告正文为空", "请提供正文或选择已完成的AI分析。", "report_content_required")
+        raise AppError(
+            422, "报告正文为空", "请提供正文或选择已完成的AI分析。", "report_content_required"
+        )
     if payload.project_id:
         project = await session.scalar(
             select(Project).where(

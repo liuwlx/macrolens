@@ -41,7 +41,9 @@ class NYFedAdapter(ProviderAdapter):
                 raise ProviderDataError(f"NY Fed mapping {source.id} has no route")
             url = f"https://markets.newyorkfed.org/api/{str(route).lstrip('/')}"
             configured_start = self._parse_date(locator.get("start_date"))
-            start = configured_start or (date(2000, 1, 1) if backfill else today - timedelta(days=365 * 5))
+            start = configured_start or (
+                date(2000, 1, 1) if backfill else today - timedelta(days=365 * 5)
+            )
             if not backfill:
                 start = max(start, today - timedelta(days=365 * 5))
             if start > today:
@@ -88,9 +90,7 @@ class NYFedAdapter(ProviderAdapter):
                 parsed_in_window = 0
                 for row in rows:
                     period_value = (
-                        row.get("effectiveDate")
-                        or row.get("operationDate")
-                        or row.get("date")
+                        row.get("effectiveDate") or row.get("operationDate") or row.get("date")
                     )
                     if not period_value:
                         raise ProviderDataError(
@@ -212,9 +212,7 @@ class NYFedAdapter(ProviderAdapter):
                 value = payload.get(key)
                 if isinstance(value, list):
                     if not all(isinstance(item, dict) for item in value):
-                        raise ProviderDataError(
-                            f"NY Fed response {key} contained a non-object row"
-                        )
+                        raise ProviderDataError(f"NY Fed response {key} contained a non-object row")
                     return value
                 if isinstance(value, dict):
                     for nested_key in ("rates", "operations", "data", "results"):

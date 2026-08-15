@@ -46,11 +46,7 @@ async def _document_chunks(
         )
         if ranked:
             return ranked
-    return list(
-        (
-            await session.scalars(base.order_by(DocumentChunk.chunk_no).limit(limit))
-        ).all()
-    )
+    return list((await session.scalars(base.order_by(DocumentChunk.chunk_no).limit(limit))).all())
 
 
 async def snapshot_context(
@@ -219,7 +215,9 @@ async def snapshot_context(
     if context_type == "release_event":
         event = await session.get(ReleaseEvent, context_id)
         if event is None:
-            raise AppError(404, "发布事件不存在", "AI 上下文中的事件不存在。", "context_event_not_found")
+            raise AppError(
+                404, "发布事件不存在", "AI 上下文中的事件不存在。", "context_event_not_found"
+            )
         return {
             "type": "release_event",
             "id": str(event.id),
@@ -232,21 +230,29 @@ async def snapshot_context(
     if context_type == "fomc_meeting":
         meeting = await session.get(FomcMeeting, context_id)
         if meeting is None:
-            raise AppError(404, "FOMC会议不存在", "AI 上下文中的会议不存在。", "context_fomc_not_found")
+            raise AppError(
+                404, "FOMC会议不存在", "AI 上下文中的会议不存在。", "context_fomc_not_found"
+            )
         return {
             "type": "fomc_meeting",
             "id": str(meeting.id),
             "meeting_start": meeting.meeting_start.isoformat(),
             "meeting_end": meeting.meeting_end.isoformat(),
             "decision_code": meeting.decision_code,
-            "target_rate_lower": str(meeting.target_rate_lower) if meeting.target_rate_lower is not None else None,
-            "target_rate_upper": str(meeting.target_rate_upper) if meeting.target_rate_upper is not None else None,
+            "target_rate_lower": str(meeting.target_rate_lower)
+            if meeting.target_rate_lower is not None
+            else None,
+            "target_rate_upper": str(meeting.target_rate_upper)
+            if meeting.target_rate_upper is not None
+            else None,
             "summary": meeting.summary_zh,
             "official_url": meeting.official_url,
         }
     if context_type == "saved_view":
         if workspace_id is None or user_id is None:
-            raise AppError(403, "上下文权限不足", "保存视图需要用户工作区上下文。", "context_scope_required")
+            raise AppError(
+                403, "上下文权限不足", "保存视图需要用户工作区上下文。", "context_scope_required"
+            )
         view = await session.scalar(
             select(SavedView).where(
                 SavedView.id == context_id,
@@ -255,7 +261,12 @@ async def snapshot_context(
             )
         )
         if view is None:
-            raise AppError(404, "保存视图不存在", "AI 上下文中的保存视图不存在。", "context_saved_view_not_found")
+            raise AppError(
+                404,
+                "保存视图不存在",
+                "AI 上下文中的保存视图不存在。",
+                "context_saved_view_not_found",
+            )
         return {
             "type": "saved_view",
             "id": str(view.id),
@@ -267,7 +278,9 @@ async def snapshot_context(
         }
     if context_type == "note":
         if workspace_id is None or user_id is None:
-            raise AppError(403, "上下文权限不足", "研究笔记需要用户工作区上下文。", "context_scope_required")
+            raise AppError(
+                403, "上下文权限不足", "研究笔记需要用户工作区上下文。", "context_scope_required"
+            )
         note = await session.scalar(
             select(Note)
             .outerjoin(Project, Project.id == Note.project_id)
@@ -278,7 +291,9 @@ async def snapshot_context(
             )
         )
         if note is None:
-            raise AppError(404, "研究笔记不存在", "AI 上下文中的研究笔记不存在。", "context_note_not_found")
+            raise AppError(
+                404, "研究笔记不存在", "AI 上下文中的研究笔记不存在。", "context_note_not_found"
+            )
         return {
             "type": "note",
             "id": str(note.id),
@@ -287,7 +302,9 @@ async def snapshot_context(
             "version_no": note.version_no,
             "updated_at": note.updated_at.isoformat(),
         }
-    raise AppError(422, "上下文类型不支持", f"暂不支持 {context_type} 上下文。", "unsupported_context")
+    raise AppError(
+        422, "上下文类型不支持", f"暂不支持 {context_type} 上下文。", "unsupported_context"
+    )
 
 
 async def persist_contexts(
@@ -335,7 +352,11 @@ async def persist_contexts(
 def data_as_of_from_snapshots(snapshots: list[dict[str, Any]]) -> datetime:
     candidates: list[datetime] = []
     for snapshot in snapshots:
-        value = snapshot.get("data_as_of") or snapshot.get("published_at") or snapshot.get("scheduled_at")
+        value = (
+            snapshot.get("data_as_of")
+            or snapshot.get("published_at")
+            or snapshot.get("scheduled_at")
+        )
         if value:
             try:
                 candidate = datetime.fromisoformat(str(value).replace("Z", "+00:00"))

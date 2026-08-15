@@ -5,8 +5,8 @@ from dataclasses import dataclass
 from hashlib import sha256
 from typing import BinaryIO
 
-import boto3
-from botocore.client import BaseClient
+import boto3  # type: ignore[import-untyped]
+from botocore.client import BaseClient  # type: ignore[import-untyped]
 
 from ..config import get_settings
 
@@ -51,7 +51,9 @@ class ObjectStorage:
         )
 
     async def get_bytes(self, key: str) -> bytes:
-        response = await asyncio.to_thread(self.client.get_object, Bucket=self.settings.s3_bucket, Key=key)
+        response = await asyncio.to_thread(
+            self.client.get_object, Bucket=self.settings.s3_bucket, Key=key
+        )
         body: BinaryIO = response["Body"]
         return await asyncio.to_thread(body.read)
 

@@ -10,8 +10,8 @@ from ..dependencies import CurrentUser, SessionDep
 from ..errors import AppError
 from ..models import Document, DocumentVersion, Provider
 from ..schemas import DocumentDetail
-from ..services.jobs import enqueue_job
 from ..services.documents import get_document, list_documents
+from ..services.jobs import enqueue_job
 from ..services.licenses import get_license_for_provider
 
 router = APIRouter(prefix="/documents", tags=["Documents"])
@@ -36,7 +36,12 @@ async def documents(
         limit=limit,
         offset=offset,
     )
-    return {"items": [item.model_dump(mode="json") for item in items], "total": total, "limit": limit, "offset": offset}
+    return {
+        "items": [item.model_dump(mode="json") for item in items],
+        "total": total,
+        "limit": limit,
+        "offset": offset,
+    }
 
 
 @router.get("/{document_id}", response_model=DocumentDetail)
@@ -67,7 +72,9 @@ async def generate_document_summary(
     document, provider = document_row
     license_info = await get_license_for_provider(session, provider.id)
     if not license_info.ai_context_allowed:
-        raise AppError(403, "文档许可限制", "该文档来源不允许进入 AI 上下文。", "license_ai_context_denied")
+        raise AppError(
+            403, "文档许可限制", "该文档来源不允许进入 AI 上下文。", "license_ai_context_denied"
+        )
     version = await session.scalar(
         select(DocumentVersion)
         .where(DocumentVersion.document_id == document.id)

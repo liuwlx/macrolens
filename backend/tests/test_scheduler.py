@@ -12,7 +12,7 @@ def test_fomc_meeting_dates_support_cross_month_and_cross_year_ranges(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     storage = ModuleType("macrolens_api.services.storage")
-    setattr(storage, "ObjectStorage", object)
+    storage.ObjectStorage = object
     monkeypatch.setitem(sys.modules, "macrolens_api.services.storage", storage)
     from macrolens_worker.tasks.fomc import _meeting_dates
 

@@ -12,7 +12,14 @@ from ..config import get_settings
 from ..dependencies import CurrentUser, CurrentWorkspace, SessionDep
 from ..errors import AppError
 from ..models import Note, Project, ProjectItem, ProjectShareLink
-from ..schemas import NotePublic, ProjectDetail, ProjectItemPublic, ProjectPublic, ProjectShareCreate, ProjectSharePublic
+from ..schemas import (
+    NotePublic,
+    ProjectDetail,
+    ProjectItemPublic,
+    ProjectPublic,
+    ProjectShareCreate,
+    ProjectSharePublic,
+)
 
 settings = get_settings()
 private_router = APIRouter(prefix="/me/projects", tags=["Project sharing"])
@@ -23,7 +30,9 @@ def _hash_token(token: str) -> str:
     return hashlib.sha256(token.encode("utf-8")).hexdigest()
 
 
-async def _owned_project(project_id: UUID, session: SessionDep, user: CurrentUser, workspace: CurrentWorkspace) -> Project:
+async def _owned_project(
+    project_id: UUID, session: SessionDep, user: CurrentUser, workspace: CurrentWorkspace
+) -> Project:
     project = await session.scalar(
         select(Project).where(
             Project.id == project_id,
@@ -104,7 +113,9 @@ async def revoke_share(
 ) -> Response:
     await _owned_project(project_id, session, user, workspace)
     row = await session.scalar(
-        select(ProjectShareLink).where(ProjectShareLink.id == share_id, ProjectShareLink.project_id == project_id)
+        select(ProjectShareLink).where(
+            ProjectShareLink.id == share_id, ProjectShareLink.project_id == project_id
+        )
     )
     if row is None:
         raise AppError(404, "分享链接不存在", "没有找到该分享链接。", "share_not_found")

@@ -9,12 +9,30 @@ from sqlalchemy import select
 from ..dependencies import AdminUser, SessionDep
 from ..errors import AppError
 from ..models import (
-    AuditLog, Dataset, IngestionRun, Job, ObservationLatest, ObservationVintage, Provider,
-    PublicationBatch, QualityResult, RawObject, RefreshSession, Series, SourceSeries, User, Workspace
+    AuditLog,
+    Dataset,
+    IngestionRun,
+    Job,
+    ObservationLatest,
+    ObservationVintage,
+    Provider,
+    PublicationBatch,
+    QualityResult,
+    RawObject,
+    RefreshSession,
+    Series,
+    SourceSeries,
+    User,
+    Workspace,
 )
 from ..schemas import (
-    AdminDocumentFetchRequest, AdminUserCreate, AdminUserPublic, AdminUserUpdate,
-    JobCreate, JobPublic, SourceMappingUpdate
+    AdminDocumentFetchRequest,
+    AdminUserCreate,
+    AdminUserPublic,
+    AdminUserUpdate,
+    JobCreate,
+    JobPublic,
+    SourceMappingUpdate,
 )
 from ..security import hash_password
 from ..services.jobs import enqueue_job
@@ -64,17 +82,30 @@ async def update_user(
         raise AppError(404, "用户不存在", "没有找到该用户。", "user_not_found")
     values = payload.model_dump(exclude_unset=True)
     if user.id == admin.id and values.get("active") is False:
-        raise AppError(409, "不能停用自己", "请由其他管理员执行此操作。", "self_deactivation_forbidden")
+        raise AppError(
+            409, "不能停用自己", "请由其他管理员执行此操作。", "self_deactivation_forbidden"
+        )
     if user.id == admin.id and values.get("role") not in {None, "admin"}:
-        raise AppError(409, "不能降低自己的权限", "请由其他管理员执行此操作。", "self_role_change_forbidden")
+        raise AppError(
+            409, "不能降低自己的权限", "请由其他管理员执行此操作。", "self_role_change_forbidden"
+        )
     password = values.pop("password", None)
     for key, value in values.items():
         setattr(user, key, value)
     if password:
         user.password_hash = hash_password(password)
     if password or values.get("active") is False:
-        sessions = list((await session.scalars(select(RefreshSession).where(RefreshSession.user_id == user.id, RefreshSession.revoked_at.is_(None)))).all())
+        sessions = list(
+            (
+                await session.scalars(
+                    select(RefreshSession).where(
+                        RefreshSession.user_id == user.id, RefreshSession.revoked_at.is_(None)
+                    )
+                )
+            ).all()
+        )
         from datetime import UTC, datetime
+
         for auth_session in sessions:
             auth_session.revoked_at = datetime.now(UTC)
     await session.commit()
@@ -88,7 +119,9 @@ async def fetch_official_document(
     session: SessionDep,
     _admin: AdminUser,
 ) -> JobPublic:
-    provider = await session.scalar(select(Provider).where(Provider.code == payload.provider_code.upper()))
+    provider = await session.scalar(
+        select(Provider).where(Provider.code == payload.provider_code.upper())
+    )
     if provider is None or not provider.active:
         raise AppError(404, "数据提供方不存在", "没有找到启用的数据提供方。", "provider_not_found")
     job = await enqueue_job(
@@ -214,7 +247,9 @@ async def list_source_mappings(
         stmt = stmt.where(SourceSeries.mapping_status == status)
     if provider:
         stmt = stmt.where(Provider.code == provider)
-    rows = (await session.execute(stmt.order_by(Provider.code, Series.canonical_code).limit(limit))).all()
+    rows = (
+        await session.execute(stmt.order_by(Provider.code, Series.canonical_code).limit(limit))
+    ).all()
     return [
         {
             "id": source.id,
@@ -253,7 +288,11 @@ async def update_source_mapping(
         mapping.verified_by = admin.email
         mapping.verified_at = datetime.now(UTC)
     await session.commit()
-    return {"id": mapping.id, "mapping_status": mapping.mapping_status, "is_primary": mapping.is_primary}
+    return {
+        "id": mapping.id,
+        "mapping_status": mapping.mapping_status,
+        "is_primary": mapping.is_primary,
+    }
 
 
 @router.get("/quality-results")
@@ -269,7 +308,9 @@ async def quality_results(
         stmt = stmt.where(QualityResult.severity == severity)
     if passed is not None:
         stmt = stmt.where(QualityResult.passed == passed)
-    rows = list((await session.scalars(stmt.order_by(QualityResult.checked_at.desc()).limit(limit))).all())
+    rows = list(
+        (await session.scalars(stmt.order_by(QualityResult.checked_at.desc()).limit(limit))).all()
+    )
     return [
         {
             "id": row.id,
@@ -294,7 +335,13 @@ async def raw_objects(
     _admin: AdminUser,
     limit: int = Query(default=100, ge=1, le=500),
 ) -> list[dict[str, Any]]:
-    rows = list((await session.scalars(select(RawObject).order_by(RawObject.fetched_at.desc()).limit(limit))).all())
+    rows = list(
+        (
+            await session.scalars(
+                select(RawObject).order_by(RawObject.fetched_at.desc()).limit(limit)
+            )
+        ).all()
+    )
     return [
         {
             "id": str(row.id),
@@ -318,7 +365,13 @@ async def audit_logs(
     _admin: AdminUser,
     limit: int = Query(default=200, ge=1, le=1000),
 ) -> list[dict[str, Any]]:
-    rows = list((await session.scalars(select(AuditLog).order_by(AuditLog.created_at.desc()).limit(limit))).all())
+    rows = list(
+        (
+            await session.scalars(
+                select(AuditLog).order_by(AuditLog.created_at.desc()).limit(limit)
+            )
+        ).all()
+    )
     return [
         {
             "id": str(row.id),
@@ -345,7 +398,9 @@ async def publication_batches(
     if provider_id is not None:
         stmt = stmt.where(PublicationBatch.provider_id == provider_id)
     rows = list(
-        (await session.scalars(stmt.order_by(PublicationBatch.created_at.desc()).limit(limit))).all()
+        (
+            await session.scalars(stmt.order_by(PublicationBatch.created_at.desc()).limit(limit))
+        ).all()
     )
     return [
         {
@@ -375,7 +430,9 @@ async def rollback_publication_batch(
     if batch is None:
         raise AppError(404, "发布批次不存在", "没有找到该批次。", "publication_batch_not_found")
     if batch.status != "active":
-        raise AppError(409, "批次不可回滚", "只有当前活动批次可以回滚。", "publication_batch_not_active")
+        raise AppError(
+            409, "批次不可回滚", "只有当前活动批次可以回滚。", "publication_batch_not_active"
+        )
 
     touched = (
         await session.execute(

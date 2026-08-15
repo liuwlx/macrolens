@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import json
 from datetime import UTC, datetime
-from types import SimpleNamespace
 from pathlib import Path
+from types import SimpleNamespace
 
 import httpx
 import pytest
@@ -14,7 +14,6 @@ from macrolens_api.main import app
 from macrolens_worker.providers.bls import BLSAdapter
 from macrolens_worker.providers.eia import EIAAdapter
 from macrolens_worker.tasks.notifications import _digest_due, _threshold_triggered
-
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
@@ -72,11 +71,29 @@ async def test_bls_backfill_uses_legal_windows_and_preserves_dataset_lineage(mon
         assert end - start + 1 <= 20
         rows = []
         if start <= 1959 <= end:
-            rows.append({"year": "1959", "period": "M12", "value": "100", "latest": "false", "footnotes": []})
+            rows.append(
+                {
+                    "year": "1959",
+                    "period": "M12",
+                    "value": "100",
+                    "latest": "false",
+                    "footnotes": [],
+                }
+            )
         if start <= 1960 <= end:
-            rows.append({"year": "1960", "period": "M01", "value": "103", "latest": "false", "footnotes": []})
+            rows.append(
+                {
+                    "year": "1960",
+                    "period": "M01",
+                    "value": "103",
+                    "latest": "false",
+                    "footnotes": [],
+                }
+            )
         series = [{"seriesID": series_id, "data": rows} for series_id in payload["seriesid"]]
-        return httpx.Response(200, json={"status": "REQUEST_SUCCEEDED", "Results": {"series": series}})
+        return httpx.Response(
+            200, json={"status": "REQUEST_SUCCEEDED", "Results": {"series": series}}
+        )
 
     async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
         adapter = BLSAdapter(client)
@@ -169,7 +186,8 @@ def test_document_extractors_remove_scripts_and_read_spreadsheets() -> None:
     from macrolens_worker.tasks.documents import _extract_html, _extract_xlsx
 
     html_text = _extract_html(
-        b"<html><body><nav>menu</nav><h1>Official release</h1><script>steal()</script><p>Core PCE 2.6%</p></body></html>"
+        b"<html><body><nav>menu</nav><h1>Official release</h1>"
+        b"<script>steal()</script><p>Core PCE 2.6%</p></body></html>"
     )
     assert "Official release" in html_text
     assert "Core PCE 2.6%" in html_text
@@ -204,7 +222,9 @@ async def test_unchanged_document_parse_restores_active_status(monkeypatch) -> N
 
     from macrolens_worker.tasks import documents
 
-    document = SimpleNamespace(id=uuid4(), source_url="https://example.com/release.txt", status="processing")
+    document = SimpleNamespace(
+        id=uuid4(), source_url="https://example.com/release.txt", status="processing"
+    )
     raw_object = SimpleNamespace(
         id=uuid4(),
         object_uri=f"s3://{documents.settings.s3_bucket}/raw/document.txt",
@@ -288,10 +308,10 @@ def test_ai_data_as_of_normalizes_naive_and_aware_timestamps() -> None:
 
 
 def test_mock_openai_contract_over_real_http() -> None:
+    import importlib.util
     import threading
     from http.server import ThreadingHTTPServer
 
-    import importlib.util
     module_path = REPO_ROOT / "backend/tests/mock_openai_server.py"
     spec = importlib.util.spec_from_file_location("mock_openai_server", module_path)
     assert spec and spec.loader
@@ -326,6 +346,7 @@ def test_mock_openai_contract_over_real_http() -> None:
 def test_initial_migration_is_self_contained_and_covers_models() -> None:
     import importlib.util
     import re
+
     from macrolens_api.models import Base
 
     migration_path = REPO_ROOT / "backend/alembic/versions/0001_initial.py"
@@ -347,6 +368,7 @@ def test_initial_migration_is_self_contained_and_covers_models() -> None:
 
 def test_frontend_api_calls_are_represented_in_openapi() -> None:
     import re
+
     import yaml
 
     spec = yaml.safe_load((REPO_ROOT / "macrolens_openapi.yaml").read_text())
@@ -379,6 +401,7 @@ def test_acceptance_origins_and_cookie_configuration_are_consistent() -> None:
     assert '"http://localhost:3000"' in playwright
     assert "WEB_ORIGIN=http://localhost:3000" in env_example
 
+
 async def test_fred_adapter_normalizes_current_vintage(monkeypatch) -> None:
     from macrolens_worker.providers.fred import FREDAdapter
 
@@ -389,8 +412,18 @@ async def test_fred_adapter_normalizes_current_vintage(monkeypatch) -> None:
         assert request.url.params["series_id"] == "PCEPI"
         if request.url.path.endswith("/fred/series"):
             return httpx.Response(
-                200, request=request,
-                json={"seriess": [{"id": "PCEPI", "frequency_short": "M", "observation_start": "1959-01-01", "title": "Personal Consumption Expenditures: Chain-type Price Index"}]},
+                200,
+                request=request,
+                json={
+                    "seriess": [
+                        {
+                            "id": "PCEPI",
+                            "frequency_short": "M",
+                            "observation_start": "1959-01-01",
+                            "title": "Personal Consumption Expenditures: Chain-type Price Index",
+                        }
+                    ]
+                },
             )
         return httpx.Response(
             200,
@@ -406,7 +439,17 @@ async def test_fred_adapter_normalizes_current_vintage(monkeypatch) -> None:
     async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
         result = await FREDAdapter(client).fetch(
             SimpleNamespace(code="FRED_API"),
-            [(SimpleNamespace(id=41, provider_series_id="PCEPI", source_frequency="monthly", source_locator={}), _dataset(4))],
+            [
+                (
+                    SimpleNamespace(
+                        id=41,
+                        provider_series_id="PCEPI",
+                        source_frequency="monthly",
+                        source_locator={},
+                    ),
+                    _dataset(4),
+                )
+            ],
             mode="incremental",
         )
     assert len(result) == 1
@@ -432,8 +475,18 @@ async def test_bea_adapter_maps_series_and_line_number(monkeypatch) -> None:
                 "BEAAPI": {
                     "Results": {
                         "Data": [
-                            {"SeriesCode": "DHLCRA3", "LineNumber": "100", "TimePeriod": "2026M06", "DataValue": "132.7"},
-                            {"SeriesCode": "OTHER", "LineNumber": "101", "TimePeriod": "2026M06", "DataValue": "999"},
+                            {
+                                "SeriesCode": "DHLCRA3",
+                                "LineNumber": "100",
+                                "TimePeriod": "2026M06",
+                                "DataValue": "132.7",
+                            },
+                            {
+                                "SeriesCode": "OTHER",
+                                "LineNumber": "101",
+                                "TimePeriod": "2026M06",
+                                "DataValue": "999",
+                            },
                         ]
                     }
                 }
@@ -442,14 +495,23 @@ async def test_bea_adapter_maps_series_and_line_number(monkeypatch) -> None:
 
     source = SimpleNamespace(
         id=51,
-        source_locator={"table_name": "U20404", "series_code": "DHLCRA3", "line_number": 100, "frequency": "M"},
+        source_locator={
+            "table_name": "U20404",
+            "series_code": "DHLCRA3",
+            "line_number": 100,
+            "frequency": "M",
+        },
         source_frequency="monthly",
     )
     dataset = SimpleNamespace(id=5, code="NIUnderlyingDetail")
     async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
-        result = await BEAAdapter(client).fetch(SimpleNamespace(code="BEA_API"), [(source, dataset)], mode="incremental")
+        result = await BEAAdapter(client).fetch(
+            SimpleNamespace(code="BEA_API"), [(source, dataset)], mode="incremental"
+        )
     assert len(result) == 1
-    assert [(item.period_start.isoformat(), str(item.value)) for item in result[0].observations] == [
+    assert [
+        (item.period_start.isoformat(), str(item.value)) for item in result[0].observations
+    ] == [
         ("2026-06-01", "132.7"),
     ]
     get_settings.cache_clear()
@@ -457,6 +519,7 @@ async def test_bea_adapter_maps_series_and_line_number(monkeypatch) -> None:
 
 async def test_census_adapter_requires_dimensions_and_parses_matrix(monkeypatch) -> None:
     from datetime import date as dt_date
+
     from macrolens_worker.providers.census import CensusEITSAdapter
 
     monkeypatch.setenv("CENSUS_API_KEY", "test-key")
@@ -465,7 +528,10 @@ async def test_census_adapter_requires_dimensions_and_parses_matrix(monkeypatch)
 
     async def handler(request: httpx.Request) -> httpx.Response:
         assert request.url.params["time"] == f"from+{current_year - 5}+to+{current_year}"
-        payload = [["cell_value", "time", "time_slot_date", "seasonally_adj"], ["42.5", f"{current_year}-01", f"{current_year}-01-01", "yes"]]
+        payload = [
+            ["cell_value", "time", "time_slot_date", "seasonally_adj"],
+            ["42.5", f"{current_year}-01", f"{current_year}-01-01", "yes"],
+        ]
         return httpx.Response(200, request=request, json=payload)
 
     ready = SimpleNamespace(
@@ -514,12 +580,18 @@ async def test_dol_adapter_supports_json_and_csv(monkeypatch) -> None:
             200,
             request=request,
             headers={"content-type": "application/json"},
-            json={"records": [{"week_ending": "2026-07-25", "initial_claims_seasonally_adjusted": "221000"}]},
+            json={
+                "records": [
+                    {"week_ending": "2026-07-25", "initial_claims_seasonally_adjusted": "221000"}
+                ]
+            },
         )
 
     source = SimpleNamespace(id=71, source_locator={}, source_frequency="weekly")
     async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
-        result = await DOLOpenDataAdapter(client).fetch(SimpleNamespace(code="DOL_OPEN_DATA_API"), [(source, _dataset(8))], mode="incremental")
+        result = await DOLOpenDataAdapter(client).fetch(
+            SimpleNamespace(code="DOL_OPEN_DATA_API"), [(source, _dataset(8))], mode="incremental"
+        )
     assert str(result[0].observations[0].value) == "221000"
     assert result[0].observations[0].period_end.isoformat() == "2026-07-31"
     csv_rows = DOLOpenDataAdapter._rows(b"week_ending,claims\n2026-07-25,221000\n", "text/csv")
@@ -544,7 +616,9 @@ async def test_nyfed_adapter_discovers_nested_rows() -> None:
         provider_series_id="SOFR",
     )
     async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
-        result = await NYFedAdapter(client).fetch(SimpleNamespace(code="NYFED_MARKETS_API"), [(source, _dataset(9))], mode="incremental")
+        result = await NYFedAdapter(client).fetch(
+            SimpleNamespace(code="NYFED_MARKETS_API"), [(source, _dataset(9))], mode="incremental"
+        )
     assert len(result[0].observations) == 1
     assert str(result[0].observations[0].value) == "5.31"
 
@@ -554,8 +628,17 @@ async def test_treasury_adapter_parses_nominal_and_real_xml() -> None:
 
     async def handler(request: httpx.Request) -> httpx.Response:
         year = request.url.params["field_tdr_date_value"]
-        xml = f'''<?xml version="1.0"?><feed xmlns:d="x" xmlns:m="y"><entry><content><m:properties><d:NEW_DATE>{year}-07-31T00:00:00</d:NEW_DATE><d:BC_2YEAR>4.10</d:BC_2YEAR><d:BC_10YEAR>4.35</d:BC_10YEAR><d:TC_10YEAR>1.98</d:TC_10YEAR></m:properties></content></entry></feed>'''.encode()
-        return httpx.Response(200, request=request, content=xml, headers={"content-type": "application/xml"})
+        xml = (
+            '<?xml version="1.0"?><feed xmlns:d="x" xmlns:m="y">'
+            "<entry><content><m:properties>"
+            f"<d:NEW_DATE>{year}-07-31T00:00:00</d:NEW_DATE>"
+            "<d:BC_2YEAR>4.10</d:BC_2YEAR><d:BC_10YEAR>4.35</d:BC_10YEAR>"
+            "<d:TC_10YEAR>1.98</d:TC_10YEAR>"
+            "</m:properties></content></entry></feed>"
+        ).encode()
+        return httpx.Response(
+            200, request=request, content=xml, headers={"content-type": "application/xml"}
+        )
 
     nominal = SimpleNamespace(id=91, provider_series_id="2Y_PAR_NOMINAL", source_frequency="daily")
     real = SimpleNamespace(id=92, provider_series_id="10Y_PAR_REAL", source_frequency="daily")
@@ -565,7 +648,11 @@ async def test_treasury_adapter_parses_nominal_and_real_xml() -> None:
             [(nominal, _dataset(10)), (real, _dataset(11))],
             mode="incremental",
         )
-    values = [(item.observations[0].source_series_id, str(item.observations[0].value)) for item in result if item.observations]
+    values = [
+        (item.observations[0].source_series_id, str(item.observations[0].value))
+        for item in result
+        if item.observations
+    ]
     assert (91, "4.10") in values
     assert (92, "1.98") in values
 
@@ -576,14 +663,27 @@ def test_release_calendar_and_fomc_helpers_cover_realistic_formats() -> None:
     from macrolens_worker.tasks.fomc import _document_type, _meeting_dates
     from macrolens_worker.tasks.release_calendar import _event_datetime, _match_release, parse_ics
 
-    raw = """BEGIN:VCALENDAR\r\nBEGIN:VEVENT\r\nUID:test-1\r\nSUMMARY:Employment Situation\r\nDTSTART;TZID=America/New_York:20260807T083000\r\nDESCRIPTION:Line one\\n line two\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n"""
+    raw = (
+        "BEGIN:VCALENDAR\r\n"
+        "BEGIN:VEVENT\r\n"
+        "UID:test-1\r\n"
+        "SUMMARY:Employment Situation\r\n"
+        "DTSTART;TZID=America/New_York:20260807T083000\r\n"
+        "DESCRIPTION:Line one\\n line two\r\n"
+        "END:VEVENT\r\n"
+        "END:VCALENDAR\r\n"
+    )
     events = parse_ics(raw)
     assert events[0]["SUMMARY"] == "Employment Situation"
     assert _event_datetime(events[0]).isoformat() == "2026-08-07T12:30:00+00:00"
     assert _match_release(events[0]["SUMMARY"])[0] == "EMPLOYMENT"
-    assert _meeting_dates(2026, "September", "15-16") == (dt_date(2026, 9, 15), dt_date(2026, 9, 16))
+    assert _meeting_dates(2026, "September", "15-16") == (
+        dt_date(2026, 9, 15),
+        dt_date(2026, 9, 16),
+    )
     assert _document_type("Minutes", "/minutes.pdf") == "minutes"
     assert _document_type("Summary of Economic Projections", "/sep.pdf") == "projection"
+
 
 async def test_worker_health_server_exposes_cloud_run_port(monkeypatch) -> None:
     import asyncio

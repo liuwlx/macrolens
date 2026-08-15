@@ -1,6 +1,13 @@
 from uuid import uuid4
 
-from macrolens_api.security import TokenType, create_token, decode_token, hash_password, hash_refresh_token, verify_password
+from macrolens_api.security import (
+    TokenType,
+    create_token,
+    decode_token,
+    hash_password,
+    hash_refresh_token,
+    verify_password,
+)
 
 
 def test_password_hash_and_verify() -> None:

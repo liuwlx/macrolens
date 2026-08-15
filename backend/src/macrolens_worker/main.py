@@ -3,8 +3,9 @@ from __future__ import annotations
 import asyncio
 import os
 import socket
+from collections.abc import Callable, Coroutine
 from contextlib import suppress
-from typing import Awaitable, Callable
+from typing import Any
 
 import typer
 
@@ -23,7 +24,9 @@ def _runtime_worker_id() -> str:
     return f"{base}:{socket.gethostname()}:{os.getpid()}"[:120]
 
 
-async def _run_service(role: str, task_factory: Callable[[], Awaitable[None]]) -> None:
+async def _run_service(
+    role: str, task_factory: Callable[[], Coroutine[Any, Any, None]]
+) -> None:
     health = asyncio.create_task(health_server(role))
     business = asyncio.create_task(task_factory())
     done, pending = await asyncio.wait({health, business}, return_when=asyncio.FIRST_EXCEPTION)
@@ -72,9 +75,13 @@ def schedule_once() -> None:
 
 @app.command("audit-data")
 def audit_data(
-    registry: str = typer.Option("database/seed/source_registry.json", help="Source registry JSON path"),
+    registry: str = typer.Option(
+        "database/seed/source_registry.json", help="Source registry JSON path"
+    ),
     output: str | None = typer.Option(None, help="Optional output JSON path"),
-    structural: bool = typer.Option(False, help="Ignore secrets and audit mapping/adapter readiness only"),
+    structural: bool = typer.Option(
+        False, help="Ignore secrets and audit mapping/adapter readiness only"
+    ),
     require_all: bool = typer.Option(
         False, help="Also fail for intentionally blocked mapping/license entries"
     ),
@@ -98,12 +105,10 @@ def audit_data(
 
 @app.command("audit-live")
 def audit_live(
-    provider: list[str] | None = typer.Option(
+    provider: list[str] | None = typer.Option(  # noqa: B008 - Typer declares CLI options here.
         None, "--provider", help="Provider code to audit; repeat for multiple providers"
     ),
-    mode: str = typer.Option(
-        "incremental", help="incremental, backfill, or vintage_backfill"
-    ),
+    mode: str = typer.Option("incremental", help="incremental, backfill, or vintage_backfill"),
     output: str | None = typer.Option(None, help="Optional output JSON path"),
 ) -> None:
     """Fetch enabled mappings without publishing and enforce completeness gates."""

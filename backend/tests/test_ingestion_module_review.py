@@ -375,8 +375,12 @@ def test_fomc_calendar_rejects_partially_parseable_meeting_rows() -> None:
         """
         <div class='panel'>
           <h3>2026 FOMC Meetings</h3>
-          <div class='fomc-meeting'><span class='month'>January</span><span class='date'>27-28</span></div>
-          <div class='fomc-meeting'><span class='month'>NotAMonth</span><span class='date'>17-18</span></div>
+          <div class='fomc-meeting'>
+            <span class='month'>January</span><span class='date'>27-28</span>
+          </div>
+          <div class='fomc-meeting'>
+            <span class='month'>NotAMonth</span><span class='date'>17-18</span>
+          </div>
         </div>
         """
     )
@@ -391,7 +395,9 @@ def test_registry_pins_every_enabled_history_boundary() -> None:
     assert len(enabled) == 31
     for item in enabled:
         locator = item.get("locator") or {}
-        assert locator.get("expected_first_period") or locator.get("start_year"), item["canonical_code"]
+        assert locator.get("expected_first_period") or locator.get("start_year"), item[
+            "canonical_code"
+        ]
     by_code = {item["canonical_code"]: item for item in enabled}
     assert by_code["US.BANK.CREDIT"]["provider_series_id"] == "TOTBKCR"
     assert by_code["US.WTI"]["locator"]["expected_first_period"] == "1986-01-02"
@@ -401,17 +407,17 @@ def test_registry_pins_every_enabled_history_boundary() -> None:
 def test_live_ingestion_audit_workflow_covers_every_registered_adapter_and_full_history() -> None:
     from macrolens_worker.tasks.sync import ADAPTERS
 
-    workflow = Path('.github/workflows/live-ingestion-audit.yml').read_text()
+    workflow = Path(".github/workflows/live-ingestion-audit.yml").read_text()
     for provider_code in ADAPTERS:
-        assert f'--provider {provider_code}' in workflow
-    assert '43 6 1 * *' in workflow
-    assert 'value=backfill' in workflow
+        assert f"--provider {provider_code}" in workflow
+    assert "43 6 1 * *" in workflow
+    assert "value=backfill" in workflow
 
 
 def test_collection_module_review_lists_every_registered_adapter() -> None:
     from macrolens_worker.tasks.sync import ADAPTERS
 
-    report = json.loads(Path('DATA_COLLECTION_MODULE_REVIEW.json').read_text())
-    reviewed = {entry.get('code') for entry in report['modules']}
+    report = json.loads(Path("DATA_COLLECTION_MODULE_REVIEW.json").read_text())
+    reviewed = {entry.get("code") for entry in report["modules"]}
     assert set(ADAPTERS).issubset(reviewed)
-    assert report['guarantee_model'] == 'fail_closed_no_partial_publish'
+    assert report["guarantee_model"] == "fail_closed_no_partial_publish"

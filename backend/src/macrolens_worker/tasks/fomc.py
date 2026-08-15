@@ -7,7 +7,7 @@ from pathlib import PurePosixPath
 from urllib.parse import urljoin
 
 import httpx
-from lxml import html
+from lxml import html  # type: ignore[import-untyped]
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -42,14 +42,14 @@ MONTHS = {
 
 def _meeting_dates(year: int, month_text: str, date_text: str) -> tuple[date, date] | None:
     month_names = [value.strip().lower() for value in month_text.split("/") if value.strip()]
-    months = [MONTHS.get(value) for value in month_names]
-    if not months or any(month is None for month in months):
+    if not month_names or any(value not in MONTHS for value in month_names):
         return None
+    months = [MONTHS[value] for value in month_names]
     numbers = [int(value) for value in re.findall(r"\d{1,2}", date_text)]
     if not numbers:
         return None
-    start_month = int(months[0])
-    end_month = int(months[1]) if len(months) > 1 else start_month
+    start_month = months[0]
+    end_month = months[1] if len(months) > 1 else start_month
     start_day = numbers[0]
     end_day = numbers[1] if len(numbers) > 1 else numbers[0]
     end_year = year + 1 if end_month < start_month else year
@@ -87,7 +87,8 @@ def _parse_calendar_rows(document: html.HtmlElement) -> list[tuple[html.HtmlElem
         parsed = _meeting_dates(year, month_text, date_text)
         if parsed is None:
             failures.append(
-                f"row {index}: invalid meeting date year={year}, month={month_text!r}, date={date_text!r}"
+                f"row {index}: invalid meeting date year={year}, "
+                f"month={month_text!r}, date={date_text!r}"
             )
             continue
         if parsed in identities:
@@ -125,7 +126,11 @@ async def _persist_raw(
     prefix: str,
 ) -> RawObject:
     now = datetime.now(UTC)
-    extension = "pdf" if "pdf" in response.headers.get("content-type", "") or url.lower().endswith(".pdf") else "html"
+    extension = (
+        "pdf"
+        if "pdf" in response.headers.get("content-type", "") or url.lower().endswith(".pdf")
+        else "html"
+    )
     digest = hashlib.sha256(response.content).hexdigest()
     existing = await session.scalar(
         select(RawObject).where(RawObject.provider_id == provider.id, RawObject.sha256 == digest)
@@ -165,7 +170,11 @@ async def sync_fomc_calendar(session: AsyncSession) -> dict[str, int]:
     provider = await session.scalar(select(Provider).where(Provider.code == "FEDERAL_RESERVE"))
     if provider is None:
         raise RuntimeError("FEDERAL_RESERVE provider is not seeded")
-    async with httpx.AsyncClient(timeout=45, follow_redirects=True, headers={"User-Agent": "MacroLens/1.0 research-data-platform"}) as client:
+    async with httpx.AsyncClient(
+        timeout=45,
+        follow_redirects=True,
+        headers={"User-Agent": "MacroLens/1.0 research-data-platform"},
+    ) as client:
         response = await client.get(settings.federal_reserve_calendar_url)
         response.raise_for_status()
         await _persist_raw(
@@ -250,7 +259,10 @@ async def sync_fomc_calendar(session: AsyncSession) -> dict[str, int]:
                 await enqueue_job(
                     session,
                     job_type="parse_document",
-                    payload={"document_id": str(existing_document.id), "raw_object_id": str(raw.id)},
+                    payload={
+                        "document_id": str(existing_document.id),
+                        "raw_object_id": str(raw.id),
+                    },
                     idempotency_key=f"parse-fomc:{existing_document.id}:{raw.sha256}",
                     priority=12,
                     max_attempts=3,

@@ -47,7 +47,9 @@ class EIAAdapter(ProviderAdapter):
             )
             data_fields = locator.get("data_fields") or [str(locator.get("value_field") or "value")]
             if not isinstance(data_fields, list) or not data_fields:
-                raise ProviderDataError(f"EIA mapping {source.id} data_fields must be a non-empty list")
+                raise ProviderDataError(
+                    f"EIA mapping {source.id} data_fields must be a non-empty list"
+                )
             value_field = str(locator.get("value_field") or data_fields[0])
             base_params: dict[str, Any] = {
                 "api_key": settings.eia_api_key,
@@ -100,7 +102,9 @@ class EIAAdapter(ProviderAdapter):
 
                 signature = tuple(str(row.get("period") or row.get("date") or "") for row in rows)
                 if signature and signature in seen_page_signatures:
-                    raise ProviderDataError("EIA pagination repeated a page; refusing incomplete history")
+                    raise ProviderDataError(
+                        "EIA pagination repeated a page; refusing incomplete history"
+                    )
                 seen_page_signatures.add(signature)
 
                 for raw_row in rows:
@@ -139,14 +143,21 @@ class EIAAdapter(ProviderAdapter):
                     raise ProviderDataError("EIA total changed during pagination")
                 received = len(rows)
                 offset += received
-                if received == 0 or (total is not None and offset >= total) or received < self.page_size:
+                if (
+                    received == 0
+                    or (total is not None and offset >= total)
+                    or received < self.page_size
+                ):
                     break
             else:
-                raise ProviderDataError(f"EIA pagination exceeded {self.max_pages} pages for {route}")
+                raise ProviderDataError(
+                    f"EIA pagination exceeded {self.max_pages} pages for {route}"
+                )
 
             if expected_total is not None and offset < expected_total:
                 raise ProviderDataError(
-                    f"EIA pagination incomplete for {route}: received {offset} of {expected_total} rows"
+                    f"EIA pagination incomplete for {route}: received {offset} of "
+                    f"{expected_total} rows"
                 )
             fetched_at = datetime.now(UTC)
             observations: list[NormalizedObservation] = []

@@ -573,6 +573,10 @@ class ProjectItemCreate(BaseModel):
     metadata: dict[str, Any] = Field(default_factory=dict)
 
 
+def _default_alert_channels() -> list[Literal["in_app", "email"]]:
+    return ["in_app"]
+
+
 class AlertCreate(BaseModel):
     name: str = Field(min_length=1, max_length=240)
     alert_type: Literal[
@@ -581,7 +585,7 @@ class AlertCreate(BaseModel):
     target_type: str | None = None
     target_id: UUID | None = None
     rule: dict[str, Any]
-    channels: list[Literal["in_app", "email"]] = Field(default_factory=lambda: ["in_app"])
+    channels: list[Literal["in_app", "email"]] = Field(default_factory=_default_alert_channels)
 
 
 class AlertPublic(ORMModel):

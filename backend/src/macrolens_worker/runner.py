@@ -8,11 +8,16 @@ from uuid import UUID
 from sqlalchemy import and_, or_, select
 
 from macrolens_api.config import get_settings
-from macrolens_api.logging import get_logger
 from macrolens_api.db import SessionLocal
+from macrolens_api.logging import get_logger
 from macrolens_api.models import AIRun, Job
 from macrolens_worker.tasks.ai import run_ai_analysis
-from macrolens_worker.tasks.documents import embed_document, fetch_document, parse_document, summarize_document
+from macrolens_worker.tasks.documents import (
+    embed_document,
+    fetch_document,
+    parse_document,
+    summarize_document,
+)
 from macrolens_worker.tasks.email import send_email_notification
 from macrolens_worker.tasks.fomc import sync_fomc_calendar
 from macrolens_worker.tasks.notifications import evaluate_alerts

@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+from collections.abc import Iterable
 from datetime import UTC, datetime
-from typing import Any, Iterable
+from typing import Any
 
 import httpx
 from sqlalchemy import select
@@ -79,7 +80,7 @@ async def _provider_mappings(
                 )
                 .order_by(Dataset.id, SourceSeries.id)
             )
-        ).all()
+        ).tuples().all()
     )
 
 
@@ -106,7 +107,9 @@ async def audit_live_data(
                 {
                     "provider": code,
                     "status": "failed",
-                    "issues": [{"code": "provider_missing", "message": "Provider is not active or seeded."}],
+                    "issues": [
+                        {"code": "provider_missing", "message": "Provider is not active or seeded."}
+                    ],
                     "series": {},
                 }
             )
@@ -182,8 +185,7 @@ async def audit_live_data(
         "passed_provider_count": sum(report["status"] == "passed" for report in executed),
         "failed_provider_count": sum(report["status"] == "failed" for report in executed),
         "skipped_provider_count": sum(report["status"] == "skipped" for report in provider_reports),
-        "all_executed_passed": bool(executed) and all(
-            report["status"] == "passed" for report in executed
-        ),
+        "all_executed_passed": bool(executed)
+        and all(report["status"] == "passed" for report in executed),
         "providers": provider_reports,
     }

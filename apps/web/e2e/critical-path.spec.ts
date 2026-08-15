@@ -1,5 +1,11 @@
 import { expect, type Page, test } from "@playwright/test";
 
+/* eslint-disable @typescript-eslint/no-explicit-any --
+ * This runtime acceptance test intentionally traverses heterogeneous API payloads. The assertions
+ * validate their observable contract; duplicating every production response schema here would
+ * couple the E2E boundary to implementation-owned TypeScript types.
+ */
+
 const adminEmail = process.env.E2E_ADMIN_EMAIL ?? "admin@example.com";
 const adminPassword = process.env.E2E_ADMIN_PASSWORD ?? "change-me-now";
 const apiUrl = process.env.E2E_API_URL ?? "http://localhost:8000/api/v1";

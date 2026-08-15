@@ -3,8 +3,8 @@ from __future__ import annotations
 import hashlib
 from dataclasses import dataclass
 from datetime import UTC, datetime
-from typing import Literal
 from pathlib import PurePosixPath
+from typing import Literal, cast
 from uuid import UUID
 
 import httpx
@@ -35,7 +35,11 @@ from macrolens_worker.providers import (
     NYFedAdapter,
     TreasuryAdapter,
 )
-from macrolens_worker.providers.base import NormalizedObservation, ProviderAdapter, ProviderFetchResult
+from macrolens_worker.providers.base import (
+    NormalizedObservation,
+    ProviderAdapter,
+    ProviderFetchResult,
+)
 from macrolens_worker.tasks.ingestion_quality import validate_ingestion_completeness
 
 ADAPTERS: dict[str, type[ProviderAdapter]] = {
@@ -59,7 +63,13 @@ async def _raw_object(
     result: ProviderFetchResult,
 ) -> RawObject:
     now = datetime.now(UTC)
-    suffix = "json" if "json" in result.content_type else "xml" if "xml" in result.content_type else "bin"
+    suffix = (
+        "json"
+        if "json" in result.content_type
+        else "xml"
+        if "xml" in result.content_type
+        else "bin"
+    )
     digest = hashlib.sha256(result.raw_bytes).hexdigest()
     existing = await session.scalar(
         select(RawObject).where(RawObject.provider_id == provider.id, RawObject.sha256 == digest)
@@ -154,9 +164,7 @@ def decide_observation_merge(
     )
 
 
-def _same_vintage_payload(
-    existing: ObservationVintage, observation: NormalizedObservation
-) -> bool:
+def _same_vintage_payload(existing: ObservationVintage, observation: NormalizedObservation) -> bool:
     return (
         existing.period_end == observation.period_end
         and existing.value == observation.value
@@ -302,7 +310,7 @@ async def sync_provider(
             )
             .order_by(Dataset.id, SourceSeries.id)
         )
-    ).all()
+    ).tuples().all()
     if not mapping_rows:
         raise RuntimeError(f"Provider {provider_code} has no verified source mappings")
 
@@ -335,11 +343,11 @@ async def sync_provider(
         )
         raise RuntimeError(f"Provider {provider_code} returned no data")
 
-    staged_by_key: dict[
-        tuple[int, object, object], tuple[NormalizedObservation, UUID]
-    ] = {}
+    staged_by_key: dict[tuple[int, object, object], tuple[NormalizedObservation, UUID]] = {}
     for result in results:
-        raw = await _raw_object(session, storage, provider=provider, dataset=result.dataset, result=result)
+        raw = await _raw_object(
+            session, storage, provider=provider, dataset=result.dataset, result=result
+        )
         if run.raw_object_id is None:
             run.raw_object_id = raw.id
         for observation in result.observations:
@@ -357,7 +365,8 @@ async def sync_provider(
                     message=(
                         "Provider returned contradictory rows for "
                         f"source_series_id={observation.source_series_id}, "
-                        f"period={observation.period_start}, vintage={observation.vintage_at.isoformat()}."
+                        f"period={observation.period_start}, "
+                        f"vintage={observation.vintage_at.isoformat()}."
                     ),
                 )
                 raise RuntimeError("Provider snapshot contains contradictory duplicate rows")
@@ -395,7 +404,7 @@ async def sync_provider(
         run.finished_at = datetime.now(UTC)
         await session.commit()
         raise RuntimeError(run.error_message)
-    coverage = float(completeness_metrics["coverage_ratio"])
+    coverage = float(cast(str | float, completeness_metrics["coverage_ratio"]))
 
     previous = await session.scalar(
         select(PublicationBatch)

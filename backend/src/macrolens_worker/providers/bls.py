@@ -68,7 +68,9 @@ class BLSAdapter(ProviderAdapter):
         for dataset, sources in by_dataset.values():
             source_by_external = {str(source.provider_series_id): source for source in sources}
             if len(source_by_external) != len(sources):
-                raise ProviderDataError("BLS dataset contains duplicate provider_series_id mappings")
+                raise ProviderDataError(
+                    "BLS dataset contains duplicate provider_series_id mappings"
+                )
             start_year = (
                 min(int(source.source_locator.get("start_year", 1913)) for source in sources)
                 if backfill
@@ -109,7 +111,9 @@ class BLSAdapter(ProviderAdapter):
                     if body.get("status") != "REQUEST_SUCCEEDED":
                         raise ProviderDataError(f"BLS request failed: {body.get('message')}")
                     result_object = body.get("Results", {})
-                    series_payloads = result_object.get("series", []) if isinstance(result_object, dict) else []
+                    series_payloads = (
+                        result_object.get("series", []) if isinstance(result_object, dict) else []
+                    )
                     if not isinstance(series_payloads, list):
                         raise ProviderDataError("BLS Results.series was not a list")
                     returned: dict[str, dict[str, Any]] = {}
@@ -149,7 +153,8 @@ class BLSAdapter(ProviderAdapter):
                             actual_title = str(catalog.get("series_title") or "").strip()
                             if actual_title != str(expected_title).strip():
                                 raise ProviderDataError(
-                                    f"BLS catalog title mismatch for {external_id}: {actual_title!r}"
+                                    f"BLS catalog title mismatch for {external_id}: "
+                                    f"{actual_title!r}"
                                 )
                         data_rows = series_payload.get("data", [])
                         if not isinstance(data_rows, list):
@@ -177,7 +182,8 @@ class BLSAdapter(ProviderAdapter):
                             )
                             if period is None:
                                 raise ProviderDataError(
-                                    f"BLS row for {external_id} has unsupported period {period_code!r}"
+                                    f"BLS row for {external_id} has unsupported period "
+                                    f"{period_code!r}"
                                 )
                             if not window_start <= period.year <= window_end:
                                 raise ProviderDataError(
@@ -209,9 +215,7 @@ class BLSAdapter(ProviderAdapter):
                             observation = NormalizedObservation(
                                 source_series_id=source.id,
                                 period_start=period,
-                                period_end=period_end(
-                                    period, source.source_frequency or "monthly"
-                                ),
+                                period_end=period_end(period, source.source_frequency or "monthly"),
                                 value=value,
                                 status=(
                                     "missing"
@@ -254,9 +258,7 @@ class BLSAdapter(ProviderAdapter):
                     request_url=self.endpoint,
                     request_parameters={"requests": request_log},
                     content_type=(
-                        "application/json"
-                        if len(content_types) != 1
-                        else next(iter(content_types))
+                        "application/json" if len(content_types) != 1 else next(iter(content_types))
                     ),
                     raw_bytes=raw_bundle,
                     observations=observations,

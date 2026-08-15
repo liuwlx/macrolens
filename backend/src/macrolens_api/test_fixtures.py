@@ -5,7 +5,6 @@ import os
 from calendar import monthrange
 from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
-from uuid import uuid4
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -69,7 +68,11 @@ def _period_end(period: date) -> date:
 
 def _fixture_value(series: Series, series_index: int, point_index: int) -> Decimal:
     if series.unit_code == "percent":
-        return Decimal("1.75") + Decimal(series_index) / Decimal(10) + Decimal(point_index % 18) / Decimal(20)
+        return (
+            Decimal("1.75")
+            + Decimal(series_index) / Decimal(10)
+            + Decimal(point_index % 18) / Decimal(20)
+        )
     if series.unit_code in {"thousand_persons", "persons"}:
         return Decimal(120 + series_index * 20 + point_index * 3)
     if "usd" in series.unit_code:
@@ -79,8 +82,13 @@ def _fixture_value(series: Series, series_index: int, point_index: int) -> Decim
 
 async def seed_runtime_acceptance_fixtures(session: AsyncSession) -> dict[str, int | str]:
     settings = get_settings()
-    if settings.environment not in {"development", "test"} or os.getenv("ALLOW_TEST_FIXTURES") != "true":
-        raise RuntimeError("Runtime acceptance fixtures are disabled outside an explicit test environment")
+    if (
+        settings.environment not in {"development", "test"}
+        or os.getenv("ALLOW_TEST_FIXTURES") != "true"
+    ):
+        raise RuntimeError(
+            "Runtime acceptance fixtures are disabled outside an explicit test environment"
+        )
 
     existing_run = await session.scalar(
         select(IngestionRun).where(IngestionRun.business_key == FIXTURE_VERSION)
@@ -88,7 +96,9 @@ async def seed_runtime_acceptance_fixtures(session: AsyncSession) -> dict[str, i
     if existing_run is not None:
         return {"status": "already_seeded", "run_id": str(existing_run.id)}
 
-    admin = await session.scalar(select(User).where(User.email == settings.bootstrap_admin_email.lower()))
+    admin = await session.scalar(
+        select(User).where(User.email == settings.bootstrap_admin_email.lower())
+    )
     if admin is None:
         raise RuntimeError("Bootstrap admin is required before acceptance fixtures")
     workspace = await session.scalar(select(Workspace).where(Workspace.owner_user_id == admin.id))
@@ -149,8 +159,14 @@ async def seed_runtime_acceptance_fixtures(session: AsyncSession) -> dict[str, i
         series.latest_period = periods[-1]
         for point_index, period in enumerate(periods):
             value = _fixture_value(series, series_index, point_index)
-            vintage = datetime(period.year, period.month, min(28, _period_end(period).day), 13, 30, tzinfo=UTC)
-            first_value = value - Decimal("0.10") if series_index == 0 and point_index == len(periods) - 2 else value
+            vintage = datetime(
+                period.year, period.month, min(28, _period_end(period).day), 13, 30, tzinfo=UTC
+            )
+            first_value = (
+                value - Decimal("0.10")
+                if series_index == 0 and point_index == len(periods) - 2
+                else value
+            )
             session.add(
                 ObservationVintage(
                     source_series_id=source.id,
@@ -204,7 +220,9 @@ async def seed_runtime_acceptance_fixtures(session: AsyncSession) -> dict[str, i
             observation_count += 1
     run.inserted_count = observation_count
 
-    definitions = list((await session.scalars(select(ReleaseDefinition).order_by(ReleaseDefinition.code))).all())
+    definitions = list(
+        (await session.scalars(select(ReleaseDefinition).order_by(ReleaseDefinition.code))).all()
+    )
     now = datetime.now(UTC)
     release_count = 0
     for index, definition in enumerate(definitions[:5]):
@@ -216,7 +234,7 @@ async def seed_runtime_acceptance_fixtures(session: AsyncSession) -> dict[str, i
             title_zh=f"{definition.name_zh}运行时验收发布",
             title_en=f"{definition.code} runtime acceptance release",
             country_code="US",
-            reference_period=f"2026-{max(1, 7-index):02d}",
+            reference_period=f"2026-{max(1, 7 - index):02d}",
             scheduled_at=scheduled,
             source_timezone="America/New_York",
             actual_released_at=scheduled if index <= 2 else None,
@@ -288,20 +306,39 @@ async def seed_runtime_acceptance_fixtures(session: AsyncSession) -> dict[str, i
     )
     session.add(meeting)
     await session.flush()
-    for variable, value in [("real_gdp", "2.0"), ("unemployment", "4.2"), ("core_pce", "2.5")]:
+    for variable, projection_value in [
+        ("real_gdp", "2.0"),
+        ("unemployment", "4.2"),
+        ("core_pce", "2.5"),
+    ]:
         session.add(
             FomcProjection(
                 meeting_id=meeting.id,
                 variable_code=variable,
                 horizon="2026",
                 statistic="median",
-                value=Decimal(value),
+                value=Decimal(projection_value),
                 unit="%",
             )
         )
-    for horizon, dot_value, count in [("2026", "4.125", 8), ("2026", "3.875", 5), ("long_run", "3.000", 10)]:
-        session.add(FomcDot(meeting_id=meeting.id, horizon=horizon, dot_value=Decimal(dot_value), dot_count=count))
-    for lower, upper, probability in [("4.00", "4.25", "0.30"), ("4.25", "4.50", "0.60"), ("4.50", "4.75", "0.10")]:
+    for horizon, dot_value, count in [
+        ("2026", "4.125", 8),
+        ("2026", "3.875", 5),
+        ("long_run", "3.000", 10),
+    ]:
+        session.add(
+            FomcDot(
+                meeting_id=meeting.id,
+                horizon=horizon,
+                dot_value=Decimal(dot_value),
+                dot_count=count,
+            )
+        )
+    for lower, upper, probability in [
+        ("4.00", "4.25", "0.30"),
+        ("4.25", "4.50", "0.60"),
+        ("4.50", "4.75", "0.10"),
+    ]:
         session.add(
             FomcProbabilitySnapshot(
                 meeting_id=meeting.id,
@@ -315,7 +352,9 @@ async def seed_runtime_acceptance_fixtures(session: AsyncSession) -> dict[str, i
             )
         )
 
-    document_provider = await session.scalar(select(Provider).where(Provider.code == "BEA_API")) or provider
+    document_provider = (
+        await session.scalar(select(Provider).where(Provider.code == "BEA_API")) or provider
+    )
     doc_text = (
         "核心PCE价格指数同比回落，服务价格仍有粘性。\n\n"
         "本报告解释数据口径、修订机制和主要分项贡献，并明确所有数字均为运行时验收夹具。"
@@ -359,7 +398,11 @@ async def seed_runtime_acceptance_fixtures(session: AsyncSession) -> dict[str, i
         )
         session.add(chunk)
         chunks.append(chunk)
-    session.add(DocumentSeries(document_id=document.id, series_id=source_rows[0][1].id, relation_type="headline"))
+    session.add(
+        DocumentSeries(
+            document_id=document.id, series_id=source_rows[0][1].id, relation_type="headline"
+        )
+    )
 
     project = Project(
         workspace_id=workspace.id,
@@ -370,7 +413,14 @@ async def seed_runtime_acceptance_fixtures(session: AsyncSession) -> dict[str, i
     )
     session.add(project)
     await session.flush()
-    session.add(ProjectItem(project_id=project.id, object_type="series", object_id=source_rows[0][1].id, title_override="核心指标"))
+    session.add(
+        ProjectItem(
+            project_id=project.id,
+            object_type="series",
+            object_id=source_rows[0][1].id,
+            title_override="核心指标",
+        )
+    )
     note = Note(
         project_id=project.id,
         author_user_id=admin.id,
@@ -386,8 +436,18 @@ async def seed_runtime_acceptance_fixtures(session: AsyncSession) -> dict[str, i
         view_type="compare",
         definition={
             "series": [
-                {"series_id": str(source_rows[0][1].id), "transform": "yoy", "axis": "left", "lag_periods": 0},
-                {"series_id": str(source_rows[1][1].id), "transform": "level", "axis": "right", "lag_periods": 0},
+                {
+                    "series_id": str(source_rows[0][1].id),
+                    "transform": "yoy",
+                    "axis": "left",
+                    "lag_periods": 0,
+                },
+                {
+                    "series_id": str(source_rows[1][1].id),
+                    "transform": "level",
+                    "axis": "right",
+                    "lag_periods": 0,
+                },
             ]
         },
         description="运行时验收视图",
@@ -453,7 +513,10 @@ async def seed_runtime_acceptance_fixtures(session: AsyncSession) -> dict[str, i
             ai_run_id=ai_run.id,
             context_type="document",
             context_id=document.id,
-            snapshot={"title": document.title_zh, "chunks": [{"chunk_id": str(chunks[0].id), "content": chunks[0].content}]},
+            snapshot={
+                "title": document.title_zh,
+                "chunks": [{"chunk_id": str(chunks[0].id), "content": chunks[0].content}],
+            },
         )
     )
     session.add(

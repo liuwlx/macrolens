@@ -1,8 +1,8 @@
 import json
 from pathlib import Path
 
-from sqlalchemy.schema import CreateTable
 from sqlalchemy.dialects import postgresql
+from sqlalchemy.schema import CreateTable
 
 from macrolens_api.main import app
 from macrolens_api.models import Base, ObservationVintage, PublicationBatch, SavedView
@@ -35,14 +35,16 @@ def test_observation_vintage_has_append_only_identity() -> None:
 
 
 def test_saved_views_and_publication_batches_are_persistent() -> None:
-    assert {"workspace_id", "owner_user_id", "definition"}.issubset(SavedView.__table__.columns.keys())
+    assert {"workspace_id", "owner_user_id", "definition"}.issubset(
+        SavedView.__table__.columns.keys()
+    )
     assert {"provider_id", "run_id", "status", "previous_batch_id"}.issubset(
         PublicationBatch.__table__.columns.keys()
     )
 
 
 def test_api_route_surface() -> None:
-    paths = {route.path for route in app.routes}
+    paths = set(app.openapi()["paths"])
     expected = {
         "/api/v1/health",
         "/api/v1/series",
@@ -104,4 +106,4 @@ def test_seed_command_updates_existing_source_mappings() -> None:
     seed_source = (ROOT / "backend/src/macrolens_api/cli.py").read_text(encoding="utf-8")
     assert 'source_series.source_locator = item.get("locator") or {}' in seed_source
     assert 'source_series.provider_series_id = item.get("provider_series_id")' in seed_source
-    assert 'source_series.mapping_status = status' in seed_source
+    assert "source_series.mapping_status = status" in seed_source

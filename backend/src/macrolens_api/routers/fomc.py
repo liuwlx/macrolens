@@ -13,8 +13,8 @@ from ..models import (
     Document,
     FomcDot,
     FomcMeeting,
-    FomcProjection,
     FomcProbabilitySnapshot,
+    FomcProjection,
     Provider,
 )
 from ..schemas import (
@@ -22,8 +22,8 @@ from ..schemas import (
     FomcDotPublic,
     FomcMeetingDetail,
     FomcMeetingSummary,
-    FomcProjectionPublic,
     FomcProbabilityPublic,
+    FomcProjectionPublic,
 )
 from ..services.licenses import get_license_for_provider
 
@@ -47,7 +47,9 @@ async def meetings(
         stmt = stmt.where(FomcMeeting.meeting_start <= end)
     if status:
         stmt = stmt.where(FomcMeeting.status == status)
-    rows = list((await session.scalars(stmt.order_by(FomcMeeting.meeting_start.desc()).limit(limit))).all())
+    rows = list(
+        (await session.scalars(stmt.order_by(FomcMeeting.meeting_start.desc()).limit(limit))).all()
+    )
     items = [
         FomcMeetingSummary(
             id=row.id,
@@ -77,7 +79,9 @@ async def meeting_detail(meeting_id: UUID, session: SessionDep) -> FomcMeetingDe
             await session.scalars(
                 select(FomcProjection)
                 .where(FomcProjection.meeting_id == meeting_id)
-                .order_by(FomcProjection.variable_code, FomcProjection.horizon, FomcProjection.statistic)
+                .order_by(
+                    FomcProjection.variable_code, FomcProjection.horizon, FomcProjection.statistic
+                )
             )
         ).all()
     )
@@ -147,11 +151,14 @@ async def meeting_probabilities(
 ) -> list[FomcProbabilityPublic]:
     if await session.get(FomcMeeting, meeting_id) is None:
         raise AppError(404, "FOMC会议不存在", "没有找到该会议。", "fomc_meeting_not_found")
+    target_time: datetime | None
     if observed_at:
         try:
             target_time = datetime.fromisoformat(observed_at.replace("Z", "+00:00"))
         except ValueError as exc:
-            raise AppError(422, "时间格式无效", "observed_at 必须使用 ISO 8601。", "invalid_observed_at") from exc
+            raise AppError(
+                422, "时间格式无效", "observed_at 必须使用 ISO 8601。", "invalid_observed_at"
+            ) from exc
     else:
         target_time = await session.scalar(
             select(FomcProbabilitySnapshot.observed_at)

@@ -2,9 +2,8 @@ from __future__ import annotations
 
 import json
 from datetime import UTC, date, datetime
-from typing import Any
 
-from lxml import etree
+from lxml import etree  # type: ignore[import-untyped]
 
 from macrolens_api.models import Dataset, Provider, SourceSeries
 
@@ -36,8 +35,16 @@ class TreasuryAdapter(ProviderAdapter):
         mode: str,
     ) -> list[ProviderFetchResult]:
         current_year = date.today().year
-        nominal = [(source, dataset) for source, dataset in mappings if source.provider_series_id != "10Y_PAR_REAL"]
-        real = [(source, dataset) for source, dataset in mappings if source.provider_series_id == "10Y_PAR_REAL"]
+        nominal = [
+            (source, dataset)
+            for source, dataset in mappings
+            if source.provider_series_id != "10Y_PAR_REAL"
+        ]
+        real = [
+            (source, dataset)
+            for source, dataset in mappings
+            if source.provider_series_id == "10Y_PAR_REAL"
+        ]
         results: list[ProviderFetchResult] = []
         for kind, kind_mappings, default_start in (
             ("daily_treasury_yield_curve", nominal, 1990),
@@ -46,7 +53,8 @@ class TreasuryAdapter(ProviderAdapter):
             if not kind_mappings:
                 continue
             start_year = min(
-                int(getattr(source, "source_locator", {}).get("start_year", default_start)) for source, _ in kind_mappings
+                int(getattr(source, "source_locator", {}).get("start_year", default_start))
+                for source, _ in kind_mappings
             )
             years = (
                 range(start_year, current_year + 1)
@@ -58,17 +66,25 @@ class TreasuryAdapter(ProviderAdapter):
                 params = {"data": kind, "field_tdr_date_value": str(year)}
                 response = await self.client.get(url, params=params)
                 response.raise_for_status()
-                observations = deduplicate_observations(self._parse(response.content, kind_mappings))
+                observations = deduplicate_observations(
+                    self._parse(response.content, kind_mappings)
+                )
                 outside_year = [item for item in observations if item.period_start.year != year]
                 if outside_year:
                     raise ProviderDataError(
-                        f"Treasury {kind} returned {len(outside_year)} rows outside requested year {year}"
+                        f"Treasury {kind} returned {len(outside_year)} rows outside "
+                        f"requested year {year}"
                     )
                 observed_source_ids = {item.source_series_id for item in observations}
                 missing_sources = [
                     source.id
                     for source, _dataset in kind_mappings
-                    if year >= int((getattr(source, "source_locator", {}) or {}).get("start_year", default_start))
+                    if year
+                    >= int(
+                        (getattr(source, "source_locator", {}) or {}).get(
+                            "start_year", default_start
+                        )
+                    )
                     and source.id not in observed_source_ids
                 ]
                 if missing_sources:
@@ -131,7 +147,8 @@ class TreasuryAdapter(ProviderAdapter):
                 field = self.FIELD_MAP.get(source.provider_series_id or "")
                 if not field:
                     raise ProviderDataError(
-                        f"Treasury mapping {source.id} has unsupported series {source.provider_series_id}"
+                        f"Treasury mapping {source.id} has unsupported series "
+                        f"{source.provider_series_id}"
                     )
                 value = parse_decimal(values.get(field))
                 if value is None:
