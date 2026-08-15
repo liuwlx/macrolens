@@ -14,7 +14,8 @@ PR #11 的 GitHub 远程 acceptance 作业在 `seed-test-fixtures` 阶段失败�
 2. acceptance fixture 改为选择 active 且状态为 `needs_review/verified` 的映射，不选择 disabled 或 license-required 映射。
 3. 对尚未验证的候选创建显式、test-only 的成功 MappingProbe Job 证据，并复用生产审批服务写入审批血缘；不恢复 Registry 自动信任。
 4. 将门禁收紧为仅 `ENVIRONMENT=test` 且 `ALLOW_TEST_FIXTURES=true`；普通 development、staging 和 production 全部拒绝。目标服务器不执行 `seed-test-fixtures`。
-5. 修复旧结论报告的 EOF 空行，完成目标回归、类型检查和六项工程门禁。
+5. 补齐与真实 `MappingProbeResult` 一致的 URL、content type、官方描述、Probe 时间和结构化 evidence 字段，并修正任务卡对全候选 migration/seed 影响的描述。
+6. 修复旧结论报告的 EOF 空行，完成目标回归、类型检查和六项工程门禁。
 
 ## 4. Agents、skills、tools 与文档
 

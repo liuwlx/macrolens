@@ -95,6 +95,7 @@ async def _approve_runtime_acceptance_mappings(
         if source.mapping_status == "verified" and source.is_primary:
             continue
         fingerprint = source_mapping_fingerprint(source, dataset, provider)
+        probed_at = datetime.now(UTC)
         probe_job = Job(
             id=uuid4(),
             job_type="mapping_probe",
@@ -104,16 +105,19 @@ async def _approve_runtime_acceptance_mappings(
             idempotency_key=f"{FIXTURE_VERSION}:mapping-probe:{source.id}",
             attempts=1,
             max_attempts=1,
-            started_at=datetime.now(UTC),
-            finished_at=datetime.now(UTC),
+            started_at=probed_at,
+            finished_at=probed_at,
             result={
                 "source_series_id": source.id,
                 "provider_code": provider.code,
                 "provider_series_id": source.provider_series_id,
+                "request_url": "fixture://runtime-acceptance",
                 "http_reachable": True,
                 "http_status": 200,
+                "content_type": "application/json",
                 "business_success": True,
                 "identity_match": True,
+                "official_description": "Runtime acceptance fixture",
                 "authorization_available": True,
                 "production_ready": True,
                 "classification": "PASS",
@@ -121,8 +125,16 @@ async def _approve_runtime_acceptance_mappings(
                     f"{FIXTURE_VERSION}:{fingerprint}".encode()
                 ).hexdigest(),
                 "mapping_fingerprint": fingerprint,
+                "probed_at": probed_at.isoformat(),
                 "issues": [],
-                "evidence": {"fixture": True},
+                "evidence": {
+                    "transport_success": True,
+                    "http_success": True,
+                    "business_success": True,
+                    "identity_match": True,
+                    "authorization_available": True,
+                    "details": {"fixture": True},
+                },
             },
         )
         session.add(probe_job)

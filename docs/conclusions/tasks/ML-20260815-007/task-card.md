@@ -9,7 +9,7 @@
 - 分配部门席位：研发部 04（PRIMARY）。
 - 工作树与起始提交：`E:\workerspace\projects\20260709\macrolens-worktrees\ML-20260815-007-engineering-01`，clean HEAD `e194a6d2761b8442c7aace188af68806933bd3a3`，关联 PR #11。
 - 允许修改的模块：仅“范围内”列出的文件；不得修改 readiness 脚本本地 Git mode。
-- 公共接口或 Schema 影响：无公共 API、OpenAPI、数据库 Schema、migration 或 seed 变更。
+- 公共接口或 Schema 影响：本次增量无新的公共 API/OpenAPI/Schema；PR 全候选包含既有 migration `0002_unique_primary_source`、模型验证字段和 Registry seed 变更。目标服务器禁止执行 migration/seed，故 Stage 03 前必须只读证明目标库已处于兼容版本，否则阻塞并回滚应用发布。
 - 依赖任务：PR #11 当前候选、审查结论、GitHub acceptance 失败日志；根组织规则和开发链路宪法 01/02/03。
 - 必须执行的检查：回归先 RED 后 GREEN；相关 pytest；`ruff check backend`；`mypy backend/src`；`pytest backend/tests`；`npm --workspace apps/web run lint`、`test`、`build`；`git diff --check`、mode/范围/敏感信息检查；GitHub CI；服务器 Compose/镜像/健康/readiness/UI/一次性 Worker 审计证据。
 - 预期交付物：修复提交与 PR、合并提交、不可变标签、服务器运行时验收、一次性 Worker 四源审计、七节结论报告、最终验收链接和已验证账号密码。
