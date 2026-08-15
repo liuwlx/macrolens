@@ -50,7 +50,10 @@ jobs:
       - run: python -m compileall -q backend/src backend/tests scripts
       - run: PYTHONPATH=backend/src python -m macrolens_worker.main audit-data --structural --output DATA_INGESTION_READINESS.json
       - run: PYTHONPATH=backend/src pytest backend/tests --cov=macrolens_api --cov=macrolens_worker --cov-report=term-missing --cov-fail-under=35
-      - run: cd backend && alembic upgrade head && alembic downgrade base && alembic upgrade head
+      - run: alembic upgrade head && alembic downgrade base && alembic upgrade head
+        working-directory: backend
+        env:
+          PYTHONPATH: src
       - run: PYTHONPATH=backend/src python -m macrolens_api.cli seed
       - run: PYTHONPATH=backend/src python scripts/generate_openapi.py --check
       - run: python scripts/validate_repository.py

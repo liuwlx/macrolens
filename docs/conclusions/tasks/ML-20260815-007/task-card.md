@@ -8,7 +8,7 @@
 - 范围外：数据库 migration 执行、seed 执行、任何数据同步/backfill/发布、mapping 状态手工修改、真实 observation 写入、Scheduler 修改/停止/重启/重建、生产 Key 轮换或回显、删除容器/卷/数据、修改非 acceptance 栈。
 - 分配部门席位：集成发布部 01（阶段 02 PRIMARY）、运维部 01（阶段 03 PRIMARY）、安全合规部 01与测试部 01（SUPPORTING）。
 - 工作树与起始提交：运行时同源代理 remediation 使用 `E:\workerspace\projects\20260709\macrolens-worktrees\ML-20260815-007-engineering-01`，起点 `1974e895`；阶段 02 使用该 remediation 的最终候选；阶段 03 仅使用服务器提交/标签源码，不在服务器编辑代码。
-- 允许修改的模块：`apps/web/next.config.ts`、直接对应的同源代理回归测试、GitHub 分支/PR/标签；服务器 acceptance 发布目录、同项目镜像和允许更新的 Web/API/Worker 服务；本任务报告。不得修改根工作区用户既有文件。
+- 允许修改的模块：`apps/web/next.config.ts`、直接对应的同源代理回归测试、`.github/workflows/ci.yml` 的 Alembic 导入路径、对应静态回归测试、GitHub 分支/PR/标签；服务器 acceptance 发布目录、同项目镜像和允许更新的 Web/API/Worker 服务；本任务报告。不得修改根工作区用户既有文件。
 - 公共接口或 Schema 影响：候选含既有 OpenAPI 及 Alembic/seed 定义；本任务允许发布代码但明确禁止执行 migration/seed。若运行库 Schema 不兼容，必须停止并回滚，不能绕过。
 - 依赖任务：ML-20260815-003、ML-20260815-005、ML-20260815-006；现有项目 `macrolens-acceptance-20260814`、服务器四源 Key 与受限代理配置。
 - 必须执行的检查：PR CI/审查；标签与合并 SHA 追溯；Compose 项目/镜像/端口/health/readiness；Scheduler 三元身份；一次性 Worker 残留；`audit-data`、四源 `audit-live`；审计前后 jobs/ingestion/raw/vintage/latest 零写快照；Web/API 登录、身份、数据页和退出；外部 HTTP 入口。
