@@ -137,10 +137,7 @@ async def _approve_runtime_acceptance_mappings(
 
 async def seed_runtime_acceptance_fixtures(session: AsyncSession) -> dict[str, int | str]:
     settings = get_settings()
-    if (
-        settings.environment not in {"development", "test"}
-        or os.getenv("ALLOW_TEST_FIXTURES") != "true"
-    ):
+    if settings.environment != "test" or os.getenv("ALLOW_TEST_FIXTURES") != "true":
         raise RuntimeError(
             "Runtime acceptance fixtures are disabled outside an explicit test environment"
         )

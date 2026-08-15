@@ -8,6 +8,23 @@ from macrolens_api import test_fixtures
 from macrolens_api.models import Job
 
 
+def test_runtime_acceptance_fixtures_reject_development(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("ENVIRONMENT", "development")
+    monkeypatch.setenv("ALLOW_TEST_FIXTURES", "true")
+    test_fixtures.get_settings.cache_clear()
+
+    with pytest.raises(RuntimeError, match="disabled outside an explicit test environment"):
+        asyncio.run(
+            test_fixtures.seed_runtime_acceptance_fixtures(  # type: ignore[arg-type]
+                SimpleNamespace()
+            )
+        )
+
+    test_fixtures.get_settings.cache_clear()
+
+
 def test_clean_seed_mappings_receive_fixture_probe_approval(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

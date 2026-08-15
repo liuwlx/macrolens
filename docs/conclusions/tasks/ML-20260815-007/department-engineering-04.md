@@ -13,7 +13,7 @@ PR #11 的 GitHub 远程 acceptance 作业在 `seed-test-fixtures` 阶段失败�
 1. 新增最小回归，模拟三条干净 seed 后的 `needs_review` 映射，先观察缺少 fixture 审批函数的 RED。
 2. acceptance fixture 改为选择 active 且状态为 `needs_review/verified` 的映射，不选择 disabled 或 license-required 映射。
 3. 对尚未验证的候选创建显式、test-only 的成功 MappingProbe Job 证据，并复用生产审批服务写入审批血缘；不恢复 Registry 自动信任。
-4. 保留 `ENVIRONMENT in {development,test}` 与 `ALLOW_TEST_FIXTURES=true` 双重门禁。目标服务器不执行 `seed-test-fixtures`。
+4. 将门禁收紧为仅 `ENVIRONMENT=test` 且 `ALLOW_TEST_FIXTURES=true`；普通 development、staging 和 production 全部拒绝。目标服务器不执行 `seed-test-fixtures`。
 5. 修复旧结论报告的 EOF 空行，完成目标回归、类型检查和六项工程门禁。
 
 ## 4. Agents、skills、tools 与文档
@@ -30,7 +30,7 @@ fail-closed 的生产 seed 与运行时验收夹具必须分别定义信任来�
 
 ## 6. 更好的初始提示词
 
-> PR 的 GitHub acceptance 在干净数据库执行 `seed-test-fixtures` 时提示“至少需要三条 verified source mappings”。请先核对 catalog seed 是否按安全规则把 READY 映射置为 needs_review，再为该冲突写最小 RED 测试。只允许在 `ENVIRONMENT=test/development + ALLOW_TEST_FIXTURES=true` 下创建带显式 fixture 标记的 MappingProbe 审批血缘，禁止恢复 Registry 自动信任，禁止本地 Docker，完成六项门禁后推送原 PR。
+> PR 的 GitHub acceptance 在干净数据库执行 `seed-test-fixtures` 时提示“至少需要三条 verified source mappings”。请先核对 catalog seed 是否按安全规则把 READY 映射置为 needs_review，再为该冲突写最小 RED 测试。只允许在 `ENVIRONMENT=test + ALLOW_TEST_FIXTURES=true` 下创建带显式 fixture 标记的 MappingProbe 审批血缘，禁止恢复 Registry 自动信任，禁止本地 Docker，完成六项门禁后推送原 PR。
 
 ## 7. 当前场景的一次性更优方案提示词
 
