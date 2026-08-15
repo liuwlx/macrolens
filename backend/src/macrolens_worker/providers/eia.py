@@ -22,6 +22,9 @@ from .base import (
     deduplicate_observations,
     parse_decimal,
     period_end,
+    raise_for_status_safely,
+    redact_sensitive_data,
+    sanitized_transport_error,
 )
 
 
@@ -182,7 +185,7 @@ class EIAAdapter(ProviderAdapter):
         )
         identity_issues: list[MappingProbeIssue] = []
         try:
-            total = int(response_payload.get("total"))
+            total = int(str(response_payload.get("total")))
         except (TypeError, ValueError):
             total = 0
         details["total"] = total
@@ -307,22 +310,32 @@ class EIAAdapter(ProviderAdapter):
 
             for _page in range(self.max_pages):
                 params = {**base_params, "offset": offset}
-                response = await self.client.get(url, params=params)
-                response.raise_for_status()
+                try:
+                    response = await self.client.get(url, params=params)
+                except httpx.TransportError:
+                    raise sanitized_transport_error(
+                        provider_code=self.code, request_url=url
+                    ) from None
+                raise_for_status_safely(
+                    response,
+                    provider_code=self.code,
+                    request_url=url,
+                    secrets=(settings.eia_api_key,),
+                )
                 payload = response.json()
                 if not isinstance(payload, dict):
                     raise ProviderDataError("EIA response was not an object")
                 if payload.get("error"):
-                    raise ProviderDataError(f"EIA API error: {payload.get('error')}")
+                    raise ProviderDataError("EIA API reported a business error")
                 response_payload = payload.get("response", {})
                 if not isinstance(response_payload, dict):
                     raise ProviderDataError("EIA response did not contain a response object")
                 rows = response_payload.get("data", []) or []
                 if not isinstance(rows, list):
                     raise ProviderDataError("EIA response.data was not a list")
-                pages.append(payload)
-                request_log.append(params)
-                last_request_url = str(response.request.url)
+                pages.append(redact_sensitive_data(payload, secrets=(settings.eia_api_key,)))
+                request_log.append(redact_sensitive_data(params, secrets=(settings.eia_api_key,)))
+                last_request_url = url
                 content_type = response.headers.get("content-type", "application/json")
 
                 signature = tuple(str(row.get("period") or row.get("date") or "") for row in rows)
@@ -339,7 +352,7 @@ class EIAAdapter(ProviderAdapter):
                     period = self._parse_period(period_text)
                     if period is None:
                         raise ProviderDataError(
-                            f"EIA returned an invalid period {period_text!r} for source {source.id}"
+                            f"EIA returned an invalid period for source {source.id}"
                         )
                     if period < cutoff:
                         raise ProviderDataError(

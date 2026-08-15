@@ -3,26 +3,296 @@ from __future__ import annotations
 import json
 from collections import defaultdict
 from datetime import UTC, date, datetime
+from hashlib import sha256
 from typing import Any
+
+import httpx
 
 from macrolens_api.config import get_settings
 from macrolens_api.models import Dataset, Provider, SourceSeries
 
 from .base import (
+    MappingProbeEvidence,
+    MappingProbeIssue,
+    MappingProbeResult,
     NormalizedObservation,
     ProviderAdapter,
     ProviderDataError,
     ProviderFetchResult,
+    build_mapping_probe_result,
     deduplicate_observations,
     normalize_label,
     parse_decimal,
     period_end,
+    raise_for_status_safely,
+    redact_sensitive_data,
+    sanitized_transport_error,
 )
 
 
 class BEAAdapter(ProviderAdapter):
     code = "BEA_API"
     endpoint = "https://apps.bea.gov/api/data"
+
+    async def probe(
+        self,
+        provider: Provider,
+        source: SourceSeries,
+        dataset: Dataset,
+    ) -> MappingProbeResult:
+        settings = get_settings()
+        authorized = bool(settings.bea_api_key)
+        probed_at = datetime.now(UTC)
+        provider_series_id = str(source.provider_series_id) if source.provider_series_id else None
+        locator = source.source_locator
+        pinned = {
+            "table_name": str(locator.get("table_name") or ""),
+            "frequency": str(locator.get("frequency") or ""),
+            "series_code": str(locator.get("series_code") or ""),
+            "line_number": str(locator.get("line_number") or ""),
+            "line_description": str(locator.get("line_description") or ""),
+        }
+        missing = [name for name, value in pinned.items() if not value.strip()]
+        if missing:
+            return build_mapping_probe_result(
+                provider_code=provider.code,
+                source_series_id=source.id,
+                provider_series_id=provider_series_id,
+                request_url=self.endpoint,
+                http_status=None,
+                content_type="",
+                official_description="",
+                response_sha256="",
+                probed_at=probed_at,
+                evidence=MappingProbeEvidence(False, False, False, False, authorized),
+                issues=tuple(
+                    MappingProbeIssue(
+                        "configuration",
+                        f"{name}_missing",
+                        f"BEA {name} must be pinned before probing",
+                    )
+                    for name in missing
+                ),
+            )
+        params: dict[str, Any] = {
+            "method": "GetData",
+            "DataSetName": dataset.code,
+            "TableName": pinned["table_name"],
+            "Frequency": pinned["frequency"],
+            "Year": str(locator.get("probe_year") or date.today().year),
+            "ResultFormat": "JSON",
+        }
+        if settings.bea_api_key:
+            params["UserID"] = settings.bea_api_key
+        try:
+            response = await self.client.get(self.endpoint, params=params)
+        except httpx.TransportError:
+            return build_mapping_probe_result(
+                provider_code=provider.code,
+                source_series_id=source.id,
+                provider_series_id=provider_series_id,
+                request_url=self.endpoint,
+                http_status=None,
+                content_type="",
+                official_description="",
+                response_sha256="",
+                probed_at=probed_at,
+                evidence=MappingProbeEvidence(False, False, False, False, authorized),
+                issues=(
+                    MappingProbeIssue(
+                        "transport", "transport_error", "BEA request was unreachable"
+                    ),
+                ),
+            )
+        raw = response.content
+        digest = sha256(raw).hexdigest()
+        content_type = response.headers.get("content-type", "application/json")
+        if not 200 <= response.status_code < 300:
+            return build_mapping_probe_result(
+                provider_code=provider.code,
+                source_series_id=source.id,
+                provider_series_id=provider_series_id,
+                request_url=self.endpoint,
+                http_status=response.status_code,
+                content_type=content_type,
+                official_description="",
+                response_sha256=digest,
+                probed_at=probed_at,
+                evidence=MappingProbeEvidence(True, False, False, False, authorized),
+                issues=(
+                    MappingProbeIssue(
+                        "http", "http_status", f"BEA returned HTTP {response.status_code}"
+                    ),
+                ),
+            )
+        try:
+            payload = response.json()
+        except ValueError:
+            payload = None
+        errors = self._business_errors(payload)
+        data_rows = self._data_rows(payload)
+        if errors or data_rows is None:
+            return build_mapping_probe_result(
+                provider_code=provider.code,
+                source_series_id=source.id,
+                provider_series_id=provider_series_id,
+                request_url=self.endpoint,
+                http_status=response.status_code,
+                content_type=content_type,
+                official_description="",
+                response_sha256=digest,
+                probed_at=probed_at,
+                evidence=MappingProbeEvidence(True, True, False, False, authorized),
+                issues=(
+                    MappingProbeIssue(
+                        "business",
+                        "business_error",
+                        "BEA response reported a business error"
+                        if errors
+                        else "BEA response did not contain a Data list",
+                    ),
+                ),
+            )
+
+        expected_description = self._normalize_whitespace(pinned["line_description"])
+        identity_rows = [
+            row
+            for row in data_rows
+            if isinstance(row, dict)
+            and str(row.get("SeriesCode") or "") == pinned["series_code"]
+            and str(row.get("LineNumber") or "") == pinned["line_number"]
+        ]
+        identities = {
+            (
+                str(row.get("SeriesCode") or ""),
+                str(row.get("LineNumber") or ""),
+                self._normalize_whitespace(str(row.get("LineDescription") or "")),
+            )
+            for row in identity_rows
+        }
+        issue_specs: list[tuple[str, str]] = []
+        if len(identities) != 1:
+            issue_specs.append(
+                ("identity_not_unique", "BEA fixed identity did not resolve uniquely")
+            )
+        elif next(iter(identities))[2] != expected_description:
+            issue_specs.append(
+                (
+                    "line_description_drift",
+                    "BEA LineDescription does not exactly match after whitespace normalization",
+                )
+            )
+        first_row = identity_rows[0] if identity_rows else {}
+        if not identity_rows or any(
+            self._parse_period(str(row.get("TimePeriod") or "")) is None for row in identity_rows
+        ):
+            issue_specs.append(
+                ("time_period_invalid", "BEA TimePeriod must be present and parseable")
+            )
+        if not identity_rows or any(
+            parse_decimal(row.get("DataValue")) is None for row in identity_rows
+        ):
+            issue_specs.append(
+                ("data_value_invalid", "BEA DataValue must be present and parseable")
+            )
+        for locator_name, response_name in (
+            ("metric_name", "METRIC_NAME"),
+            ("cl_unit", "CL_UNIT"),
+            ("unit_mult", "UNIT_MULT"),
+        ):
+            expected = locator.get(locator_name)
+            if expected is not None and (
+                not identity_rows
+                or any(str(row.get(response_name) or "") != str(expected) for row in identity_rows)
+            ):
+                issue_specs.append(
+                    (
+                        f"{locator_name}_drift",
+                        f"BEA {response_name} does not match the pinned value",
+                    )
+                )
+        issues = [MappingProbeIssue("identity", code, message) for code, message in issue_specs]
+        if not authorized:
+            issues.append(
+                MappingProbeIssue(
+                    "authorization",
+                    "authorization_missing",
+                    "BEA API authorization is unavailable",
+                )
+            )
+        details = {
+            "table_name": pinned["table_name"],
+            "frequency": pinned["frequency"],
+            "series_code": str(first_row.get("SeriesCode") or ""),
+            "line_number": str(first_row.get("LineNumber") or ""),
+            "line_description": self._normalize_whitespace(
+                str(first_row.get("LineDescription") or "")
+            ),
+            "time_period": str(first_row.get("TimePeriod") or ""),
+            "metric_name": str(first_row.get("METRIC_NAME") or ""),
+            "cl_unit": str(first_row.get("CL_UNIT") or ""),
+            "unit_mult": str(first_row.get("UNIT_MULT") or ""),
+        }
+        return build_mapping_probe_result(
+            provider_code=provider.code,
+            source_series_id=source.id,
+            provider_series_id=provider_series_id,
+            request_url=self.endpoint,
+            http_status=response.status_code,
+            content_type=content_type,
+            official_description=details["line_description"],
+            response_sha256=digest,
+            probed_at=probed_at,
+            evidence=MappingProbeEvidence(
+                True,
+                True,
+                True,
+                not issue_specs,
+                authorized,
+                details,
+            ),
+            issues=tuple(issues),
+        )
+
+    @staticmethod
+    def _normalize_whitespace(value: str) -> str:
+        return " ".join(value.split())
+
+    @staticmethod
+    def _business_errors(payload: Any) -> list[Any]:
+        if not isinstance(payload, dict):
+            return []
+        bea_api = payload.get("BEAAPI")
+        if not isinstance(bea_api, dict):
+            return []
+        errors: list[Any] = []
+        if bea_api.get("Error"):
+            errors.append(bea_api["Error"])
+        results = bea_api.get("Results")
+        if isinstance(results, dict) and results.get("Error"):
+            errors.append(results["Error"])
+        elif isinstance(results, list):
+            errors.extend(
+                item["Error"] for item in results if isinstance(item, dict) and item.get("Error")
+            )
+        return errors
+
+    @staticmethod
+    def _data_rows(payload: Any) -> list[dict[str, Any]] | None:
+        if not isinstance(payload, dict):
+            return None
+        bea_api = payload.get("BEAAPI")
+        if not isinstance(bea_api, dict):
+            return None
+        results = bea_api.get("Results")
+        if isinstance(results, dict):
+            rows = results.get("Data")
+            return rows if isinstance(rows, list) else None
+        if isinstance(results, list):
+            data_items = [item.get("Data") for item in results if isinstance(item, dict)]
+            rows = next((item for item in data_items if isinstance(item, list)), None)
+            return rows
+        return None
 
     async def fetch(
         self,
@@ -66,16 +336,28 @@ class BEAAdapter(ProviderAdapter):
                 ),
                 "ResultFormat": "JSON",
             }
-            response = await self.client.get(self.endpoint, params=params)
-            response.raise_for_status()
+            try:
+                response = await self.client.get(self.endpoint, params=params)
+            except httpx.TransportError:
+                raise sanitized_transport_error(
+                    provider_code=self.code, request_url=self.endpoint
+                ) from None
+            raise_for_status_safely(
+                response,
+                provider_code=self.code,
+                request_url=self.endpoint,
+                secrets=(settings.bea_api_key,),
+            )
             payload = response.json()
-            errors = payload.get("BEAAPI", {}).get("Error")
+            errors = self._business_errors(payload)
             if errors:
-                raise ProviderDataError(f"BEA request failed: {errors}")
+                raise ProviderDataError("BEA request failed with a business error")
             results_payload = payload.get("BEAAPI", {}).get("Results", {})
             if isinstance(results_payload, list):
                 # Some BEA methods wrap Results in a list. GetData normally returns a mapping.
-                results_payload = next((item for item in results_payload if isinstance(item, dict)), {})
+                results_payload = next(
+                    (item for item in results_payload if isinstance(item, dict)), {}
+                )
             data_rows = results_payload.get("Data", []) if isinstance(results_payload, dict) else []
             if not isinstance(data_rows, list):
                 raise ProviderDataError("BEA response did not contain a Data list")
@@ -94,7 +376,7 @@ class BEAAdapter(ProviderAdapter):
                     period = self._parse_period(period_text)
                     if period is None:
                         raise ProviderDataError(
-                            f"BEA mapping {source.id} returned invalid TimePeriod {period_text!r}"
+                            f"BEA mapping {source.id} returned an invalid TimePeriod"
                         )
                     value = parse_decimal(row.get("DataValue"))
                     flags: list[str] = []
@@ -117,7 +399,7 @@ class BEAAdapter(ProviderAdapter):
                 {
                     "provider": self.code,
                     "resolved_identities": identities,
-                    "response": payload,
+                    "response": redact_sensitive_data(payload, secrets=(settings.bea_api_key,)),
                 },
                 ensure_ascii=False,
                 separators=(",", ":"),
@@ -127,8 +409,10 @@ class BEAAdapter(ProviderAdapter):
                 ProviderFetchResult(
                     provider=provider,
                     dataset=dataset,
-                    request_url=str(response.request.url),
-                    request_parameters=params,
+                    request_url=self.endpoint,
+                    request_parameters=redact_sensitive_data(
+                        params, secrets=(settings.bea_api_key,)
+                    ),
                     content_type=response.headers.get("content-type", "application/json"),
                     raw_bytes=raw_bundle,
                     observations=observations,
@@ -171,11 +455,10 @@ class BEAAdapter(ProviderAdapter):
             if series_code or line_number:
                 key = (series_code, line_number)
                 previous = metadata.get(key)
-                if previous is not None and normalize_label(previous) != normalize_label(description):
-                    raise ProviderDataError(
-                        f"BEA row identity {key} has conflicting descriptions: "
-                        f"{previous!r} vs {description!r}"
-                    )
+                if previous is not None and normalize_label(previous) != normalize_label(
+                    description
+                ):
+                    raise ProviderDataError(f"BEA row identity {key} has conflicting descriptions")
                 metadata[key] = description
 
         identities: dict[int, dict[str, str]] = {}
@@ -191,7 +474,9 @@ class BEAAdapter(ProviderAdapter):
                     and (not explicit_line or line_number == explicit_line)
                 ]
             else:
-                raw_aliases = locator.get("line_aliases") or locator.get("description_aliases") or []
+                raw_aliases = (
+                    locator.get("line_aliases") or locator.get("description_aliases") or []
+                )
                 if isinstance(raw_aliases, str):
                     raw_aliases = [raw_aliases]
                 aliases = [
@@ -204,7 +489,9 @@ class BEAAdapter(ProviderAdapter):
                     ]
                     if value
                 ]
-                normalized_aliases = {normalize_label(alias) for alias in aliases if normalize_label(alias)}
+                normalized_aliases = {
+                    normalize_label(alias) for alias in aliases if normalize_label(alias)
+                }
                 exact = [
                     (series_code, line_number, description)
                     for (series_code, line_number), description in metadata.items()
@@ -221,12 +508,14 @@ class BEAAdapter(ProviderAdapter):
                             for alias in normalized_aliases
                         )
                     ]
-            unique = {(series_code, line_number, description) for series_code, line_number, description in matches}
+            unique = {
+                (series_code, line_number, description)
+                for series_code, line_number, description in matches
+            }
             if len(unique) != 1:
-                candidates = sorted(description for _, _, description in unique)[:10]
                 raise ProviderDataError(
                     f"BEA mapping {source.id} must resolve to exactly one row; "
-                    f"found {len(unique)} candidates: {candidates}"
+                    f"found {len(unique)} candidates"
                 )
             series_code, line_number, description = unique.pop()
             identities[source.id] = {

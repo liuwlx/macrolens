@@ -8,7 +8,7 @@ from dataclasses import asdict, dataclass, field
 from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 from typing import Any, Literal
-from urllib.parse import urlsplit
+from urllib.parse import urlsplit, urlunsplit
 
 import httpx
 
@@ -121,6 +121,46 @@ class MappingProbeResult:
         )
         if evidence.http_success != expected_http_success:
             raise ValueError("MappingProbeResult HTTP evidence contradicts status")
+        if not self.issues:
+            inferred_issues: list[MappingProbeIssue] = []
+            if not evidence.transport_success:
+                inferred_issues.append(
+                    MappingProbeIssue(
+                        "transport",
+                        "transport_error",
+                        "Provider request was unreachable",
+                    )
+                )
+            elif not evidence.http_success:
+                inferred_issues.append(
+                    MappingProbeIssue("http", "http_status", "Provider returned a non-2xx status")
+                )
+            elif not evidence.business_success:
+                inferred_issues.append(
+                    MappingProbeIssue(
+                        "business",
+                        "business_error",
+                        "Provider response did not report business success",
+                    )
+                )
+            elif not evidence.identity_match:
+                inferred_issues.append(
+                    MappingProbeIssue(
+                        "identity",
+                        "identity_mismatch",
+                        "Provider response did not match the pinned identity",
+                    )
+                )
+            if not evidence.authorization_available:
+                inferred_issues.append(
+                    MappingProbeIssue(
+                        "authorization",
+                        "authorization_missing",
+                        "Provider API authorization is unavailable",
+                    )
+                )
+            if inferred_issues:
+                object.__setattr__(self, "issues", tuple(inferred_issues))
         classification = classify_mapping_probe(evidence, self.issues)
         if classification != self.classification:
             raise ValueError("MappingProbeResult classification contradicts evidence and issues")
@@ -193,11 +233,92 @@ def build_mapping_probe_result(
     )
 
 
+_SENSITIVE_PARAMETER_NAMES = {
+    "apikey",
+    "key",
+    "registrationkey",
+    "userid",
+}
+
+
+def redact_sensitive_data(value: Any, *, secrets: tuple[str, ...] = ()) -> Any:
+    """Remove credential fields and values from persistable provider evidence."""
+
+    if isinstance(value, dict):
+        return {
+            key: redact_sensitive_data(item, secrets=secrets)
+            for key, item in value.items()
+            if re.sub(r"[^a-z0-9]", "", str(key).lower()) not in _SENSITIVE_PARAMETER_NAMES
+        }
+    if isinstance(value, list):
+        return [redact_sensitive_data(item, secrets=secrets) for item in value]
+    if isinstance(value, tuple):
+        return tuple(redact_sensitive_data(item, secrets=secrets) for item in value)
+    if isinstance(value, str):
+        sanitized = value
+        for secret in secrets:
+            if secret:
+                sanitized = sanitized.replace(secret, "[REDACTED]")
+        return sanitized
+    if isinstance(value, bytes):
+        sanitized_bytes = value
+        for secret in secrets:
+            if secret:
+                sanitized_bytes = sanitized_bytes.replace(secret.encode(), b"[REDACTED]")
+        return sanitized_bytes
+    return value
+
+
+def strip_url_query(url: str) -> str:
+    parts = urlsplit(url)
+    return urlunsplit((parts.scheme, parts.netloc, parts.path, "", ""))
+
+
+def raise_for_status_safely(
+    response: httpx.Response,
+    *,
+    provider_code: str,
+    request_url: str,
+    secrets: tuple[str, ...] = (),
+) -> None:
+    if 200 <= response.status_code < 300:
+        return
+    safe_request = httpx.Request(response.request.method, strip_url_query(request_url))
+    safe_response = httpx.Response(
+        response.status_code,
+        headers=response.headers,
+        content=redact_sensitive_data(response.content, secrets=secrets),
+        request=safe_request,
+    )
+    raise httpx.HTTPStatusError(
+        f"{provider_code} request failed with HTTP {response.status_code}",
+        request=safe_request,
+        response=safe_response,
+    )
+
+
+def sanitized_transport_error(*, provider_code: str, request_url: str) -> httpx.TransportError:
+    return httpx.TransportError(
+        f"{provider_code} transport request failed",
+        request=httpx.Request("GET", strip_url_query(request_url)),
+    )
+
+
 class ProviderAdapter(ABC):
     code: str
 
     def __init__(self, client: httpx.AsyncClient) -> None:
         self.client = client
+
+    async def probe(
+        self,
+        provider: Provider,
+        source: SourceSeries,
+        dataset: Dataset,
+    ) -> MappingProbeResult:
+        """Collect read-only mapping evidence when the provider supports probing."""
+
+        raise NotImplementedError(f"MappingProbe is not implemented for {self.code}")
 
     @abstractmethod
     async def fetch(

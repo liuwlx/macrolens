@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from dataclasses import asdict
 from hashlib import sha256
 from typing import Any
 from uuid import UUID
@@ -12,7 +11,18 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from macrolens_api.models import Dataset, Provider, RawObject, SourceSeries
 from macrolens_api.services.source_mapping_identity import source_mapping_fingerprint
 from macrolens_api.services.storage import ObjectStorage
+from macrolens_worker.providers.base import ProviderAdapter
+from macrolens_worker.providers.bea import BEAAdapter
 from macrolens_worker.providers.bls import BLSAdapter
+from macrolens_worker.providers.census import CensusEITSAdapter
+from macrolens_worker.providers.eia import EIAAdapter
+
+ADAPTER_REGISTRY: dict[str, type[ProviderAdapter]] = {
+    BLSAdapter.code: BLSAdapter,
+    EIAAdapter.code: EIAAdapter,
+    BEAAdapter.code: BEAAdapter,
+    CensusEITSAdapter.code: CensusEITSAdapter,
+}
 
 
 async def probe_mapping(
@@ -37,18 +47,25 @@ async def probe_mapping(
     if row is None:
         raise RuntimeError(f"Unknown or inactive source mapping: {source_series_id}")
     source, dataset, provider = row
-    if provider.code != BLSAdapter.code:
-        raise RuntimeError(
-            f"MappingProbe is not implemented for provider {provider.code}"
-        )
+    adapter_type = ADAPTER_REGISTRY.get(provider.code)
+    if adapter_type is None:
+        raise RuntimeError(f"MappingProbe is not implemented for provider {provider.code}")
     async with httpx.AsyncClient(
         timeout=httpx.Timeout(30, connect=20),
         follow_redirects=True,
         headers={"User-Agent": "MacroLens/1.0 mapping-probe"},
     ) as client:
-        evidence = await BLSAdapter(client).probe(provider, source, dataset)
-    result = asdict(evidence)
-    result["probed_at"] = evidence.probed_at.isoformat()
+        evidence = await adapter_type(client).probe(provider, source, dataset)
+    expected_provider_series_id = (
+        str(source.provider_series_id) if source.provider_series_id is not None else None
+    )
+    if (
+        evidence.provider_code != provider.code
+        or evidence.source_series_id != source.id
+        or evidence.provider_series_id != expected_provider_series_id
+    ):
+        raise RuntimeError("MappingProbe adapter returned mismatched mapping identity")
+    result = evidence.to_dict()
     result["mapping_fingerprint"] = source_mapping_fingerprint(source, dataset, provider)
     return result
 
