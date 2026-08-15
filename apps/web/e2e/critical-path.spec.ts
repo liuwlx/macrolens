@@ -131,10 +131,12 @@ test("data, release, FOMC and document read paths return linked runtime fixtures
 
   const meetings = await api<{ items: any[] }>(page, "/fomc/meetings?limit=100");
   expect(meetings.items.length).toBeGreaterThan(0);
-  const meeting = await api<any>(page, `/fomc/meetings/${meetings.items[0].id}`);
+  const fixtureMeeting = meetings.items.find((item: any) => item.meeting_start === "2026-07-28");
+  expect(fixtureMeeting).toBeTruthy();
+  const meeting = await api<any>(page, `/fomc/meetings/${fixtureMeeting.id}`);
   expect(meeting.projections.length).toBeGreaterThan(0);
   expect(meeting.dots.length).toBeGreaterThan(0);
-  const probabilities = await api<any[]>(page, `/fomc/meetings/${meetings.items[0].id}/probabilities`);
+  const probabilities = await api<any[]>(page, `/fomc/meetings/${fixtureMeeting.id}/probabilities`);
   expect(probabilities.length).toBeGreaterThan(0);
 
   const documents = await api<{ items: any[] }>(page, "/documents?limit=100");
