@@ -122,11 +122,11 @@ jobs:
           p.write_text(s)
           PY
       - run: docker compose --profile acceptance up -d --build postgres minio minio-init migrate seed mock-openai
-      - run: ./scripts/wait_for_http.sh http://127.0.0.1:8081/health 120
+      - run: bash scripts/wait_for_http.sh http://127.0.0.1:8081/health 120
       - run: docker compose run --rm -e ENVIRONMENT=test -e ALLOW_TEST_FIXTURES=true seed python -m macrolens_api.cli seed-test-fixtures
       - run: docker compose --profile acceptance up -d api worker scheduler web
-      - run: ./scripts/wait_for_http.sh http://127.0.0.1:8000/api/v1/ready 180
-      - run: ./scripts/wait_for_http.sh http://localhost:3000/login 180
+      - run: bash scripts/wait_for_http.sh http://127.0.0.1:8000/api/v1/ready 180
+      - run: bash scripts/wait_for_http.sh http://localhost:3000/login 180
       - uses: actions/setup-node@v4
         with:
           node-version: "22"

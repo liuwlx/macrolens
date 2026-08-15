@@ -198,6 +198,7 @@ class CensusEITSAdapter(ProviderAdapter):
             payload = response.json()
         except ValueError:
             payload = None
+        payload = _redact_sensitive_data(payload, secrets=(settings.census_api_key or "",))
         if not isinstance(payload, list) or not payload or not isinstance(payload[0], list):
             return _build_mapping_probe_result(
                 provider_code=provider.code,

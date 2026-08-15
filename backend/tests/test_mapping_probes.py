@@ -31,16 +31,18 @@ def _dataset(code: str) -> SimpleNamespace:
     return SimpleNamespace(id=2, code=code)
 
 
-def _eia_source() -> SimpleNamespace:
+def _eia_source(**locator_overrides: object) -> SimpleNamespace:
+    locator = {
+        "route": "v2/seriesid/PET.RWTC.D",
+        "expected_first_period": "1986-01-02",
+        "min_observations_backfill": 100,
+    }
+    locator.update(locator_overrides)
     return SimpleNamespace(
         id=3,
         provider_series_id="PET.RWTC.D",
         source_frequency="daily",
-        source_locator={
-            "route": "v2/seriesid/PET.RWTC.D",
-            "expected_first_period": "1986-01-02",
-            "min_observations_backfill": 100,
-        },
+        source_locator=locator,
     )
 
 
@@ -396,6 +398,79 @@ async def test_eia_probe_blocks_total_below_pinned_backfill_minimum(
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
+    ("case", "minimum"),
+    [
+        ("missing", None),
+        ("not-an-integer", "many"),
+        ("below-minimum", 1),
+    ],
+)
+async def test_eia_probe_requires_fixed_backfill_minimum_before_http(
+    monkeypatch: pytest.MonkeyPatch,
+    case: str,
+    minimum: object,
+) -> None:
+    monkeypatch.setenv("EIA_API_KEY", "probe-secret")
+    get_settings.cache_clear()
+    source = _eia_source(min_observations_backfill=minimum)
+    if case == "missing":
+        source.source_locator.pop("min_observations_backfill")
+    called = False
+
+    async def handler(request: httpx.Request) -> httpx.Response:
+        nonlocal called
+        called = True
+        return httpx.Response(
+            200,
+            request=request,
+            content=(FIXTURES / "eia_wti_pass.json").read_bytes(),
+        )
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+        result = await EIAAdapter(client).probe(
+            _provider("EIA_API_V2"), source, _dataset("Petroleum")
+        )
+
+    assert called is False
+    assert result.classification == "BLOCKED"
+    assert {issue.code for issue in result.issues} == {
+        "min_observations_backfill_invalid"
+    }
+    assert result.response_sha256 == ""
+    get_settings.cache_clear()
+
+
+@pytest.mark.asyncio
+async def test_eia_probe_redacts_success_payload_before_extracting_evidence(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from hashlib import sha256
+
+    secret = "eia-success-payload-secret"
+    monkeypatch.setenv("EIA_API_KEY", secret)
+    get_settings.cache_clear()
+    body = json.loads((FIXTURES / "eia_wti_pass.json").read_text())
+    body["response"]["description"] = f"description echoed {secret}"
+    body["response"]["data"][0]["value"] = secret
+    raw = json.dumps(body, separators=(",", ":")).encode()
+
+    async def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, request=request, content=raw)
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+        result = await EIAAdapter(client).probe(
+            _provider("EIA_API_V2"), _eia_source(), _dataset("Petroleum")
+        )
+
+    assert result.response_sha256 == sha256(raw).hexdigest()
+    assert result.classification == "BLOCKED"
+    assert "value_invalid" in {issue.code for issue in result.issues}
+    _assert_secret_absent(result.to_dict(), secret)
+    get_settings.cache_clear()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
     ("case", "expected_code", "expected_classification"),
     [
         ("auth", "authorization_missing", "AUTH_REQUIRED"),
@@ -530,6 +605,38 @@ async def test_census_probe_failure_matrix_is_fail_closed_and_secret_safe(
 
     assert result.classification == expected_classification
     assert expected_code in {issue.code for issue in result.issues}
+    _assert_secret_absent(result.to_dict(), secret)
+    get_settings.cache_clear()
+
+
+@pytest.mark.asyncio
+async def test_census_probe_redacts_success_payload_before_extracting_evidence(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from hashlib import sha256
+
+    secret = "census-success-payload-secret"
+    monkeypatch.setenv("CENSUS_API_KEY", secret)
+    get_settings.cache_clear()
+    body = json.loads((FIXTURES / "census_retail_pass.json").read_text())
+    body[0][0] = f"cell_value-{secret}"
+    body[1][0] = secret
+    body[1][2] = secret
+    raw = json.dumps(body, separators=(",", ":")).encode()
+
+    async def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, request=request, content=raw)
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+        result = await CensusEITSAdapter(client).probe(
+            _provider("CENSUS_EITS_API"), _census_source(), _dataset("marts")
+        )
+
+    assert result.response_sha256 == sha256(raw).hexdigest()
+    assert result.classification == "BLOCKED"
+    assert {"headers_mismatch", "dimensions_drift", "value_invalid"} <= {
+        issue.code for issue in result.issues
+    }
     _assert_secret_absent(result.to_dict(), secret)
     get_settings.cache_clear()
 

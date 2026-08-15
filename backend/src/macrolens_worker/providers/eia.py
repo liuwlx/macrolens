@@ -48,6 +48,18 @@ class EIAAdapter(ProviderAdapter):
         route = str(source.source_locator.get("route") or "")
         request_url = self._route_url(route.strip("/") or expected_route or "", False)
         configuration_issues: list[MappingProbeIssue] = []
+        try:
+            minimum_total = int(str(source.source_locator["min_observations_backfill"]))
+        except (KeyError, TypeError, ValueError):
+            minimum_total = None
+        if minimum_total is None or minimum_total < 2:
+            configuration_issues.append(
+                MappingProbeIssue(
+                    "configuration",
+                    "min_observations_backfill_invalid",
+                    "EIA min_observations_backfill must be a pinned integer of at least 2",
+                )
+            )
         if not provider_series_id:
             configuration_issues.append(
                 MappingProbeIssue(
@@ -141,6 +153,7 @@ class EIAAdapter(ProviderAdapter):
             payload = response.json()
         except ValueError:
             payload = None
+        payload = _redact_sensitive_data(payload, secrets=(settings.eia_api_key or "",))
         response_payload = payload.get("response") if isinstance(payload, dict) else None
         if (
             not isinstance(payload, dict)
@@ -188,10 +201,7 @@ class EIAAdapter(ProviderAdapter):
             total = int(str(response_payload.get("total")))
         except (TypeError, ValueError):
             total = 0
-        try:
-            minimum_total = int(str(source.source_locator.get("min_observations_backfill") or 1))
-        except (TypeError, ValueError):
-            minimum_total = 1
+        assert minimum_total is not None
         details["total"] = total
         checks = (
             (

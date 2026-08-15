@@ -451,6 +451,68 @@ async def test_identical_raw_replay_does_not_create_another_vintage() -> None:
         )
 
 
+async def test_same_raw_payload_with_a_new_vintage_is_not_treated_as_exact_replay() -> None:
+    from decimal import Decimal
+
+    from macrolens_worker.providers.base import NormalizedObservation
+    from macrolens_worker.tasks.sync import _merge_observation
+
+    observation = NormalizedObservation(
+        source_series_id=42,
+        period_start=datetime(2025, 12, 1).date(),
+        period_end=datetime(2025, 12, 31).date(),
+        value=Decimal("324.054"),
+        vintage_at=datetime(2026, 1, 15, 13, 30, tzinfo=UTC),
+        source_updated_at=datetime(2026, 1, 15, 13, 30, tzinfo=UTC),
+    )
+    previous_vintage = SimpleNamespace(
+        period_end=observation.period_end,
+        value=observation.value,
+        value_text=None,
+        observation_status="normal",
+        published_at=None,
+        source_updated_at=datetime(2026, 1, 14, 13, 30, tzinfo=UTC),
+        quality_flags=[],
+        vintage_at=datetime(2026, 1, 14, 13, 30, tzinfo=UTC),
+    )
+
+    class FakeSession:
+        def __init__(self) -> None:
+            self.scalar_statements: list[object] = []
+            self.added: list[object] = []
+            self.executed: list[object] = []
+
+        async def scalar(self, statement: object) -> object | None:
+            self.scalar_statements.append(statement)
+            if len(self.scalar_statements) == 1:
+                replay_sql = str(statement)
+                if "observation_vintage.vintage_at =" not in replay_sql:
+                    return previous_vintage
+            return None
+
+        def add(self, value: object) -> None:
+            self.added.append(value)
+
+        async def execute(self, statement: object) -> None:
+            self.executed.append(statement)
+
+    session = FakeSession()
+    outcome = await _merge_observation(  # type: ignore[arg-type]
+        session,
+        observation,
+        run_id="run-id",  # type: ignore[arg-type]
+        raw_object_id="raw-id",  # type: ignore[arg-type]
+        publication_batch_id="batch-id",  # type: ignore[arg-type]
+    )
+
+    assert outcome == "inserted"
+    assert len(session.scalar_statements) == 3
+    assert "observation_vintage.vintage_at =" in str(session.scalar_statements[0])
+    assert len(session.added) == 1
+    assert session.added[0].vintage_at == observation.vintage_at
+    assert len(session.executed) == 1
+
+
 async def test_worker_offline_replay_validates_stored_raw_without_network(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

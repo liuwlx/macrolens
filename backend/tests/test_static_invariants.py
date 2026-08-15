@@ -42,3 +42,20 @@ def test_ci_alembic_step_can_import_backend_packages() -> None:
         "CI Alembic must run from backend with PYTHONPATH=src; without it alembic/env.py "
         "cannot import macrolens_api"
     )
+
+
+def test_ci_wait_for_http_does_not_require_an_executable_checkout_bit() -> None:
+    workflow = (REPOSITORY_ROOT / ".github" / "workflows" / "ci.yml").read_text(
+        encoding="utf-8"
+    )
+    invocations = [
+        line.strip()
+        for line in workflow.splitlines()
+        if "scripts/wait_for_http.sh" in line
+    ]
+
+    assert len(invocations) == 3, "CI acceptance must retain all three HTTP readiness waits"
+    assert all(item.startswith("- run: bash scripts/wait_for_http.sh ") for item in invocations), (
+        "CI must invoke wait_for_http.sh through bash because its checkout mode is 100644"
+    )
+    assert "./scripts/wait_for_http.sh" not in workflow

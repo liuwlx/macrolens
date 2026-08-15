@@ -200,6 +200,7 @@ async def _merge_observation(
             ObservationVintage.source_series_id == observation.source_series_id,
             ObservationVintage.period_start == observation.period_start,
             ObservationVintage.raw_object_id == raw_object_id,
+            ObservationVintage.vintage_at == observation.vintage_at,
         )
     )
     if replayed_vintage is not None:

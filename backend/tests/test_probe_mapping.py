@@ -60,6 +60,7 @@ def _source(
             source_locator={
                 "route": "v2/seriesid/PET.RWTC.D",
                 "expected_first_period": "1986-01-02",
+                "min_observations_backfill": 100,
             },
         )
         dataset = SimpleNamespace(id=11, code="Petroleum")
