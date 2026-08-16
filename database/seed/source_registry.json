@@ -904,7 +904,8 @@
         "min_observations_backfill": 60,
         "require_contiguous": true,
         "start_year": 1957,
-        "expected_first_period": "1957-01-01"
+        "expected_first_period": "1957-01-01",
+        "expected_catalog_title": "All items less food and energy in U.S. city average, all urban consumers, seasonally adjusted"
       },
       "mapping_type": "DIRECT",
       "mapping_status": "READY",
@@ -931,7 +932,8 @@
         "min_observations_backfill": 60,
         "require_contiguous": true,
         "start_year": 1953,
-        "expected_first_period": "1953-01-01"
+        "expected_first_period": "1953-01-01",
+        "expected_catalog_title": "Shelter in U.S. city average, all urban consumers, seasonally adjusted"
       },
       "mapping_type": "DIRECT",
       "mapping_status": "READY",
@@ -958,7 +960,8 @@
         "min_observations_backfill": 60,
         "require_contiguous": true,
         "start_year": 1956,
-        "expected_first_period": "1956-01-01"
+        "expected_first_period": "1956-01-01",
+        "expected_catalog_title": "Medical care services in U.S. city average, all urban consumers, seasonally adjusted"
       },
       "mapping_type": "DIRECT",
       "mapping_status": "READY",
@@ -985,7 +988,8 @@
         "min_observations_backfill": 60,
         "require_contiguous": true,
         "start_year": 2009,
-        "expected_first_period": "2009-11-01"
+        "expected_first_period": "2009-11-01",
+        "expected_catalog_title": "PPI Commodity data for Final demand, seasonally adjusted"
       },
       "mapping_type": "DIRECT",
       "mapping_status": "READY",
@@ -1015,7 +1019,8 @@
         "min_observations_backfill": 60,
         "require_contiguous": true,
         "start_year": 2013,
-        "expected_first_period": "2013-08-01"
+        "expected_first_period": "2013-08-01",
+        "expected_catalog_title": "PPI Commodity data for Final demand less foods, energy, and trade services, seasonally adjusted"
       },
       "mapping_type": "DIRECT",
       "mapping_status": "READY",
@@ -1106,7 +1111,8 @@
         "min_observations_backfill": 60,
         "require_contiguous": true,
         "start_year": 1939,
-        "expected_first_period": "1939-02-01"
+        "expected_first_period": "1939-02-01",
+        "expected_catalog_title": "All employees, thousands, total nonfarm, seasonally adjusted"
       },
       "mapping_type": "DERIVED_TRANSFORM",
       "mapping_status": "READY",
@@ -1135,7 +1141,8 @@
         "min_observations_backfill": 60,
         "require_contiguous": true,
         "start_year": 1948,
-        "expected_first_period": "1948-01-01"
+        "expected_first_period": "1948-01-01",
+        "expected_catalog_title": "(Seas) Unemployment Rate"
       },
       "mapping_type": "DIRECT",
       "mapping_status": "READY",
@@ -1162,7 +1169,8 @@
         "min_observations_backfill": 60,
         "require_contiguous": true,
         "start_year": 1948,
-        "expected_first_period": "1948-01-01"
+        "expected_first_period": "1948-01-01",
+        "expected_catalog_title": "(Seas) Labor Force Participation Rate"
       },
       "mapping_type": "DIRECT",
       "mapping_status": "READY",
@@ -1189,7 +1197,8 @@
         "min_observations_backfill": 60,
         "require_contiguous": true,
         "start_year": 2006,
-        "expected_first_period": "2006-03-01"
+        "expected_first_period": "2006-03-01",
+        "expected_catalog_title": "Average hourly earnings of all employees, total private, seasonally adjusted"
       },
       "mapping_type": "DIRECT",
       "mapping_status": "READY",
@@ -1218,7 +1227,8 @@
         "min_observations_backfill": 20,
         "require_contiguous": true,
         "start_year": 2001,
-        "expected_first_period": "2001-01-01"
+        "expected_first_period": "2001-01-01",
+        "expected_catalog_title": "Total compensation for all civilian workers, current dollar index"
       },
       "mapping_type": "DIRECT",
       "mapping_status": "READY",

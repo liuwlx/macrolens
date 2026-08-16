@@ -2,16 +2,23 @@ from __future__ import annotations
 
 import json
 from datetime import UTC, date, datetime, timedelta
+from hashlib import sha256
 from typing import Any
+
+import httpx
 
 from macrolens_api.config import get_settings
 from macrolens_api.models import Dataset, Provider, SourceSeries
 
 from .base import (
+    MappingProbeEvidence,
+    MappingProbeIssue,
+    MappingProbeResult,
     NormalizedObservation,
     ProviderAdapter,
     ProviderDataError,
     ProviderFetchResult,
+    _build_mapping_probe_result,
     apply_mapping_transform,
     deduplicate_observations,
     parse_decimal,
@@ -27,6 +34,202 @@ class FREDAdapter(ProviderAdapter):
     page_size = 100000
     vintage_chunk_size = 100
     max_pages = 10000
+
+    async def probe(
+        self,
+        provider: Provider,
+        source: SourceSeries,
+        dataset: Dataset,
+    ) -> MappingProbeResult:
+        del dataset
+        settings = get_settings()
+        provider_series_id = str(source.provider_series_id) if source.provider_series_id else None
+        probed_at = datetime.now(UTC)
+        if not provider_series_id:
+            return _build_mapping_probe_result(
+                provider_code=provider.code,
+                source_series_id=source.id,
+                provider_series_id=None,
+                request_url=self.series_url,
+                http_status=None,
+                content_type="",
+                official_description="",
+                response_sha256="",
+                probed_at=probed_at,
+                evidence=MappingProbeEvidence(
+                    False, False, False, False, bool(settings.fred_api_key)
+                ),
+                issues=(
+                    MappingProbeIssue(
+                        "configuration",
+                        "provider_series_id_missing",
+                        "FRED provider_series_id must be pinned before probing",
+                    ),
+                ),
+            )
+        if not settings.fred_api_key:
+            return _build_mapping_probe_result(
+                provider_code=provider.code,
+                source_series_id=source.id,
+                provider_series_id=provider_series_id,
+                request_url=self.series_url,
+                http_status=None,
+                content_type="",
+                official_description="",
+                response_sha256="",
+                probed_at=probed_at,
+                evidence=MappingProbeEvidence(False, False, False, False, False),
+                issues=(
+                    MappingProbeIssue(
+                        "authorization",
+                        "authorization_missing",
+                        "FRED_API_KEY is required for MappingProbe",
+                    ),
+                ),
+            )
+
+        params = {
+            "series_id": provider_series_id,
+            "api_key": settings.fred_api_key,
+            "file_type": "json",
+        }
+        try:
+            response = await self.client.get(self.series_url, params=params)
+        except httpx.TransportError:
+            return _build_mapping_probe_result(
+                provider_code=provider.code,
+                source_series_id=source.id,
+                provider_series_id=provider_series_id,
+                request_url=self.series_url,
+                http_status=None,
+                content_type="",
+                official_description="",
+                response_sha256="",
+                probed_at=probed_at,
+                evidence=MappingProbeEvidence(False, False, False, False, True),
+                issues=(
+                    MappingProbeIssue(
+                        "transport", "transport_error", "FRED request was unreachable"
+                    ),
+                ),
+            )
+        raw = response.content
+        digest = sha256(raw).hexdigest()
+        content_type = response.headers.get("content-type", "application/json")
+        if not 200 <= response.status_code < 300:
+            return _build_mapping_probe_result(
+                provider_code=provider.code,
+                source_series_id=source.id,
+                provider_series_id=provider_series_id,
+                request_url=self.series_url,
+                http_status=response.status_code,
+                content_type=content_type,
+                official_description="",
+                response_sha256=digest,
+                probed_at=probed_at,
+                evidence=MappingProbeEvidence(True, False, False, False, True),
+                issues=(
+                    MappingProbeIssue("http", "http_status", "FRED returned a non-2xx status"),
+                ),
+            )
+        try:
+            payload = response.json()
+        except ValueError:
+            payload = None
+        rows = payload.get("seriess", []) if isinstance(payload, dict) else []
+        business_success = isinstance(rows, list) and len(rows) == 1 and isinstance(rows[0], dict)
+        if not business_success:
+            return _build_mapping_probe_result(
+                provider_code=provider.code,
+                source_series_id=source.id,
+                provider_series_id=provider_series_id,
+                request_url=self.series_url,
+                http_status=response.status_code,
+                content_type=content_type,
+                official_description="",
+                response_sha256=digest,
+                probed_at=probed_at,
+                evidence=MappingProbeEvidence(True, True, False, False, True),
+                issues=(
+                    MappingProbeIssue(
+                        "business",
+                        "series_metadata_invalid",
+                        "FRED metadata did not return exactly one series",
+                    ),
+                ),
+            )
+        metadata = rows[0]
+        expected_frequency = {
+            "daily": "D",
+            "weekly": "W",
+            "monthly": "M",
+            "quarterly": "Q",
+            "annual": "A",
+        }.get(str(source.source_frequency or "").lower())
+        actual_frequency = str(metadata.get("frequency_short") or "").upper()
+        expected_start = str(
+            source.source_locator.get("expected_first_period")
+            or source.source_locator.get("observation_start")
+            or ""
+        )[:10]
+        actual_start = str(metadata.get("observation_start") or "")[:10]
+        expected_title = str(source.source_locator.get("expected_title") or "").strip()
+        actual_title = str(metadata.get("title") or "").strip()
+        issues: list[MappingProbeIssue] = []
+        if str(metadata.get("id") or "") != provider_series_id:
+            issues.append(
+                MappingProbeIssue(
+                    "identity",
+                    "series_id_mismatch",
+                    "FRED series ID did not match the pinned identity",
+                )
+            )
+        if expected_frequency and not actual_frequency.startswith(expected_frequency):
+            issues.append(
+                MappingProbeIssue(
+                    "identity",
+                    "frequency_mismatch",
+                    "FRED frequency did not match the pinned identity",
+                )
+            )
+        if expected_start and actual_start != expected_start:
+            issues.append(
+                MappingProbeIssue(
+                    "identity",
+                    "history_start_mismatch",
+                    "FRED history start did not match the pinned identity",
+                )
+            )
+        if expected_title and actual_title != expected_title:
+            issues.append(
+                MappingProbeIssue(
+                    "identity", "title_mismatch", "FRED title did not match the pinned identity"
+                )
+            )
+        return _build_mapping_probe_result(
+            provider_code=provider.code,
+            source_series_id=source.id,
+            provider_series_id=provider_series_id,
+            request_url=self.series_url,
+            http_status=response.status_code,
+            content_type=content_type,
+            official_description=actual_title,
+            response_sha256=digest,
+            probed_at=probed_at,
+            evidence=MappingProbeEvidence(
+                True,
+                True,
+                True,
+                not issues,
+                True,
+                {
+                    "frequency": actual_frequency,
+                    "observation_start": actual_start,
+                    "title": actual_title,
+                },
+            ),
+            issues=tuple(issues),
+        )
 
     async def fetch(
         self,

@@ -4,15 +4,22 @@ import json
 from collections import defaultdict
 from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
+from hashlib import sha256
 from typing import Any
+
+import httpx
 
 from macrolens_api.models import Dataset, Provider, SourceSeries
 
 from .base import (
+    MappingProbeEvidence,
+    MappingProbeIssue,
+    MappingProbeResult,
     NormalizedObservation,
     ProviderAdapter,
     ProviderDataError,
     ProviderFetchResult,
+    _build_mapping_probe_result,
     deduplicate_observations,
     parse_decimal,
     period_end,
@@ -23,6 +30,157 @@ class NYFedAdapter(ProviderAdapter):
     """New York Fed markets adapter with bounded date windows and strict row coverage."""
 
     code = "NYFED_MARKETS_API"
+
+    async def probe(
+        self,
+        provider: Provider,
+        source: SourceSeries,
+        dataset: Dataset,
+    ) -> MappingProbeResult:
+        del dataset
+        probed_at = datetime.now(UTC)
+        provider_series_id = str(source.provider_series_id) if source.provider_series_id else None
+        route = str(source.source_locator.get("route") or "").strip().lstrip("/")
+        request_url = (
+            f"https://markets.newyorkfed.org/api/{route}"
+            if route
+            else "https://markets.newyorkfed.org/api"
+        )
+        if not provider_series_id or not route:
+            return _build_mapping_probe_result(
+                provider_code=provider.code,
+                source_series_id=source.id,
+                provider_series_id=provider_series_id,
+                request_url=request_url,
+                http_status=None,
+                content_type="",
+                official_description="",
+                response_sha256="",
+                probed_at=probed_at,
+                evidence=MappingProbeEvidence(True, False, False, False, True),
+                issues=(
+                    MappingProbeIssue(
+                        "configuration",
+                        "route_or_identity_missing",
+                        "NY Fed route and provider_series_id must be pinned before probing",
+                    ),
+                ),
+            )
+        today = date.today()
+        params: dict[str, Any] = {
+            "startDate": (today - timedelta(days=7)).isoformat(),
+            "endDate": today.isoformat(),
+            "format": "json",
+        }
+        if route.startswith("rates/"):
+            params["type"] = str(source.source_locator.get("type") or "rate")
+        params.update(dict(source.source_locator.get("params") or {}))
+        try:
+            response = await self.client.get(request_url, params=params)
+        except httpx.TransportError:
+            return _build_mapping_probe_result(
+                provider_code=provider.code,
+                source_series_id=source.id,
+                provider_series_id=provider_series_id,
+                request_url=request_url,
+                http_status=None,
+                content_type="",
+                official_description="",
+                response_sha256="",
+                probed_at=probed_at,
+                evidence=MappingProbeEvidence(False, False, False, False, True),
+                issues=(
+                    MappingProbeIssue(
+                        "transport", "transport_error", "NY Fed request was unreachable"
+                    ),
+                ),
+            )
+        raw = response.content
+        digest = sha256(raw).hexdigest()
+        content_type = response.headers.get("content-type", "application/json")
+        if not 200 <= response.status_code < 300:
+            return _build_mapping_probe_result(
+                provider_code=provider.code,
+                source_series_id=source.id,
+                provider_series_id=provider_series_id,
+                request_url=request_url,
+                http_status=response.status_code,
+                content_type=content_type,
+                official_description="",
+                response_sha256=digest,
+                probed_at=probed_at,
+                evidence=MappingProbeEvidence(True, False, False, False, True),
+                issues=(
+                    MappingProbeIssue("http", "http_status", "NY Fed returned a non-2xx status"),
+                ),
+            )
+        try:
+            payload = response.json()
+            rows = self._find_rows(payload)
+        except (ValueError, ProviderDataError):
+            rows = []
+        if not rows:
+            return _build_mapping_probe_result(
+                provider_code=provider.code,
+                source_series_id=source.id,
+                provider_series_id=provider_series_id,
+                request_url=request_url,
+                http_status=response.status_code,
+                content_type=content_type,
+                official_description="",
+                response_sha256=digest,
+                probed_at=probed_at,
+                evidence=MappingProbeEvidence(True, True, False, False, True),
+                issues=(
+                    MappingProbeIssue(
+                        "business", "empty_response", "NY Fed returned no probe rows"
+                    ),
+                ),
+            )
+        values: list[tuple[str, Decimal]] = []
+        field = str(source.source_locator.get("field") or "") or None
+        for row in rows:
+            period = self._parse_date(
+                row.get("effectiveDate") or row.get("operationDate") or row.get("date")
+            )
+            value = parse_decimal(self._value(row, provider_series_id, field))
+            if period is not None and value is not None:
+                values.append((period.isoformat(), value))
+        identity_match = bool(values)
+        issues = (
+            ()
+            if identity_match
+            else (
+                MappingProbeIssue(
+                    "identity",
+                    "value_field_mismatch",
+                    "NY Fed rows did not expose the pinned numeric value",
+                ),
+            )
+        )
+        return _build_mapping_probe_result(
+            provider_code=provider.code,
+            source_series_id=source.id,
+            provider_series_id=provider_series_id,
+            request_url=request_url,
+            http_status=response.status_code,
+            content_type=content_type,
+            official_description=provider_series_id,
+            response_sha256=digest,
+            probed_at=probed_at,
+            evidence=MappingProbeEvidence(
+                True,
+                True,
+                True,
+                identity_match,
+                True,
+                {
+                    "first_period": values[0][0] if values else None,
+                    "value_field": field or "provider_default",
+                },
+            ),
+            issues=issues,
+        )
 
     async def fetch(
         self,

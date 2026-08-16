@@ -16,12 +16,18 @@ from macrolens_worker.providers.bea import BEAAdapter
 from macrolens_worker.providers.bls import BLSAdapter
 from macrolens_worker.providers.census import CensusEITSAdapter
 from macrolens_worker.providers.eia import EIAAdapter
+from macrolens_worker.providers.fred import FREDAdapter
+from macrolens_worker.providers.nyfed import NYFedAdapter
+from macrolens_worker.providers.treasury import TreasuryAdapter
 
 ADAPTER_REGISTRY: dict[str, type[ProviderAdapter]] = {
     BLSAdapter.code: BLSAdapter,
     EIAAdapter.code: EIAAdapter,
     BEAAdapter.code: BEAAdapter,
     CensusEITSAdapter.code: CensusEITSAdapter,
+    FREDAdapter.code: FREDAdapter,
+    NYFedAdapter.code: NYFedAdapter,
+    TreasuryAdapter.code: TreasuryAdapter,
 }
 
 
