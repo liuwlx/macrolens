@@ -390,7 +390,9 @@ def test_fomc_calendar_rejects_partially_parseable_meeting_rows() -> None:
 
 def test_registry_pins_every_enabled_history_boundary() -> None:
     root = Path(__file__).resolve().parents[2]
-    registry = json.loads((root / "database/seed/source_registry.json").read_text())
+    registry = json.loads(
+        (root / "database/seed/source_registry.json").read_text(encoding="utf-8")
+    )
     enabled = [item for item in registry["indicators"] if item["mapping_status"] == "READY"]
     assert len(enabled) == 33
     for item in enabled:

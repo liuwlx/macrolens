@@ -371,14 +371,16 @@ def test_frontend_api_calls_are_represented_in_openapi() -> None:
 
     import yaml
 
-    spec = yaml.safe_load((REPO_ROOT / "macrolens_openapi.yaml").read_text())
+    spec = yaml.safe_load(
+        (REPO_ROOT / "macrolens_openapi.yaml").read_text(encoding="utf-8")
+    )
     api_paths = set(spec["paths"])
     normalized_spec = {
         re.sub(r"\{[^}]+\}", "{}", path.removeprefix("/api/v1")) for path in api_paths
     }
     missing: list[str] = []
     for page in (REPO_ROOT / "apps/web").rglob("*.tsx"):
-        source = page.read_text()
+        source = page.read_text(encoding="utf-8")
         for raw in re.findall(r"apiFetch(?:<[^;()]*?>)?\(\s*([`\"'])((?:(?!\1).)*?)\1", source):
             value = raw[1]
             # Skip expressions where a conditional changes the path suffix; both branches are
