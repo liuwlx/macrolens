@@ -111,12 +111,22 @@ def validate_catalog_projection(
             != {registry.owner_by_series_code[canonical_code].code}
             for canonical_code in expected_series
         )
+    extra_nodes = actual_nodes - expected_nodes
+    extra_series = (actual_series - expected_series) if actual_series is not None else set()
+    allowed_extension_nodes = {code for code in extra_nodes if code.startswith("tv-")}
+    allowed_extension_series = {
+        code for code in extra_series if code.startswith("US.TV.")
+    }
+    expected_parent_mismatch = any(
+        actual_parents.get(code) != expected_parents[code] for code in expected_nodes
+    )
     if (
         len(actual_node_codes_by_id) != len(node_facts)
-        or len(actual_nodes) != len(node_facts)
-        or actual_nodes != expected_nodes
-        or actual_parents != expected_parents
-        or (actual_series is not None and actual_series != expected_series)
+        or actual_nodes < expected_nodes
+        or extra_nodes != allowed_extension_nodes
+        or expected_parent_mismatch
+        or (actual_series is not None and expected_series - actual_series)
+        or (actual_series is not None and extra_series != allowed_extension_series)
         or ownership_mismatch_count
     ):
         raise AppError(

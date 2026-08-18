@@ -329,6 +329,8 @@ a { color: inherit; text-decoration: none; }
 .data-browser-new-snapshot { position: fixed; right: 20px; bottom: 20px; z-index: 52; max-width: min(520px, calc(100vw - 32px)); display: flex; align-items: center; gap: 8px; border: 1px solid #9bb5ec; border-radius: 9px; background: white; padding: 10px 12px; color: #314568; box-shadow: 0 8px 24px rgb(23 43 77 / 16%); font-size: 11px; }
 .data-browser-new-snapshot span { flex: 1; }
 .data-browser-new-snapshot .btn { min-height: 30px; height: 30px; padding-inline: 9px; white-space: nowrap; font-size: 10px; }
+.data-browser-sync-status { margin: 0 0 10px; border: 1px solid #b8c9ef; border-radius: 8px; background: #f5f8ff; padding: 8px 10px; color: #315fae; font-size: 11px; }
+.data-browser-sync-status.is-error { border-color: #efb8b8; background: #fff5f5; color: #ae3131; }
 
 @media (min-width: 1440px) {
   .data-browser-workspace { grid-template-columns: 264px minmax(0, 1fr) 316px; }

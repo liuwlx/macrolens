@@ -137,6 +137,62 @@ async def fetch_official_document(
     return JobPublic.model_validate(job)
 
 
+@router.post("/providers/{provider_code}/sync", response_model=JobPublic, status_code=202)
+async def sync_provider_manually(
+    provider_code: str,
+    session: SessionDep,
+    _admin: AdminUser,
+) -> JobPublic:
+    normalized_code = provider_code.upper()
+    if normalized_code != "TRADINGVIEW_WEB":
+        raise AppError(
+            400,
+            "不支持的手动同步",
+            "当前只允许手动同步 TradingView。",
+            "provider_sync_not_supported",
+        )
+    provider = await session.scalar(
+        select(Provider).where(Provider.code == normalized_code, Provider.active.is_(True))
+    )
+    if provider is None:
+        raise AppError(
+            404,
+            "数据提供方不存在",
+            "TradingView Provider 尚未启用。",
+            "provider_not_found",
+        )
+
+    active_jobs = list(
+        (
+            await session.scalars(
+                select(Job)
+                .where(
+                    Job.job_type == "sync_provider",
+                    Job.status.in_(["queued", "running"]),
+                )
+                .order_by(Job.created_at.desc())
+                .limit(50)
+            )
+        ).all()
+    )
+    for existing in active_jobs:
+        if existing.payload.get("provider_code") == normalized_code:
+            return JobPublic.model_validate(existing)
+
+    from datetime import UTC, datetime
+
+    slot = datetime.now(UTC).strftime("%Y%m%d%H%M")
+    job = await enqueue_job(
+        session,
+        job_type="sync_provider",
+        payload={"provider_code": normalized_code, "mode": "latest"},
+        idempotency_key=f"manual-sync:{normalized_code}:{slot}",
+        priority=12,
+        max_attempts=3,
+    )
+    return JobPublic.model_validate(job)
+
+
 @router.post("/jobs", response_model=JobPublic, status_code=202)
 async def create_job(payload: JobCreate, session: SessionDep, _admin: AdminUser) -> JobPublic:
     job = await enqueue_job(
@@ -161,6 +217,14 @@ async def list_jobs(
         stmt = stmt.where(Job.status == status)
     rows = list((await session.scalars(stmt.order_by(Job.created_at.desc()).limit(limit))).all())
     return [JobPublic.model_validate(row) for row in rows]
+
+
+@router.get("/jobs/{job_id}", response_model=JobPublic)
+async def get_job(job_id: UUID, session: SessionDep, _admin: AdminUser) -> JobPublic:
+    job = await session.get(Job, job_id)
+    if job is None:
+        raise AppError(404, "任务不存在", "没有找到该任务。", "job_not_found")
+    return JobPublic.model_validate(job)
 
 
 @router.post("/jobs/{job_id}/retry", response_model=JobPublic)

@@ -358,7 +358,12 @@ async def _load_candidates(
             & (TaxonomyNode.tree_code == registry.tree_code)
             & TaxonomyNode.visible.is_(True),
         )
-        .where(Series.canonical_code.in_(catalog_codes))
+        .where(
+            or_(
+                Series.canonical_code.in_(catalog_codes),
+                Series.canonical_code.like("US.TV.%"),
+            )
+        )
     )
     if series_id is not None:
         statement = statement.where(Series.id == series_id)

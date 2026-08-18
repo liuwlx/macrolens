@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import json
 from datetime import UTC, datetime
+from pathlib import Path
 from typing import Any
 
 import typer
@@ -59,6 +60,15 @@ PROVIDERS: dict[str, dict[str, Any]] = {
         "license": "PUBLIC_WITH_TERMS",
         "redistribution": False,
         "attribution": "Federal Reserve Bank of St. Louis and the original data provider",
+    },
+    "TRADINGVIEW_WEB": {
+        "name": "TradingView Economic WebSocket",
+        "type": "web_distributed_data",
+        "base_url": "wss://data.tradingview.com/socket.io/websocket",
+        "docs": "https://www.tradingview.com/markets/world-economy/",
+        "license": "PUBLIC_WITH_TERMS",
+        "redistribution": False,
+        "attribution": "TradingView, Inc.",
     },
     "BEA_API": {
         "name": "U.S. Bureau of Economic Analysis",
@@ -170,7 +180,13 @@ PROVIDERS: dict[str, dict[str, Any]] = {
     },
 }
 
-FREQUENCY_MAP = {"日度": "daily", "周度": "weekly", "月度": "monthly", "季度": "quarterly"}
+FREQUENCY_MAP = {
+    "日度": "daily",
+    "周度": "weekly",
+    "月度": "monthly",
+    "季度": "quarterly",
+    "年度": "annual",
+}
 UNIT_MAP = {
     "%": ("percent", "%"),
     "百分点": ("percentage_point", "百分点"),
@@ -221,6 +237,174 @@ def _theme(code: str) -> str:
     return "金融市场"
 
 
+def _load_tradingview_registry() -> dict[str, Any]:
+    for root in (Path("/app"), Path(__file__).resolve().parents[3]):
+        path = root / "database" / "seed" / "tradingview_registry.json"
+        if path.is_file():
+            payload = json.loads(path.read_text(encoding="utf-8"))
+            if not isinstance(payload.get("indicators"), list) or not isinstance(
+                payload.get("nodes"), list
+            ):
+                raise RuntimeError("TradingView registry must contain indicators and nodes")
+            return payload
+    raise RuntimeError("Cannot locate TradingView registry")
+
+
+async def _seed_tradingview_registry(
+    session: Any,
+    *,
+    provider: Provider,
+    dataset_cache: dict[tuple[str, str], Dataset],
+    series_by_code: dict[str, Series],
+    root_node: TaxonomyNode,
+) -> None:
+    registry = _load_tradingview_registry()
+    now = datetime.now(UTC)
+    dataset_code = "TRADINGVIEW_ECONOMICS"
+    dataset = dataset_cache.get((provider.code, dataset_code))
+    if dataset is None:
+        dataset = await session.scalar(
+            select(Dataset).where(
+                Dataset.provider_id == provider.id,
+                Dataset.code == dataset_code,
+            )
+        )
+        if dataset is None:
+            dataset = Dataset(
+                provider_id=provider.id,
+                code=dataset_code,
+                name="TradingView Economics",
+                endpoint_template=provider.base_url,
+                active=True,
+            )
+            session.add(dataset)
+            await session.flush()
+        dataset.name = "TradingView Economics"
+        dataset.endpoint_template = provider.base_url
+        dataset.active = True
+        dataset_cache[(provider.code, dataset_code)] = dataset
+
+    for item in registry["indicators"]:
+        canonical_code = str(item["canonical_code"])
+        frequency = FREQUENCY_MAP[str(item["frequency"])]
+        unit = str(item["unit"])
+        unit_code, unit_label = UNIT_MAP.get(unit, (unit.lower(), unit))
+        series = await session.scalar(
+            select(Series).where(Series.canonical_code == canonical_code)
+        )
+        if series is None:
+            series = Series(
+                canonical_code=canonical_code,
+                name_zh=str(item["name_zh"]),
+                name_en=str(item["name_en"]),
+                short_name_zh=str(item["name_zh"]),
+                description="TradingView V1 economic indicator",
+                theme=str(item["theme"]),
+                series_type="raw",
+                frequency=frequency,
+                unit_code=unit_code,
+                unit_label_zh=unit_label,
+                seasonal_adjustment="not_specified",
+                default_transform="level",
+                decimal_places=4,
+                status="active",
+            )
+            session.add(series)
+            await session.flush()
+        series.name_zh = str(item["name_zh"])
+        series.name_en = str(item["name_en"])
+        series.short_name_zh = str(item["name_zh"])
+        series.theme = str(item["theme"])
+        series.series_type = "raw"
+        series.frequency = frequency
+        series.unit_code = unit_code
+        series.unit_label_zh = unit_label
+        series.status = "active"
+        series_by_code[canonical_code] = series
+
+        source_series = await session.scalar(
+            select(SourceSeries).where(
+                SourceSeries.series_id == series.id,
+                SourceSeries.dataset_id == dataset.id,
+            )
+        )
+        if source_series is None:
+            source_series = SourceSeries(series_id=series.id, dataset_id=dataset.id)
+            session.add(source_series)
+        symbol = str(item["provider_series_id"])
+        source_series.provider_series_id = symbol
+        source_series.source_locator = {
+            "symbol": symbol,
+            "frequency_code": str(item["frequency"]),
+            "allow_missing_observations": False,
+        }
+        source_series.mapping_type = "direct"
+        source_series.mapping_status = "verified"
+        source_series.is_primary = True
+        source_series.source_frequency = frequency
+        source_series.source_unit = unit
+        source_series.source_title = str(item["name_en"])
+        source_series.notes = "TradingView V1 manual sync mapping"
+        source_series.verified_by = "tradingview-registry"
+        source_series.verified_at = now
+        source_series.verification_job_id = None
+        source_series.verification_fingerprint = None
+        await session.flush()
+
+    nodes = registry["nodes"]
+    nodes_by_code: dict[str, TaxonomyNode] = {"root": root_node}
+    ordered_nodes = sorted(nodes, key=lambda item: 0 if item["parent_code"] == "root" else 1)
+    for node_spec in ordered_nodes:
+        code = str(node_spec["code"])
+        node = await session.scalar(
+            select(TaxonomyNode).where(
+                TaxonomyNode.tree_code == str(registry["tree_code"]),
+                TaxonomyNode.code == code,
+            )
+        )
+        if node is None:
+            node = TaxonomyNode(tree_code=str(registry["tree_code"]), code=code)
+            session.add(node)
+        parent_code = str(node_spec["parent_code"])
+        parent = nodes_by_code.get(parent_code)
+        if parent is None:
+            raise RuntimeError(f"Unknown TradingView taxonomy parent: {parent_code}")
+        node.parent_id = parent.id
+        node.node_type = str(node_spec["node_type"])
+        node.name_zh = str(node_spec["name_zh"])
+        node.name_en = str(node_spec["name_en"])
+        node.sort_order = int(node_spec["sort_order"])
+        node.visible = True
+        node.status = "active"
+        await session.flush()
+        nodes_by_code[code] = node
+
+        current = list(
+            (
+                await session.scalars(
+                    select(TaxonomySeries).where(TaxonomySeries.node_id == node.id)
+                )
+            ).all()
+        )
+        for mapping in current:
+            mapping.is_primary = False
+            mapping.display_role = "detail"
+        for display_order, canonical_code in enumerate(node_spec["series_codes"]):
+            series = series_by_code[str(canonical_code)]
+            mapping = await session.scalar(
+                select(TaxonomySeries).where(
+                    TaxonomySeries.node_id == node.id,
+                    TaxonomySeries.series_id == series.id,
+                )
+            )
+            if mapping is None:
+                mapping = TaxonomySeries(node_id=node.id, series_id=series.id)
+                session.add(mapping)
+            mapping.display_role = "primary"
+            mapping.display_order = display_order
+            mapping.is_primary = True
+
+
 async def seed_all() -> None:
     registry = get_catalog_registry()
     async with SessionLocal() as session:
@@ -255,7 +439,10 @@ async def seed_all() -> None:
             if policy is None:
                 policy = LicensePolicy(provider_id=provider.id)
                 session.add(policy)
-            policy.display_allowed = item["redistribution"] or code == "FRED_API"
+            policy.display_allowed = item["redistribution"] or code in {
+                "FRED_API",
+                "TRADINGVIEW_WEB",
+            }
             policy.download_allowed = item["redistribution"]
             policy.api_redistribution_allowed = item["redistribution"]
             policy.ai_context_allowed = item["redistribution"] or code == "FRED_API"
@@ -469,6 +656,14 @@ async def seed_all() -> None:
                 taxonomy_mapping.display_role = "primary"
                 taxonomy_mapping.display_order = display_order
                 taxonomy_mapping.is_primary = True
+
+        await _seed_tradingview_registry(
+            session,
+            provider=provider_by_code["TRADINGVIEW_WEB"],
+            dataset_cache=dataset_cache,
+            series_by_code=series_by_code,
+            root_node=nodes_by_code["root"],
+        )
 
         for code, name in [
             ("PCE", "个人收入与支出"),

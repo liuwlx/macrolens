@@ -61,6 +61,17 @@ class Settings(BaseSettings):
     )
     bls_release_calendar_url: str = "https://www.bls.gov/schedule/news_release/bls.ics"
 
+    tradingview_ws_url: str = "wss://data.tradingview.com/socket.io/websocket"
+    tradingview_origin: str = "https://cn.tradingview.com"
+    tradingview_user_agent: str = (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+        "AppleWebKit/537.36 Chrome/140.0 Safari/537.36"
+    )
+    tradingview_connect_timeout_seconds: float = 15.0
+    tradingview_receive_timeout_seconds: float = 30.0
+    tradingview_ping_interval_seconds: float = 20.0
+    tradingview_ping_timeout_seconds: float = 20.0
+
     openai_api_key: str | None = None
     openai_base_url: str | None = None
     openai_model: str = "gpt-5.6-terra"

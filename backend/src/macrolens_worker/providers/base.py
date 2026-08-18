@@ -44,6 +44,7 @@ class ProviderFetchResult:
     observations: list[NormalizedObservation]
     source_last_modified: datetime | None = None
     captured_at: datetime | None = None
+    persist_raw: bool = True
 
 
 @dataclass(frozen=True, slots=True)

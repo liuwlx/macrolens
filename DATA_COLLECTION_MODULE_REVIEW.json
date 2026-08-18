@@ -241,6 +241,24 @@
       "review_status": "code_reviewed_mock_contract_passed_live_audit_required"
     },
     {
+      "module": "TradingView WebSocket Adapter",
+      "code": "TRADINGVIEW_WEB",
+      "implementation": "backend/src/macrolens_worker/providers/tradingview.py",
+      "enabled_series": 23,
+      "collection_modes": [
+        "latest"
+      ],
+      "completeness_controls": [
+        "dynamic websocket session and origin",
+        "length-prefixed frame decoder",
+        "qsd status and value validation",
+        "per-symbol result isolation",
+        "append-only vintage publication"
+      ],
+      "known_boundary": "V1 performs manual latest-value synchronization only; history backfill, automatic scheduling and raw capture are out of scope.",
+      "review_status": "code_reviewed_unit_contract_passed_live_smoke_required"
+    },
+    {
       "module": "Ingestion Merge and Publication Pipeline",
       "code": "INGESTION_CORE",
       "implementation": "backend/src/macrolens_worker/tasks/sync.py",
