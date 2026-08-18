@@ -4,18 +4,24 @@ import re
 from collections import defaultdict
 from datetime import UTC, date, datetime
 from email.utils import parsedate_to_datetime
+from hashlib import sha256
 from io import BytesIO
 from zipfile import ZipFile
 
+import httpx
 from lxml import etree  # type: ignore[import-untyped]
 
 from macrolens_api.models import Dataset, Provider, SourceSeries
 
 from .base import (
+    MappingProbeEvidence,
+    MappingProbeIssue,
+    MappingProbeResult,
     NormalizedObservation,
     ProviderAdapter,
     ProviderDataError,
     ProviderFetchResult,
+    _build_mapping_probe_result,
     deduplicate_observations,
     parse_decimal,
     period_end,
@@ -32,6 +38,114 @@ class FederalReserveBoardAdapter(ProviderAdapter):
 
     code = "FED_BOARD_FILES"
     g17_url = "https://www.federalreserve.gov/releases/g17/current/ipdisk/ip_sa.txt"
+
+    async def probe(
+        self,
+        provider: Provider,
+        source: SourceSeries,
+        dataset: Dataset,
+    ) -> MappingProbeResult:
+        del dataset
+        locator = source.source_locator
+        request_url = str(locator.get("file_url") or self.g17_url)
+        probed_at = datetime.now(UTC)
+        provider_series_id = (
+            str(source.provider_series_id) if source.provider_series_id is not None else None
+        )
+        try:
+            response = await self.client.get(request_url)
+        except httpx.TransportError:
+            return _build_mapping_probe_result(
+                provider_code=provider.code,
+                source_series_id=source.id,
+                provider_series_id=provider_series_id,
+                request_url=request_url,
+                http_status=None,
+                content_type="",
+                official_description="",
+                response_sha256="",
+                probed_at=probed_at,
+                evidence=MappingProbeEvidence(False, False, False, False, True),
+                issues=(
+                    MappingProbeIssue(
+                        "transport", "transport_error", "Federal Reserve Board request failed"
+                    ),
+                ),
+            )
+
+        digest = sha256(response.content).hexdigest()
+        content_type = response.headers.get("content-type", "application/octet-stream")
+        if not 200 <= response.status_code < 300:
+            return _build_mapping_probe_result(
+                provider_code=provider.code,
+                source_series_id=source.id,
+                provider_series_id=provider_series_id,
+                request_url=request_url,
+                http_status=response.status_code,
+                content_type=content_type,
+                official_description="",
+                response_sha256=digest,
+                probed_at=probed_at,
+                evidence=MappingProbeEvidence(True, False, False, False, True),
+                issues=(
+                    MappingProbeIssue(
+                        "http",
+                        "http_status",
+                        f"Federal Reserve Board returned HTTP {response.status_code}",
+                    ),
+                ),
+            )
+
+        try:
+            format_name = str(locator.get("format") or "g17_ip_sa")
+            if format_name == "g17_ip_sa":
+                observations = self._parse_g17(response.content, source, probed_at)
+                official_description = str(locator.get("line_description") or "")
+            elif format_name == "sdmx_xml_zip":
+                observations = self._parse_sdmx_xml_zip(response.content, source, probed_at)
+                official_description = str(locator.get("series_name") or provider_series_id or "")
+            else:
+                raise ProviderDataError(f"Unsupported Federal Reserve Board format {format_name}")
+        except ProviderDataError as exc:
+            return _build_mapping_probe_result(
+                provider_code=provider.code,
+                source_series_id=source.id,
+                provider_series_id=provider_series_id,
+                request_url=request_url,
+                http_status=response.status_code,
+                content_type=content_type,
+                official_description="",
+                response_sha256=digest,
+                probed_at=probed_at,
+                evidence=MappingProbeEvidence(True, True, True, False, True),
+                issues=(MappingProbeIssue("identity", "identity_mismatch", str(exc)),),
+            )
+
+        periods = [item.period_start for item in observations]
+        return _build_mapping_probe_result(
+            provider_code=provider.code,
+            source_series_id=source.id,
+            provider_series_id=provider_series_id,
+            request_url=request_url,
+            http_status=response.status_code,
+            content_type=content_type,
+            official_description=official_description,
+            response_sha256=digest,
+            probed_at=probed_at,
+            evidence=MappingProbeEvidence(
+                True,
+                True,
+                True,
+                True,
+                True,
+                {
+                    "format": str(locator.get("format") or "g17_ip_sa"),
+                    "observation_count": len(observations),
+                    "first_period": min(periods).isoformat(),
+                    "latest_period": max(periods).isoformat(),
+                },
+            ),
+        )
 
     async def fetch(
         self,

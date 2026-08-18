@@ -263,3 +263,27 @@ async def test_g17_fetch_preserves_official_raw_bytes() -> None:
     assert results[0].raw_bytes == G17_SAMPLE
     assert len(results[0].observations) == 24
     assert results[0].request_parameters["file_url"].endswith("ip_sa.txt")
+
+
+async def test_fed_board_probe_returns_approvable_identity_evidence() -> None:
+    async def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, request=request, content=G17_SAMPLE)
+
+    source = _source(
+        {
+            "file_url": "https://www.federalreserve.gov/releases/g17/current/ipdisk/ip_sa.txt",
+            "format": "g17_ip_sa",
+            "series_code": "B50001",
+            "line_description": "Total index",
+            "expected_first_period": "1919-01-01",
+        }
+    )
+    provider = SimpleNamespace(code="FED_BOARD_FILES")
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+        result = await FederalReserveBoardAdapter(client).probe(provider, source, _dataset())
+
+    assert result.production_ready is True
+    assert result.classification == "PASS"
+    assert result.identity_match is True
+    assert result.evidence is not None
+    assert result.evidence.details["observation_count"] == 24
