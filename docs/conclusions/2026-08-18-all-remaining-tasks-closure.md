@@ -50,7 +50,7 @@
 
 ### 远程 live audit、seed、同步和部署
 
-`audit-live` 在读取数据库 Provider/SourceSeries 注册信息时失败：当前 `DATABASE_URL` 主机是 `postgres:5432`，DNS `getaddrinfo` 失败。`postgres` 是 Compose 服务名，当前没有可访问的远程 Docker/PostgreSQL 端点。
+本地 `.env` 的 `postgres:5432` 端点确实无法解析；随后通过项目现有 SSH 链路连接到服务器 `ubuntu@111.229.152.122`，发现健康数据库属于独立验收 Compose 项目 `macrolens-acceptance-20260814`。对旧验收库的只读 live audit 已执行：BEA/Census 通过，BLS 因 2025-10 官方缺值失败，EIA 因官方响应/密钥触发压缩解码错误失败，FRED/NY Fed/Treasury 因旧库没有 verified primary 跳过。旧库尚未包含当前候选的 55 条新映射。
 
 因此本轮没有：
 
@@ -73,6 +73,7 @@
 - `0a98cd3`：Census Durable Goods 维度映射；
 - `f992d6f`：公式边界和 Node 22 验证；
 - `e1fba18`：live audit 数据库阻塞记录。
+- `ee51a93`：最终 readiness 和剩余任务收口证据。
 
 主工作区仍有用户既有脏改动，因此没有自动合并候选分支。
 
@@ -80,13 +81,13 @@
 
 要从当前 55/61 进入完整生产验收，只需按以下顺序补外部条件：
 
-1. 提供任务卡指定的远程 PostgreSQL/Docker Compose 端点；
-2. 运行 55 条指标 incremental/backfill live audit；
-3. 审查并集成候选提交；
-4. 取得 4 类商业/法务许可；
-5. 审批两个 BEA 派生公式；
-6. 获得数据库 seed、同步、部署和远程验收授权；
-7. 按阶段 02/03 宪法执行集成、发布、Compose 部署和真实验收。
+1. 审查并集成当前候选提交；
+2. 在独立验收 Compose 项目执行授权 migration/seed；
+3. 对新 55 条映射重新建立 verified primary 并运行 incremental/backfill live audit；
+4. 处理 BLS 官方缺值和 EIA 响应/密钥问题；
+5. 取得 4 类商业/法务许可；
+6. 审批两个 BEA 派生公式；
+7. 获得数据库同步、部署和远程验收授权，按阶段 02/03 宪法收口。
 
 ## 6. 使用的 Agents、skills、tools 和文档
 
