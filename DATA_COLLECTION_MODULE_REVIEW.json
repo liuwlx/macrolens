@@ -1,10 +1,10 @@
 {
-  "generated_at": "2026-08-02T05:36:47Z",
+  "generated_at": "2026-08-18T12:05:00Z",
   "product": "MacroLens Production",
   "version": "1.0.2",
   "guarantee_model": "fail_closed_no_partial_publish",
   "scope_statement": "All enabled mappings must either produce a complete, identity-validated provider batch or the batch is quarantined. Unsupported, unresolved or unlicensed mappings remain disabled and are never replaced by guessed or simulated production data.",
-  "sandbox_live_test_status": "not_executed_no_external_dns_or_official_credentials",
+  "sandbox_live_test_status": "official_provider_readonly_checks_passed_database_backed_live_audit_blocked",
   "registry": {
     "indicator_count": 61,
     "enabled_ready_count": 55,
