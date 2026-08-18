@@ -1,5 +1,7 @@
 from datetime import date
+from io import BytesIO
 from types import SimpleNamespace
+from zipfile import ZIP_DEFLATED, ZipFile
 
 import httpx
 import pytest
@@ -88,6 +90,69 @@ def test_g17_parser_allows_partial_latest_year_only_when_configured() -> None:
 
     assert len(rows) == 30
     assert rows[-1].period_start == date(1921, 6, 1)
+
+
+def test_sdmx_xml_zip_parser_pins_series_and_scales_values() -> None:
+    xml = b'''<?xml version="1.0" encoding="UTF-8"?>
+    <message:MessageGroup xmlns:message="urn:message">
+      <message:DataSet>
+        <Series SERIES_NAME="B1001NCBA" SA="SA" FREQ="19">
+          <Obs TIME_PERIOD="1973-01-03" OBS_VALUE="567255.3" />
+          <Obs TIME_PERIOD="1973-01-10" OBS_VALUE="565505.4" />
+        </Series>
+      </message:DataSet>
+    </message:MessageGroup>'''
+    buffer = BytesIO()
+    with ZipFile(buffer, "w", compression=ZIP_DEFLATED) as archive:
+        archive.writestr("H8_data.xml", xml)
+    source = _source(
+        {
+            "format": "sdmx_xml_zip",
+            "series_name": "B1001NCBA",
+            "series_attributes": {"SA": "SA", "FREQ": "19"},
+            "expected_first_period": "1973-01-03",
+            "value_scale_to_platform_unit": "0.001",
+        }
+    )
+    source.source_frequency = "weekly"
+
+    rows = FederalReserveBoardAdapter._parse_sdmx_xml_zip(
+        buffer.getvalue(), source, vintage_at=None
+    )
+
+    assert len(rows) == 2
+    assert rows[0].period_start == date(1973, 1, 3)
+    assert rows[0].period_end == date(1973, 1, 9)
+    assert str(rows[0].value) == "567.2553"
+
+
+def test_sdmx_xml_zip_parser_normalizes_quarter_end_to_quarter_start() -> None:
+    xml = b'''<message:MessageGroup xmlns:message="urn:message">
+      <message:DataSet>
+        <Series SERIES_NAME="DTCTL.M" SA="SA" DATAREP="MILLDOLL">
+          <Obs TIME_PERIOD="1943-03-31" OBS_VALUE="6577.83" />
+        </Series>
+      </message:DataSet>
+    </message:MessageGroup>'''
+    buffer = BytesIO()
+    with ZipFile(buffer, "w", compression=ZIP_DEFLATED) as archive:
+        archive.writestr("G19_data.xml", xml)
+    source = _source(
+        {
+            "format": "sdmx_xml_zip",
+            "series_name": "DTCTL.M",
+            "series_attributes": {"SA": "SA", "DATAREP": "MILLDOLL"},
+            "expected_first_period": "1943-01-01",
+        }
+    )
+    source.source_frequency = "quarterly"
+
+    rows = FederalReserveBoardAdapter._parse_sdmx_xml_zip(
+        buffer.getvalue(), source, vintage_at=None
+    )
+
+    assert rows[0].period_start == date(1943, 1, 1)
+    assert rows[0].period_end == date(1943, 3, 31)
 
 
 async def test_g17_fetch_preserves_official_raw_bytes() -> None:

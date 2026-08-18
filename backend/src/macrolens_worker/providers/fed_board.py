@@ -4,6 +4,10 @@ import re
 from collections import defaultdict
 from datetime import UTC, date, datetime
 from email.utils import parsedate_to_datetime
+from io import BytesIO
+from zipfile import ZipFile
+
+from lxml import etree  # type: ignore[import-untyped]
 
 from macrolens_api.models import Dataset, Provider, SourceSeries
 
@@ -50,12 +54,17 @@ class FederalReserveBoardAdapter(ProviderAdapter):
             observations: list[NormalizedObservation] = []
             for source, _dataset in file_mappings:
                 format_name = str(source.source_locator.get("format") or "g17_ip_sa")
-                if format_name != "g17_ip_sa":
+                if format_name not in {"g17_ip_sa", "sdmx_xml_zip"}:
                     raise ProviderDataError(
                         f"Federal Reserve Board mapping {source.id} has unsupported format "
                         f"{format_name!r}"
                     )
-                observations.extend(self._parse_g17(response.content, source, fetched_at))
+                if format_name == "g17_ip_sa":
+                    observations.extend(self._parse_g17(response.content, source, fetched_at))
+                else:
+                    observations.extend(
+                        self._parse_sdmx_xml_zip(response.content, source, fetched_at)
+                    )
             observations = deduplicate_observations(observations)
             last_modified = self._last_modified(response.headers.get("last-modified"))
             results.append(
@@ -167,6 +176,107 @@ class FederalReserveBoardAdapter(ProviderAdapter):
             if actual_first != expected_first_date:
                 raise ProviderDataError(
                     f"G.17 mapping {source.id} begins at {actual_first}; "
+                    f"expected {expected_first_date}"
+                )
+        return observations
+
+    @classmethod
+    def _parse_sdmx_xml_zip(
+        cls,
+        raw: bytes,
+        source: SourceSeries,
+        vintage_at: datetime | None,
+    ) -> list[NormalizedObservation]:
+        series_name = str(
+            source.source_locator.get("series_name") or source.provider_series_id or ""
+        )
+        if not series_name:
+            raise ProviderDataError(f"Board XML mapping {source.id} has no series_name")
+        member_name = str(source.source_locator.get("zip_member") or "")
+        try:
+            with ZipFile(BytesIO(raw)) as archive:
+                candidates = [name for name in archive.namelist() if name.endswith("_data.xml")]
+                selected = member_name or (candidates[0] if candidates else "")
+                if not selected:
+                    raise ProviderDataError("Board XML ZIP has no *_data.xml member")
+                xml = archive.read(selected)
+        except (OSError, ValueError, KeyError) as exc:
+            raise ProviderDataError("Board response was not a readable XML ZIP") from exc
+        try:
+            root = etree.fromstring(xml)
+        except etree.XMLSyntaxError as exc:
+            raise ProviderDataError("Board XML data member was invalid") from exc
+
+        matches = [
+            item
+            for item in root.xpath('//*[local-name()="Series"]')
+            if item.attrib.get("SERIES_NAME") == series_name
+        ]
+        if len(matches) != 1:
+            raise ProviderDataError(
+                f"Board XML mapping {source.id} resolved {len(matches)} rows for {series_name}"
+            )
+        series = matches[0]
+        for key, expected in (source.source_locator.get("series_attributes") or {}).items():
+            actual = series.attrib.get(str(key))
+            if actual != str(expected):
+                raise ProviderDataError(
+                    f"Board XML mapping {source.id} attribute {key} expected {expected!r}, "
+                    f"received {actual!r}"
+                )
+
+        observed_vintage = vintage_at or datetime.now(UTC)
+        frequency = source.source_frequency or "daily"
+        scale = source.source_locator.get("value_scale_to_platform_unit")
+        observations: list[NormalizedObservation] = []
+        for obs in series.xpath('./*[local-name()="Obs"]'):
+            raw_period = str(obs.attrib.get("TIME_PERIOD") or "")
+            try:
+                period = date.fromisoformat(raw_period[:10])
+            except ValueError as exc:
+                raise ProviderDataError(
+                    f"Board XML mapping {source.id} has invalid TIME_PERIOD {raw_period!r}"
+                ) from exc
+            if frequency == "quarterly":
+                period = date(period.year, ((period.month - 1) // 3) * 3 + 1, 1)
+            elif frequency == "monthly":
+                period = date(period.year, period.month, 1)
+            value = parse_decimal(obs.attrib.get("OBS_VALUE"))
+            if value is not None and scale is not None:
+                from decimal import Decimal
+
+                try:
+                    value *= Decimal(str(scale))
+                except Exception as exc:
+                    raise ProviderDataError(
+                        f"Board XML mapping {source.id} has invalid value scale {scale!r}"
+                    ) from exc
+            observations.append(
+                NormalizedObservation(
+                    source_series_id=source.id,
+                    period_start=period,
+                    period_end=period_end(period, frequency),
+                    value=value,
+                    status="missing" if value is None else "normal",
+                    vintage_at=observed_vintage,
+                    source_updated_at=observed_vintage,
+                    quality_flags=["missing_value"] if value is None else [],
+                )
+            )
+        if not observations:
+            raise ProviderDataError(f"Board XML mapping {source.id} returned no observations")
+        expected_first = source.source_locator.get("expected_first_period")
+        if expected_first:
+            try:
+                expected_first_date = date.fromisoformat(str(expected_first))
+            except ValueError as exc:
+                raise ProviderDataError(
+                    f"Board XML mapping {source.id} has invalid expected_first_period"
+                ) from exc
+            actual_first = min(item.period_start for item in observations)
+            if actual_first != expected_first_date:
+                raise ProviderDataError(
+                    f"Board XML mapping {source.id} begins at {actual_first}; "
                     f"expected {expected_first_date}"
                 )
         return observations

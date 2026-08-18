@@ -1834,23 +1834,28 @@
       "unit": "指数",
       "kind": "index",
       "seasonal_adjustment": "未季调",
-      "recommended_source": "FRED_API",
+      "recommended_source": "FED_BOARD_FILES",
       "dataset": "H.10",
-      "provider_series_id": "DTWEXBGS",
+      "provider_series_id": "JRXWTFB_N.B",
       "locator": {
+        "file_url": "https://www.federalreserve.gov/releases/h10/data/FRB_H10_xml.zip",
+        "format": "sdmx_xml_zip",
+        "series_name": "JRXWTFB_N.B",
+        "series_attributes": {"FX": "BRD", "FREQ": "9"},
         "max_staleness_days": 14,
         "min_observations_incremental": 20,
         "min_observations_backfill": 100,
         "require_contiguous": false,
         "expected_first_period": "2006-01-02",
-        "observation_start": "2006-01-02"
+      "observation_start": "2006-01-02"
       },
       "mapping_type": "DIRECT",
       "mapping_status": "READY",
       "license_class": "US_GOV_PUBLIC",
-      "fallback": "Federal Reserve release XML/CSV where available",
-      "notes": [
-        "完整历史边界已核验并固定为 2006-01-02；回填缺少该首期时禁止发布。"
+    "fallback": null,
+    "notes": [
+      "使用 Federal Reserve Board H.10 XML ZIP 的 JRXWTFB_N.B Nominal Broad Dollar Index。",
+      "完整历史边界已核验并固定为 2006-01-02；回填缺少该首期时禁止发布。"
       ]
     },
     {
@@ -1928,10 +1933,15 @@
       "unit": "十亿美元",
       "kind": "amount",
       "seasonal_adjustment": "季调",
-      "recommended_source": "FRED_API",
+      "recommended_source": "FED_BOARD_FILES",
       "dataset": "H.8 Assets and Liabilities of Commercial Banks in the United States",
-      "provider_series_id": "TOTBKCR",
+      "provider_series_id": "B1001NCBA",
       "locator": {
+        "file_url": "https://www.federalreserve.gov/releases/h8/data/FRB_H8_xml.zip",
+        "format": "sdmx_xml_zip",
+        "series_name": "B1001NCBA",
+        "series_attributes": {"SA": "SA", "FREQ": "19"},
+        "value_scale_to_platform_unit": "0.001",
         "max_staleness_days": 28,
         "min_observations_incremental": 26,
         "min_observations_backfill": 100,
@@ -1942,9 +1952,10 @@
       "mapping_type": "DIRECT",
       "mapping_status": "READY",
       "license_class": "US_GOV_PUBLIC",
-      "fallback": "Federal Reserve H.8 official release files",
-      "notes": [
-        "完整历史边界已核验并固定为 1973-01-03；回填缺少该首期时禁止发布。"
+    "fallback": null,
+    "notes": [
+      "使用 Federal Reserve Board H.8 XML ZIP 的 B1001NCBA，季调总商业银行信贷；官方百万美元转换为平台十亿美元。",
+      "完整历史边界已核验并固定为 1973-01-03；回填缺少该首期时禁止发布。"
       ]
     },
     {
@@ -1957,23 +1968,29 @@
       "unit": "十亿美元",
       "kind": "amount",
       "seasonal_adjustment": "季调",
-      "recommended_source": "FRED_API",
+      "recommended_source": "FED_BOARD_FILES",
       "dataset": "G.19",
-      "provider_series_id": "TOTALSL",
+      "provider_series_id": "DTCTL.M",
       "locator": {
+        "file_url": "https://www.federalreserve.gov/releases/g19/data/FRB_g19_xml.zip",
+        "format": "sdmx_xml_zip",
+        "series_name": "DTCTL.M",
+        "series_attributes": {"SA": "SA", "DATAREP": "MILLDOLL"},
+        "value_scale_to_platform_unit": "0.001",
         "max_staleness_days": 90,
         "min_observations_incremental": 24,
         "min_observations_backfill": 60,
         "require_contiguous": true,
-        "expected_first_period": "1943-01-01",
+      "expected_first_period": "1943-01-01",
         "observation_start": "1943-01-01"
       },
       "mapping_type": "DIRECT",
       "mapping_status": "READY",
       "license_class": "US_GOV_PUBLIC",
-      "fallback": "Federal Reserve release XML/CSV where available",
-      "notes": [
-        "完整历史边界已核验并固定为 1943-01-01；回填缺少该首期时禁止发布。"
+    "fallback": null,
+    "notes": [
+      "使用 Federal Reserve Board G.19 XML ZIP 的 DTCTL.M，季调总消费信贷余额；官方百万美元转换为平台十亿美元。",
+      "完整历史边界已核验并固定为 1943-01-01；回填缺少该首期时禁止发布。"
       ]
     },
     {

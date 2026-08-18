@@ -82,7 +82,7 @@ def test_verified_provider_registry_pins_known_history_boundaries_and_routes() -
     assert by_code["US.FED.MBS"]["locator"]["expected_first_period"] == "2002-12-18"
     assert by_code["US.DOLLAR.INDEX"]["locator"]["expected_first_period"] == "2006-01-02"
     assert by_code["US.FINANCIAL.CONDITIONS"]["locator"]["expected_first_period"] == "1971-01-08"
-    assert by_code["US.BANK.CREDIT"]["provider_series_id"] == "TOTBKCR"
+    assert by_code["US.BANK.CREDIT"]["provider_series_id"] == "B1001NCBA"
     assert by_code["US.BANK.CREDIT"]["locator"]["expected_first_period"] == "1973-01-03"
     assert by_code["US.CONSUMER.CREDIT"]["locator"]["expected_first_period"] == "1943-01-01"
     assert by_code["US.CARD.DELINQUENCY"]["locator"]["expected_first_period"] == "1991-01-01"

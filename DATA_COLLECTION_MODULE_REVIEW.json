@@ -17,7 +17,7 @@
       "module": "FRED/ALFRED Adapter",
       "code": "FRED_API",
       "implementation": "backend/src/macrolens_worker/providers/fred.py",
-      "enabled_series": 12,
+      "enabled_series": 8,
       "collection_modes": [
         "incremental",
         "backfill",
@@ -118,7 +118,7 @@
       "module": "Federal Reserve Board Release File Adapter",
       "code": "FED_BOARD_FILES",
       "implementation": "backend/src/macrolens_worker/providers/fed_board.py",
-      "enabled_series": 1,
+      "enabled_series": 4,
       "collection_modes": [
         "incremental",
         "backfill"
@@ -131,7 +131,7 @@
         "duplicate-period rejection",
         "immutable raw file preservation"
       ],
-      "known_boundary": "The first release implemented is G.17 ip_sa.txt B50001 Total index. Other Board releases require separate field and fixture configuration before enablement.",
+      "known_boundary": "G.17 B50001, H.8 B1001NCBA, G.19 DTCTL.M and H.10 JRXWTFB_N.B are configured. H.4.1, CHGDEL and SLOOS still require separate field and fixture configuration before enablement.",
       "review_status": "g17_fixture_contract_passed_live_audit_required"
     },
     {

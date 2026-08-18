@@ -401,7 +401,7 @@ def test_registry_pins_every_enabled_history_boundary() -> None:
             "canonical_code"
         ]
     by_code = {item["canonical_code"]: item for item in enabled}
-    assert by_code["US.BANK.CREDIT"]["provider_series_id"] == "TOTBKCR"
+    assert by_code["US.BANK.CREDIT"]["provider_series_id"] == "B1001NCBA"
     assert by_code["US.WTI"]["locator"]["expected_first_period"] == "1986-01-02"
     assert by_code["US.SLOOS"]["locator"]["expected_first_period"] == "1990-04-01"
 
