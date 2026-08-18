@@ -7,8 +7,8 @@
   "sandbox_live_test_status": "not_executed_no_external_dns_or_official_credentials",
   "registry": {
     "indicator_count": 61,
-    "enabled_ready_count": 33,
-    "blocked_count": 28,
+    "enabled_ready_count": 54,
+    "blocked_count": 7,
     "all_enabled_ready": true,
     "all_registry_ready": false
   },
@@ -139,8 +139,8 @@
       "module": "BEA API Adapter",
       "code": "BEA_API",
       "implementation": "backend/src/macrolens_worker/providers/bea.py",
-      "enabled_series": 1,
-      "blocked_series": 23,
+      "enabled_series": 22,
+      "blocked_series": 2,
       "collection_modes": [
         "incremental",
         "backfill"
@@ -152,8 +152,8 @@
         "duplicate-period rejection",
         "non-empty mapped result requirement"
       ],
-      "known_boundary": "Twenty-three BEA indicators remain disabled until exact official metadata identities are resolved and live-audited. Real GDP is enabled through the approved NIPA mapping. No guessed line numbers are published.",
-      "review_status": "adapter_reviewed_mappings_blocked"
+      "known_boundary": "Twenty-two BEA indicators are configured with exact official SeriesCode/LineNumber/LineDescription and unit metadata and have passed a live read-only audit. Core services excluding housing and generic long-term care remain disabled because no single official line matches those concepts without a versioned derivation or narrower definition.",
+      "review_status": "adapter_reviewed_mappings_live_audit_passed_two_concepts_blocked"
     },
     {
       "module": "Census EITS Adapter",
@@ -259,99 +259,8 @@
   ],
   "blocked_indicators": [
     {
-      "canonical_code": "US.PCE.HEADLINE",
-      "name_en": "PCE Price Index",
-      "provider": "BEA_API",
-      "mapping_status": "NEEDS_METADATA_MAPPING",
-      "reason": "official identity/dimensions unresolved"
-    },
-    {
-      "canonical_code": "US.PCE.CORE",
-      "name_en": "Core PCE Price Index",
-      "provider": "BEA_API",
-      "mapping_status": "NEEDS_METADATA_MAPPING",
-      "reason": "official identity/dimensions unresolved"
-    },
-    {
-      "canonical_code": "US.PCE.CORE.GOODS",
-      "name_en": "Core Goods",
-      "provider": "BEA_API",
-      "mapping_status": "NEEDS_METADATA_MAPPING",
-      "reason": "official identity/dimensions unresolved"
-    },
-    {
-      "canonical_code": "US.PCE.CORE.SERVICES",
-      "name_en": "Core Services",
-      "provider": "BEA_API",
-      "mapping_status": "NEEDS_METADATA_MAPPING",
-      "reason": "official identity/dimensions unresolved"
-    },
-    {
-      "canonical_code": "US.PCE.HOUSING",
-      "name_en": "Housing Services",
-      "provider": "BEA_API",
-      "mapping_status": "NEEDS_METADATA_MAPPING",
-      "reason": "official identity/dimensions unresolved"
-    },
-    {
       "canonical_code": "US.PCE.NONHOUSING",
       "name_en": "Core Services Excluding Housing",
-      "provider": "BEA_API",
-      "mapping_status": "NEEDS_METADATA_MAPPING",
-      "reason": "official identity/dimensions unresolved"
-    },
-    {
-      "canonical_code": "US.PCE.MEDICAL",
-      "name_en": "Health Care Services",
-      "provider": "BEA_API",
-      "mapping_status": "NEEDS_METADATA_MAPPING",
-      "reason": "official identity/dimensions unresolved"
-    },
-    {
-      "canonical_code": "US.PCE.HOSPITAL",
-      "name_en": "Hospital Services",
-      "provider": "BEA_API",
-      "mapping_status": "NEEDS_METADATA_MAPPING",
-      "reason": "official identity/dimensions unresolved"
-    },
-    {
-      "canonical_code": "US.PCE.PHYSICIAN",
-      "name_en": "Physician & Clinical Services",
-      "provider": "BEA_API",
-      "mapping_status": "NEEDS_METADATA_MAPPING",
-      "reason": "official identity/dimensions unresolved"
-    },
-    {
-      "canonical_code": "US.PCE.OTHER.PROFESSIONAL",
-      "name_en": "Other Medical Professional Services",
-      "provider": "BEA_API",
-      "mapping_status": "NEEDS_METADATA_MAPPING",
-      "reason": "official identity/dimensions unresolved"
-    },
-    {
-      "canonical_code": "US.PCE.DENTAL",
-      "name_en": "Dental Services",
-      "provider": "BEA_API",
-      "mapping_status": "NEEDS_METADATA_MAPPING",
-      "reason": "official identity/dimensions unresolved"
-    },
-    {
-      "canonical_code": "US.PCE.MEDICAL.EQUIPMENT",
-      "name_en": "Medical Equipment & Supplies",
-      "provider": "BEA_API",
-      "mapping_status": "NEEDS_METADATA_MAPPING",
-      "reason": "official identity/dimensions unresolved"
-    },
-    {
-      "canonical_code": "US.PCE.PRESCRIPTION",
-      "name_en": "Prescription Drugs",
-      "provider": "BEA_API",
-      "mapping_status": "NEEDS_METADATA_MAPPING",
-      "reason": "official identity/dimensions unresolved"
-    },
-    {
-      "canonical_code": "US.PCE.HEALTH.INSURANCE",
-      "name_en": "Health Insurance Services",
       "provider": "BEA_API",
       "mapping_status": "NEEDS_METADATA_MAPPING",
       "reason": "official identity/dimensions unresolved"
@@ -364,81 +273,11 @@
       "reason": "official identity/dimensions unresolved"
     },
     {
-      "canonical_code": "US.PCE.TRANSPORT",
-      "name_en": "Transportation Services",
-      "provider": "BEA_API",
-      "mapping_status": "NEEDS_METADATA_MAPPING",
-      "reason": "official identity/dimensions unresolved"
-    },
-    {
-      "canonical_code": "US.PCE.RECREATION",
-      "name_en": "Recreation Services",
-      "provider": "BEA_API",
-      "mapping_status": "NEEDS_METADATA_MAPPING",
-      "reason": "official identity/dimensions unresolved"
-    },
-    {
-      "canonical_code": "US.PCE.FOOD.SERVICES",
-      "name_en": "Food Services & Accommodation",
-      "provider": "BEA_API",
-      "mapping_status": "NEEDS_METADATA_MAPPING",
-      "reason": "official identity/dimensions unresolved"
-    },
-    {
-      "canonical_code": "US.PCE.FINANCE",
-      "name_en": "Financial Services & Insurance",
-      "provider": "BEA_API",
-      "mapping_status": "NEEDS_METADATA_MAPPING",
-      "reason": "official identity/dimensions unresolved"
-    },
-    {
-      "canonical_code": "US.PCE.OTHER.SERVICES",
-      "name_en": "Other Core Services",
-      "provider": "BEA_API",
-      "mapping_status": "NEEDS_METADATA_MAPPING",
-      "reason": "official identity/dimensions unresolved"
-    },
-    {
-      "canonical_code": "US.PCE.DURABLES",
-      "name_en": "Durable Goods Price Index",
-      "provider": "BEA_API",
-      "mapping_status": "NEEDS_METADATA_MAPPING",
-      "reason": "official identity/dimensions unresolved"
-    },
-    {
-      "canonical_code": "US.PCE.NONDURABLES",
-      "name_en": "Nondurable Goods Price Index",
-      "provider": "BEA_API",
-      "mapping_status": "NEEDS_METADATA_MAPPING",
-      "reason": "official identity/dimensions unresolved"
-    },
-    {
       "canonical_code": "US.MICHIGAN.1Y",
       "name_en": "University of Michigan 1-Year Inflation Expectations",
       "provider": "UMICH_SURVEYS_OF_CONSUMERS",
       "mapping_status": "LEGAL_REVIEW_REQUIRED",
       "reason": "license or legal approval required"
-    },
-    {
-      "canonical_code": "US.REAL.GDP",
-      "name_en": "Real Gross Domestic Product",
-      "provider": "BEA_API",
-      "mapping_status": "NEEDS_METADATA_MAPPING",
-      "reason": "official identity/dimensions unresolved"
-    },
-    {
-      "canonical_code": "US.RETAIL.SALES",
-      "name_en": "Advance Retail Sales",
-      "provider": "CENSUS_EITS_API",
-      "mapping_status": "NEEDS_DIMENSION_MAPPING",
-      "reason": "official identity/dimensions unresolved"
-    },
-    {
-      "canonical_code": "US.PERSONAL.CONSUMPTION",
-      "name_en": "Real Personal Consumption Expenditures",
-      "provider": "BEA_API",
-      "mapping_status": "NEEDS_METADATA_MAPPING",
-      "reason": "official identity/dimensions unresolved"
     },
     {
       "canonical_code": "US.DURABLE.ORDERS",

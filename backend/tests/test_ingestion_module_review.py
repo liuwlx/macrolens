@@ -394,7 +394,7 @@ def test_registry_pins_every_enabled_history_boundary() -> None:
         (root / "database/seed/source_registry.json").read_text(encoding="utf-8")
     )
     enabled = [item for item in registry["indicators"] if item["mapping_status"] == "READY"]
-    assert len(enabled) == 33
+    assert len(enabled) == 54
     for item in enabled:
         locator = item.get("locator") or {}
         assert locator.get("expected_first_period") or locator.get("start_year"), item[

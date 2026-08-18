@@ -110,6 +110,32 @@ def test_verified_provider_registry_pins_known_history_boundaries_and_routes() -
     }
 
 
+def test_bea_registry_pins_live_audited_identities_and_explicit_blockers() -> None:
+    payload = json.loads((ROOT / "database/seed/source_registry.json").read_text(encoding="utf-8"))
+    bea = [item for item in payload["indicators"] if item["recommended_source"] == "BEA_API"]
+    ready = [item for item in bea if item["mapping_status"] == "READY"]
+    blocked = {item["canonical_code"] for item in bea if item["mapping_status"] != "READY"}
+
+    assert len(ready) == 22
+    assert blocked == {"US.PCE.NONHOUSING", "US.PCE.LONGTERM.CARE"}
+    for item in ready:
+        locator = item["locator"]
+        assert locator["series_code"]
+        if item["provider_series_id"] is not None:
+            assert locator["series_code"] == item["provider_series_id"]
+        assert locator["line_number"]
+        assert locator["line_description"]
+        assert locator["metric_name"]
+        assert locator["cl_unit"]
+        assert locator["unit_mult"]
+        assert locator["expected_first_period"]
+
+    personal = next(item for item in ready if item["canonical_code"] == "US.PERSONAL.CONSUMPTION")
+    assert personal["locator"]["table_name"] == "T10106"
+    assert personal["locator"]["frequency"] == "Q"
+    assert personal["locator"]["line_number"] == "2"
+
+
 def test_seed_command_updates_existing_source_mappings() -> None:
     seed_source = (ROOT / "backend/src/macrolens_api/cli.py").read_text(encoding="utf-8")
     assert 'source_series.source_locator = item.get("locator") or {}' in seed_source

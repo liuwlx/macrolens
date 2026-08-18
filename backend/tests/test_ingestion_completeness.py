@@ -518,15 +518,15 @@ def test_source_registry_readiness_is_explicit_and_no_unmapped_series_is_enabled
         check_credentials=True,
     )
     assert report["indicator_count"] == 61
-    assert report["ready_count"] == 33
-    assert report["blocked_count"] == 28
-    assert report["enabled_indicator_count"] == 33
-    assert report["enabled_ready_count"] == 33
+    assert report["ready_count"] == 54
+    assert report["blocked_count"] == 7
+    assert report["enabled_indicator_count"] == 54
+    assert report["enabled_ready_count"] == 54
     assert report["enabled_blocked_count"] == 0
     assert report["all_enabled_ready"]
     assert not report["all_production_ready"]
     by_code = {item["canonical_code"]: item for item in report["indicators"]}
-    assert by_code["US.PCE.MEDICAL"]["status"] == "blocked_mapping"
+    assert by_code["US.PCE.NONHOUSING"]["status"] == "blocked_mapping"
     assert by_code["US.MICHIGAN.1Y"]["status"] in {"blocked_license", "blocked_adapter"}
     assert by_code["US.SP500"]["status"] == "blocked_license"
     get_settings.cache_clear()
