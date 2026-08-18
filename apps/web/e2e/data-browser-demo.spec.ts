@@ -107,7 +107,7 @@ async function installApi(page: Page, mode: ApiMode, requests?: string[]) {
 test("not-ingested series is an empty data state and does not pin a snapshot", async ({ page }) => {
   await installApi(page, "live-empty");
   await page.goto("/data?view=v2");
-  await expect(page.getByText("尚未采集")).toBeVisible();
+  await expect(page.getByRole("region", { name: "明细数据表" }).getByText("尚未采集")).toBeVisible();
   await expect(page).toHaveURL(/series=series-1/);
   expect(new URL(page.url()).searchParams.has("data_as_of")).toBe(false);
   await expect(page.getByText("明细表加载失败")).toHaveCount(0);

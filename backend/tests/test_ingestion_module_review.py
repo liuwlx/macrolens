@@ -390,16 +390,18 @@ def test_fomc_calendar_rejects_partially_parseable_meeting_rows() -> None:
 
 def test_registry_pins_every_enabled_history_boundary() -> None:
     root = Path(__file__).resolve().parents[2]
-    registry = json.loads((root / "database/seed/source_registry.json").read_text())
+    registry = json.loads(
+        (root / "database/seed/source_registry.json").read_text(encoding="utf-8")
+    )
     enabled = [item for item in registry["indicators"] if item["mapping_status"] == "READY"]
-    assert len(enabled) == 33
+    assert len(enabled) == 55
     for item in enabled:
         locator = item.get("locator") or {}
         assert locator.get("expected_first_period") or locator.get("start_year"), item[
             "canonical_code"
         ]
     by_code = {item["canonical_code"]: item for item in enabled}
-    assert by_code["US.BANK.CREDIT"]["provider_series_id"] == "TOTBKCR"
+    assert by_code["US.BANK.CREDIT"]["provider_series_id"] == "B1001NCBA"
     assert by_code["US.WTI"]["locator"]["expected_first_period"] == "1986-01-02"
     assert by_code["US.SLOOS"]["locator"]["expected_first_period"] == "1990-04-01"
 

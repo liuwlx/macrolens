@@ -1,14 +1,14 @@
 {
-  "generated_at": "2026-08-02T05:36:47Z",
+  "generated_at": "2026-08-18T12:05:00Z",
   "product": "MacroLens Production",
   "version": "1.0.2",
   "guarantee_model": "fail_closed_no_partial_publish",
   "scope_statement": "All enabled mappings must either produce a complete, identity-validated provider batch or the batch is quarantined. Unsupported, unresolved or unlicensed mappings remain disabled and are never replaced by guessed or simulated production data.",
-  "sandbox_live_test_status": "not_executed_no_external_dns_or_official_credentials",
+  "sandbox_live_test_status": "official_provider_readonly_checks_passed_database_backed_live_audit_blocked",
   "registry": {
     "indicator_count": 61,
-    "enabled_ready_count": 31,
-    "blocked_count": 30,
+    "enabled_ready_count": 55,
+    "blocked_count": 6,
     "all_enabled_ready": true,
     "all_registry_ready": false
   },
@@ -17,7 +17,7 @@
       "module": "FRED/ALFRED Adapter",
       "code": "FRED_API",
       "implementation": "backend/src/macrolens_worker/providers/fred.py",
-      "enabled_series": 12,
+      "enabled_series": 4,
       "collection_modes": [
         "incremental",
         "backfill",
@@ -115,11 +115,32 @@
       "review_status": "code_reviewed_mock_contract_passed_live_audit_required"
     },
     {
+      "module": "Federal Reserve Board Release File Adapter",
+      "code": "FED_BOARD_FILES",
+      "implementation": "backend/src/macrolens_worker/providers/fed_board.py",
+      "enabled_series": 8,
+      "collection_modes": [
+        "incremental",
+        "backfill"
+      ],
+      "completeness_controls": [
+        "official file URL and format pinning",
+        "SeriesCode, series name and release-specific attribute identity checks",
+        "G.17 exact twelve-month row shape validation",
+        "XML Obs period/value normalization",
+        "first-period history boundary check",
+        "duplicate-period rejection",
+        "immutable raw file preservation"
+      ],
+      "known_boundary": "G.17 B50001, H.8 B1001NCBA, G.19 DTCTL.M, H.10 JRXWTFB_N.B, H.4.1 RESPPA_N.WW/RESPPALGASMO_N.WW, CHGDEL STFBQDCC%STFBAILCC_XEOP_MA.Q and SLOOS SUBLPDCILS_N.Q are configured. Reserve balances remain on FRED until the H.4.1 identity discrepancy is resolved.",
+      "review_status": "fixture_contract_passed_live_audit_required"
+    },
+    {
       "module": "BEA API Adapter",
       "code": "BEA_API",
       "implementation": "backend/src/macrolens_worker/providers/bea.py",
-      "enabled_series": 0,
-      "blocked_series": 24,
+      "enabled_series": 22,
+      "blocked_series": 2,
       "collection_modes": [
         "incremental",
         "backfill"
@@ -131,15 +152,15 @@
         "duplicate-period rejection",
         "non-empty mapped result requirement"
       ],
-      "known_boundary": "Twenty-four BEA indicators remain disabled until exact official metadata identities are resolved and live-audited. The adapter is ready; the mappings are not. No guessed line numbers are published.",
-      "review_status": "adapter_reviewed_mappings_blocked"
+      "known_boundary": "Twenty-two BEA indicators are configured with exact official SeriesCode/LineNumber/LineDescription and unit metadata and have passed a live read-only audit. Core services excluding housing and generic long-term care remain disabled because no single official line matches those concepts without a versioned derivation or narrower definition.",
+      "review_status": "adapter_reviewed_mappings_live_audit_passed_two_concepts_blocked"
     },
     {
       "module": "Census EITS Adapter",
       "code": "CENSUS_EITS_API",
       "implementation": "backend/src/macrolens_worker/providers/census.py",
-      "enabled_series": 0,
-      "blocked_series": 2,
+      "enabled_series": 2,
+      "blocked_series": 0,
       "collection_modes": [
         "incremental",
         "backfill"
@@ -151,8 +172,8 @@
         "period/value validation",
         "non-empty mapped result requirement"
       ],
-      "known_boundary": "Retail sales and durable-goods mappings remain disabled until the exact Census dimension combination is fixed and validated against live responses.",
-      "review_status": "adapter_reviewed_mappings_blocked"
+      "known_boundary": "Retail sales and durable-goods orders are enabled through pinned MARTS and ADVM3 dimension mappings. Both mappings require periodic live audits because Census returns a multidimensional matrix and can add or revise rows.",
+      "review_status": "adapter_reviewed_mappings_live_audit_passed"
     },
     {
       "module": "DOL Open Data Adapter",
@@ -238,99 +259,8 @@
   ],
   "blocked_indicators": [
     {
-      "canonical_code": "US.PCE.HEADLINE",
-      "name_en": "PCE Price Index",
-      "provider": "BEA_API",
-      "mapping_status": "NEEDS_METADATA_MAPPING",
-      "reason": "official identity/dimensions unresolved"
-    },
-    {
-      "canonical_code": "US.PCE.CORE",
-      "name_en": "Core PCE Price Index",
-      "provider": "BEA_API",
-      "mapping_status": "NEEDS_METADATA_MAPPING",
-      "reason": "official identity/dimensions unresolved"
-    },
-    {
-      "canonical_code": "US.PCE.CORE.GOODS",
-      "name_en": "Core Goods",
-      "provider": "BEA_API",
-      "mapping_status": "NEEDS_METADATA_MAPPING",
-      "reason": "official identity/dimensions unresolved"
-    },
-    {
-      "canonical_code": "US.PCE.CORE.SERVICES",
-      "name_en": "Core Services",
-      "provider": "BEA_API",
-      "mapping_status": "NEEDS_METADATA_MAPPING",
-      "reason": "official identity/dimensions unresolved"
-    },
-    {
-      "canonical_code": "US.PCE.HOUSING",
-      "name_en": "Housing Services",
-      "provider": "BEA_API",
-      "mapping_status": "NEEDS_METADATA_MAPPING",
-      "reason": "official identity/dimensions unresolved"
-    },
-    {
       "canonical_code": "US.PCE.NONHOUSING",
       "name_en": "Core Services Excluding Housing",
-      "provider": "BEA_API",
-      "mapping_status": "NEEDS_METADATA_MAPPING",
-      "reason": "official identity/dimensions unresolved"
-    },
-    {
-      "canonical_code": "US.PCE.MEDICAL",
-      "name_en": "Health Care Services",
-      "provider": "BEA_API",
-      "mapping_status": "NEEDS_METADATA_MAPPING",
-      "reason": "official identity/dimensions unresolved"
-    },
-    {
-      "canonical_code": "US.PCE.HOSPITAL",
-      "name_en": "Hospital Services",
-      "provider": "BEA_API",
-      "mapping_status": "NEEDS_METADATA_MAPPING",
-      "reason": "official identity/dimensions unresolved"
-    },
-    {
-      "canonical_code": "US.PCE.PHYSICIAN",
-      "name_en": "Physician & Clinical Services",
-      "provider": "BEA_API",
-      "mapping_status": "NEEDS_METADATA_MAPPING",
-      "reason": "official identity/dimensions unresolved"
-    },
-    {
-      "canonical_code": "US.PCE.OTHER.PROFESSIONAL",
-      "name_en": "Other Medical Professional Services",
-      "provider": "BEA_API",
-      "mapping_status": "NEEDS_METADATA_MAPPING",
-      "reason": "official identity/dimensions unresolved"
-    },
-    {
-      "canonical_code": "US.PCE.DENTAL",
-      "name_en": "Dental Services",
-      "provider": "BEA_API",
-      "mapping_status": "NEEDS_METADATA_MAPPING",
-      "reason": "official identity/dimensions unresolved"
-    },
-    {
-      "canonical_code": "US.PCE.MEDICAL.EQUIPMENT",
-      "name_en": "Medical Equipment & Supplies",
-      "provider": "BEA_API",
-      "mapping_status": "NEEDS_METADATA_MAPPING",
-      "reason": "official identity/dimensions unresolved"
-    },
-    {
-      "canonical_code": "US.PCE.PRESCRIPTION",
-      "name_en": "Prescription Drugs",
-      "provider": "BEA_API",
-      "mapping_status": "NEEDS_METADATA_MAPPING",
-      "reason": "official identity/dimensions unresolved"
-    },
-    {
-      "canonical_code": "US.PCE.HEALTH.INSURANCE",
-      "name_en": "Health Insurance Services",
       "provider": "BEA_API",
       "mapping_status": "NEEDS_METADATA_MAPPING",
       "reason": "official identity/dimensions unresolved"
@@ -343,88 +273,11 @@
       "reason": "official identity/dimensions unresolved"
     },
     {
-      "canonical_code": "US.PCE.TRANSPORT",
-      "name_en": "Transportation Services",
-      "provider": "BEA_API",
-      "mapping_status": "NEEDS_METADATA_MAPPING",
-      "reason": "official identity/dimensions unresolved"
-    },
-    {
-      "canonical_code": "US.PCE.RECREATION",
-      "name_en": "Recreation Services",
-      "provider": "BEA_API",
-      "mapping_status": "NEEDS_METADATA_MAPPING",
-      "reason": "official identity/dimensions unresolved"
-    },
-    {
-      "canonical_code": "US.PCE.FOOD.SERVICES",
-      "name_en": "Food Services & Accommodation",
-      "provider": "BEA_API",
-      "mapping_status": "NEEDS_METADATA_MAPPING",
-      "reason": "official identity/dimensions unresolved"
-    },
-    {
-      "canonical_code": "US.PCE.FINANCE",
-      "name_en": "Financial Services & Insurance",
-      "provider": "BEA_API",
-      "mapping_status": "NEEDS_METADATA_MAPPING",
-      "reason": "official identity/dimensions unresolved"
-    },
-    {
-      "canonical_code": "US.PCE.OTHER.SERVICES",
-      "name_en": "Other Core Services",
-      "provider": "BEA_API",
-      "mapping_status": "NEEDS_METADATA_MAPPING",
-      "reason": "official identity/dimensions unresolved"
-    },
-    {
-      "canonical_code": "US.PCE.DURABLES",
-      "name_en": "Durable Goods Price Index",
-      "provider": "BEA_API",
-      "mapping_status": "NEEDS_METADATA_MAPPING",
-      "reason": "official identity/dimensions unresolved"
-    },
-    {
-      "canonical_code": "US.PCE.NONDURABLES",
-      "name_en": "Nondurable Goods Price Index",
-      "provider": "BEA_API",
-      "mapping_status": "NEEDS_METADATA_MAPPING",
-      "reason": "official identity/dimensions unresolved"
-    },
-    {
       "canonical_code": "US.MICHIGAN.1Y",
       "name_en": "University of Michigan 1-Year Inflation Expectations",
       "provider": "UMICH_SURVEYS_OF_CONSUMERS",
       "mapping_status": "LEGAL_REVIEW_REQUIRED",
       "reason": "license or legal approval required"
-    },
-    {
-      "canonical_code": "US.REAL.GDP",
-      "name_en": "Real Gross Domestic Product",
-      "provider": "BEA_API",
-      "mapping_status": "NEEDS_METADATA_MAPPING",
-      "reason": "official identity/dimensions unresolved"
-    },
-    {
-      "canonical_code": "US.RETAIL.SALES",
-      "name_en": "Advance Retail Sales",
-      "provider": "CENSUS_EITS_API",
-      "mapping_status": "NEEDS_DIMENSION_MAPPING",
-      "reason": "official identity/dimensions unresolved"
-    },
-    {
-      "canonical_code": "US.PERSONAL.CONSUMPTION",
-      "name_en": "Real Personal Consumption Expenditures",
-      "provider": "BEA_API",
-      "mapping_status": "NEEDS_METADATA_MAPPING",
-      "reason": "official identity/dimensions unresolved"
-    },
-    {
-      "canonical_code": "US.DURABLE.ORDERS",
-      "name_en": "Manufacturers New Orders: Durable Goods",
-      "provider": "CENSUS_EITS_API",
-      "mapping_status": "NEEDS_DIMENSION_MAPPING",
-      "reason": "official identity/dimensions unresolved"
     },
     {
       "canonical_code": "US.MORTGAGE.30Y",

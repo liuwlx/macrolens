@@ -1,0 +1,269 @@
+{
+  "mode": "incremental",
+  "started_at": "2026-08-18T08:43:30.869495+00:00",
+  "finished_at": "2026-08-18T08:43:47.534155+00:00",
+  "provider_count": 7,
+  "executed_provider_count": 4,
+  "passed_provider_count": 2,
+  "failed_provider_count": 2,
+  "skipped_provider_count": 3,
+  "all_executed_passed": false,
+  "providers": [
+    {
+      "provider": "BEA_API",
+      "status": "passed",
+      "fetch_result_count": 1,
+      "raw_byte_count": 138732,
+      "metrics": {
+        "mapped_series_count": 1,
+        "observed_series_count": 1,
+        "coverage_ratio": 1.0,
+        "observation_count": 22,
+        "non_null_observation_count": 22,
+        "blocking_issue_count": 0
+      },
+      "issues": [],
+      "series": {
+        "38": {
+          "provider_series_id": null,
+          "dataset": "NIPA",
+          "observation_count": 22,
+          "non_null_count": 22,
+          "first_period": "2021-01-01",
+          "latest_period": "2026-04-01",
+          "first_vintage": "2026-08-18T08:43:35.610322+00:00",
+          "latest_vintage": "2026-08-18T08:43:35.610322+00:00"
+        }
+      }
+    },
+    {
+      "provider": "BLS_API_V2",
+      "status": "failed",
+      "fetch_result_count": 1,
+      "raw_byte_count": 67753,
+      "metrics": {
+        "mapped_series_count": 11,
+        "observed_series_count": 11,
+        "coverage_ratio": 1.0,
+        "observation_count": 692,
+        "non_null_observation_count": 685,
+        "blocking_issue_count": 5
+      },
+      "issues": [
+        {
+          "code": "missing_observation_value",
+          "message": "Source 24 has 1 missing latest values; allowed 0 after 0 leading periods.",
+          "source_series_id": 24,
+          "period_start": "2025-10-01"
+        },
+        {
+          "code": "missing_observation_value",
+          "message": "Source 25 has 1 missing latest values; allowed 0 after 0 leading periods.",
+          "source_series_id": 25,
+          "period_start": "2025-10-01"
+        },
+        {
+          "code": "missing_observation_value",
+          "message": "Source 26 has 1 missing latest values; allowed 0 after 0 leading periods.",
+          "source_series_id": 26,
+          "period_start": "2025-10-01"
+        },
+        {
+          "code": "missing_observation_value",
+          "message": "Source 32 has 1 missing latest values; allowed 0 after 0 leading periods.",
+          "source_series_id": 32,
+          "period_start": "2025-10-01"
+        },
+        {
+          "code": "missing_observation_value",
+          "message": "Source 33 has 1 missing latest values; allowed 0 after 0 leading periods.",
+          "source_series_id": 33,
+          "period_start": "2025-10-01"
+        }
+      ],
+      "series": {
+        "23": {
+          "provider_series_id": "CUSR0000SA0",
+          "dataset": "Public Data API",
+          "observation_count": 67,
+          "non_null_count": 66,
+          "first_period": "2021-01-01",
+          "latest_period": "2026-07-01",
+          "first_vintage": "2026-08-18T08:43:35.697111+00:00",
+          "latest_vintage": "2026-08-18T08:43:35.697111+00:00"
+        },
+        "24": {
+          "provider_series_id": "CUSR0000SA0L1E",
+          "dataset": "Public Data API",
+          "observation_count": 67,
+          "non_null_count": 66,
+          "first_period": "2021-01-01",
+          "latest_period": "2026-07-01",
+          "first_vintage": "2026-08-18T08:43:35.697111+00:00",
+          "latest_vintage": "2026-08-18T08:43:35.697111+00:00"
+        },
+        "25": {
+          "provider_series_id": "CUSR0000SAH1",
+          "dataset": "Public Data API",
+          "observation_count": 67,
+          "non_null_count": 66,
+          "first_period": "2021-01-01",
+          "latest_period": "2026-07-01",
+          "first_vintage": "2026-08-18T08:43:35.697111+00:00",
+          "latest_vintage": "2026-08-18T08:43:35.697111+00:00"
+        },
+        "26": {
+          "provider_series_id": "CUSR0000SAM2",
+          "dataset": "Public Data API",
+          "observation_count": 67,
+          "non_null_count": 66,
+          "first_period": "2021-01-01",
+          "latest_period": "2026-07-01",
+          "first_vintage": "2026-08-18T08:43:35.697111+00:00",
+          "latest_vintage": "2026-08-18T08:43:35.697111+00:00"
+        },
+        "27": {
+          "provider_series_id": "WPSFD4",
+          "dataset": "Public Data API",
+          "observation_count": 67,
+          "non_null_count": 67,
+          "first_period": "2021-01-01",
+          "latest_period": "2026-07-01",
+          "first_vintage": "2026-08-18T08:43:35.697111+00:00",
+          "latest_vintage": "2026-08-18T08:43:35.697111+00:00"
+        },
+        "28": {
+          "provider_series_id": "WPSFD49116",
+          "dataset": "Public Data API",
+          "observation_count": 67,
+          "non_null_count": 67,
+          "first_period": "2021-01-01",
+          "latest_period": "2026-07-01",
+          "first_vintage": "2026-08-18T08:43:35.697111+00:00",
+          "latest_vintage": "2026-08-18T08:43:35.697111+00:00"
+        },
+        "31": {
+          "provider_series_id": "CES0000000001",
+          "dataset": "Public Data API",
+          "observation_count": 67,
+          "non_null_count": 66,
+          "first_period": "2021-01-01",
+          "latest_period": "2026-07-01",
+          "first_vintage": "2026-08-18T08:43:35.697111+00:00",
+          "latest_vintage": "2026-08-18T08:43:35.697111+00:00"
+        },
+        "32": {
+          "provider_series_id": "LNS14000000",
+          "dataset": "Public Data API",
+          "observation_count": 67,
+          "non_null_count": 66,
+          "first_period": "2021-01-01",
+          "latest_period": "2026-07-01",
+          "first_vintage": "2026-08-18T08:43:35.697111+00:00",
+          "latest_vintage": "2026-08-18T08:43:35.697111+00:00"
+        },
+        "33": {
+          "provider_series_id": "LNS11300000",
+          "dataset": "Public Data API",
+          "observation_count": 67,
+          "non_null_count": 66,
+          "first_period": "2021-01-01",
+          "latest_period": "2026-07-01",
+          "first_vintage": "2026-08-18T08:43:35.697111+00:00",
+          "latest_vintage": "2026-08-18T08:43:35.697111+00:00"
+        },
+        "34": {
+          "provider_series_id": "CES0500000003",
+          "dataset": "Public Data API",
+          "observation_count": 67,
+          "non_null_count": 67,
+          "first_period": "2021-01-01",
+          "latest_period": "2026-07-01",
+          "first_vintage": "2026-08-18T08:43:35.697111+00:00",
+          "latest_vintage": "2026-08-18T08:43:35.697111+00:00"
+        },
+        "35": {
+          "provider_series_id": "CIS1010000000000I",
+          "dataset": "Public Data API",
+          "observation_count": 22,
+          "non_null_count": 22,
+          "first_period": "2021-01-01",
+          "latest_period": "2026-04-01",
+          "first_vintage": "2026-08-18T08:43:35.697111+00:00",
+          "latest_vintage": "2026-08-18T08:43:35.697111+00:00"
+        }
+      }
+    },
+    {
+      "provider": "CENSUS_EITS_API",
+      "status": "passed",
+      "fetch_result_count": 1,
+      "raw_byte_count": 808597,
+      "metrics": {
+        "mapped_series_count": 1,
+        "observed_series_count": 1,
+        "coverage_ratio": 1.0,
+        "observation_count": 67,
+        "non_null_observation_count": 67,
+        "blocking_issue_count": 0
+      },
+      "issues": [],
+      "series": {
+        "40": {
+          "provider_series_id": null,
+          "dataset": "marts",
+          "observation_count": 67,
+          "non_null_count": 67,
+          "first_period": "2021-01-01",
+          "latest_period": "2026-07-01",
+          "first_vintage": "2026-08-18T08:43:45.870234+00:00",
+          "latest_vintage": "2026-08-18T08:43:45.870234+00:00"
+        }
+      }
+    },
+    {
+      "provider": "EIA_API_V2",
+      "status": "failed",
+      "issues": [
+        {
+          "code": "provider_fetch_failed",
+          "message": "DecodingError: Error -3 while decompressing data: incorrect header check"
+        }
+      ],
+      "series": {}
+    },
+    {
+      "provider": "FRED_API",
+      "status": "skipped",
+      "issues": [
+        {
+          "code": "no_verified_mappings",
+          "message": "No verified primary mappings are enabled."
+        }
+      ],
+      "series": {}
+    },
+    {
+      "provider": "NYFED_MARKETS_API",
+      "status": "skipped",
+      "issues": [
+        {
+          "code": "no_verified_mappings",
+          "message": "No verified primary mappings are enabled."
+        }
+      ],
+      "series": {}
+    },
+    {
+      "provider": "US_TREASURY_XML",
+      "status": "skipped",
+      "issues": [
+        {
+          "code": "no_verified_mappings",
+          "message": "No verified primary mappings are enabled."
+        }
+      ],
+      "series": {}
+    }
+  ]
+}

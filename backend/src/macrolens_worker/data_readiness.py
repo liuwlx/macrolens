@@ -154,6 +154,24 @@ def _provider_blockers(
             blockers.append("locator:route")
         if not locator.get("expected_first_period"):
             blockers.append("locator:history_start")
+    elif provider == "FED_BOARD_FILES":
+        if not locator.get("file_url"):
+            blockers.append("locator:file_url")
+        if not locator.get("format"):
+            blockers.append("locator:format")
+        format_name = str(locator.get("format") or "")
+        if format_name == "g17_ip_sa":
+            if not locator.get("series_code"):
+                blockers.append("locator:series_code")
+            if not locator.get("line_description"):
+                blockers.append("locator:line_description")
+        elif format_name == "sdmx_xml_zip":
+            if not locator.get("series_name"):
+                blockers.append("locator:series_name")
+        else:
+            blockers.append("locator:unsupported_format")
+        if not locator.get("expected_first_period"):
+            blockers.append("locator:history_start")
     elif provider == "NYFED_MARKETS_API":
         if not locator.get("route"):
             blockers.append("locator:route")

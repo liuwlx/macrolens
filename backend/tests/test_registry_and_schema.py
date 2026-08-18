@@ -78,16 +78,24 @@ def test_verified_provider_registry_pins_known_history_boundaries_and_routes() -
     assert by_code["US.BREAKEVEN.5Y5Y"]["locator"]["expected_first_period"] == "2003-01-02"
     assert by_code["US.INDUSTRIAL.PRODUCTION"]["locator"]["expected_first_period"] == "1919-01-01"
     assert by_code["US.FED.ASSETS"]["locator"]["expected_first_period"] == "2002-12-18"
+    assert by_code["US.FED.ASSETS"]["recommended_source"] == "FED_BOARD_FILES"
+    assert by_code["US.FED.ASSETS"]["provider_series_id"] == "RESPPA_N.WW"
     assert by_code["US.BANK.RESERVES"]["locator"]["expected_first_period"] == "2002-12-18"
     assert by_code["US.FED.MBS"]["locator"]["expected_first_period"] == "2002-12-18"
+    assert by_code["US.FED.MBS"]["recommended_source"] == "FED_BOARD_FILES"
+    assert by_code["US.FED.MBS"]["provider_series_id"] == "RESPPALGASMO_N.WW"
     assert by_code["US.DOLLAR.INDEX"]["locator"]["expected_first_period"] == "2006-01-02"
     assert by_code["US.FINANCIAL.CONDITIONS"]["locator"]["expected_first_period"] == "1971-01-08"
-    assert by_code["US.BANK.CREDIT"]["provider_series_id"] == "TOTBKCR"
+    assert by_code["US.BANK.CREDIT"]["provider_series_id"] == "B1001NCBA"
     assert by_code["US.BANK.CREDIT"]["locator"]["expected_first_period"] == "1973-01-03"
     assert by_code["US.CONSUMER.CREDIT"]["locator"]["expected_first_period"] == "1943-01-01"
     assert by_code["US.CARD.DELINQUENCY"]["locator"]["expected_first_period"] == "1991-01-01"
+    assert by_code["US.CARD.DELINQUENCY"]["recommended_source"] == "FED_BOARD_FILES"
+    assert by_code["US.CARD.DELINQUENCY"]["provider_series_id"] == "STFBQDCC%STFBAILCC_XEOP_MA.Q"
     assert by_code["US.WTI"]["locator"]["expected_first_period"] == "1986-01-02"
     assert by_code["US.SLOOS"]["locator"]["expected_first_period"] == "1990-04-01"
+    assert by_code["US.SLOOS"]["recommended_source"] == "FED_BOARD_FILES"
+    assert by_code["US.SLOOS"]["provider_series_id"] == "SUBLPDCILS_N.Q"
     claims = by_code["US.INITIAL.CLAIMS"]
     assert claims["recommended_source"] == "FRED_API"
     assert claims["provider_series_id"] == "ICSA"
@@ -99,6 +107,48 @@ def test_verified_provider_registry_pins_known_history_boundaries_and_routes() -
         "operationTypes": "reverserepo",
         "securityType": "tsy",
         "term": "Overnight",
+    }
+
+
+def test_bea_registry_pins_live_audited_identities_and_explicit_blockers() -> None:
+    payload = json.loads((ROOT / "database/seed/source_registry.json").read_text(encoding="utf-8"))
+    bea = [item for item in payload["indicators"] if item["recommended_source"] == "BEA_API"]
+    ready = [item for item in bea if item["mapping_status"] == "READY"]
+    blocked = {item["canonical_code"] for item in bea if item["mapping_status"] != "READY"}
+
+    assert len(ready) == 22
+    assert blocked == {"US.PCE.NONHOUSING", "US.PCE.LONGTERM.CARE"}
+    for item in ready:
+        locator = item["locator"]
+        assert locator["series_code"]
+        if item["provider_series_id"] is not None:
+            assert locator["series_code"] == item["provider_series_id"]
+        assert locator["line_number"]
+        assert locator["line_description"]
+        assert locator["metric_name"]
+        assert locator["cl_unit"]
+        assert locator["unit_mult"]
+        assert locator["expected_first_period"]
+
+    personal = next(item for item in ready if item["canonical_code"] == "US.PERSONAL.CONSUMPTION")
+    assert personal["locator"]["table_name"] == "T10106"
+    assert personal["locator"]["frequency"] == "Q"
+    assert personal["locator"]["line_number"] == "2"
+
+    durable = next(
+        item for item in payload["indicators"] if item["canonical_code"] == "US.DURABLE.ORDERS"
+    )
+    assert durable["mapping_status"] == "READY"
+    assert durable["provider_series_id"] == "MDM"
+    assert durable["locator"]["dimensions"] == {
+        "data_type_code": "NO",
+        "time_slot_id": "0",
+        "seasonally_adj": "yes",
+        "program_code": "M3ADV",
+        "category_code": "MDM",
+        "geo_level_code": "US",
+        "error_data": "no",
+        "for": "us:*",
     }
 
 

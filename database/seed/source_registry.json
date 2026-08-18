@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-02T05:21:31.945775Z",
+  "generated_at": "2026-08-18T12:05:00Z",
   "source_prototype": "macro_indicator_prototype_full_suite.html",
   "indicator_count": 61,
   "license_classes": {
@@ -23,11 +23,18 @@
       "seasonal_adjustment": null,
       "recommended_source": "BEA_API",
       "dataset": "NIUnderlyingDetail",
-      "provider_series_id": null,
+      "provider_series_id": "DPCERG",
       "locator": {
         "table_name": "U20404",
         "frequency": "M",
         "year": "ALL",
+        "series_code": "DPCERG",
+        "line_number": "1",
+        "line_description": "Personal consumption expenditures",
+        "metric_name": "Fisher Price Index",
+        "cl_unit": "Level",
+        "unit_mult": "0",
+        "expected_first_period": "1959-01-01",
         "resolve_by": [
           "SeriesCode",
           "LineNumber",
@@ -42,7 +49,7 @@
         "allow_contains_match": false
       },
       "mapping_type": "DIRECT",
-      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "mapping_status": "READY",
       "license_class": "US_GOV_PUBLIC",
       "fallback": "FRED for headline/core only; do not use FRED IDs as BEA IDs",
       "notes": [
@@ -61,11 +68,18 @@
       "seasonal_adjustment": null,
       "recommended_source": "BEA_API",
       "dataset": "NIUnderlyingDetail",
-      "provider_series_id": null,
+      "provider_series_id": "DPCCRG",
       "locator": {
         "table_name": "U20404",
         "frequency": "M",
         "year": "ALL",
+        "series_code": "DPCCRG",
+        "line_number": "374",
+        "line_description": "PCE excluding food and energy",
+        "metric_name": "Fisher Price Index",
+        "cl_unit": "Level",
+        "unit_mult": "0",
+        "expected_first_period": "1959-01-01",
         "resolve_by": [
           "SeriesCode",
           "LineNumber",
@@ -80,7 +94,7 @@
         "allow_contains_match": false
       },
       "mapping_type": "DIRECT",
-      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "mapping_status": "READY",
       "license_class": "US_GOV_PUBLIC",
       "fallback": "FRED for headline/core only; do not use FRED IDs as BEA IDs",
       "notes": [
@@ -99,11 +113,18 @@
       "seasonal_adjustment": null,
       "recommended_source": "BEA_API",
       "dataset": "NIUnderlyingDetail",
-      "provider_series_id": null,
+      "provider_series_id": "IA000062",
       "locator": {
         "table_name": "U20404",
         "frequency": "M",
         "year": "ALL",
+        "series_code": "IA000062",
+        "line_number": "375",
+        "line_description": "PCE goods excluding food and energy",
+        "metric_name": "Fisher Price Index",
+        "cl_unit": "Level",
+        "unit_mult": "0",
+        "expected_first_period": "1959-01-01",
         "resolve_by": [
           "SeriesCode",
           "LineNumber",
@@ -117,8 +138,8 @@
         "target_description_en": "Core Goods",
         "allow_contains_match": false
       },
-      "mapping_type": "DERIVED_AGGREGATE",
-      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "mapping_type": "DIRECT",
+      "mapping_status": "READY",
       "license_class": "US_GOV_PUBLIC",
       "fallback": "FRED for headline/core only; do not use FRED IDs as BEA IDs",
       "notes": [
@@ -137,11 +158,18 @@
       "seasonal_adjustment": null,
       "recommended_source": "BEA_API",
       "dataset": "NIUnderlyingDetail",
-      "provider_series_id": null,
+      "provider_series_id": "IA000063",
       "locator": {
         "table_name": "U20404",
         "frequency": "M",
         "year": "ALL",
+        "series_code": "IA000063",
+        "line_number": "376",
+        "line_description": "PCE services excluding energy",
+        "metric_name": "Fisher Price Index",
+        "cl_unit": "Level",
+        "unit_mult": "0",
+        "expected_first_period": "1959-01-01",
         "resolve_by": [
           "SeriesCode",
           "LineNumber",
@@ -155,8 +183,8 @@
         "target_description_en": "Core Services",
         "allow_contains_match": false
       },
-      "mapping_type": "DERIVED_AGGREGATE",
-      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "mapping_type": "DIRECT",
+      "mapping_status": "READY",
       "license_class": "US_GOV_PUBLIC",
       "fallback": "FRED for headline/core only; do not use FRED IDs as BEA IDs",
       "notes": [
@@ -175,11 +203,18 @@
       "seasonal_adjustment": null,
       "recommended_source": "BEA_API",
       "dataset": "NIUnderlyingDetail",
-      "provider_series_id": null,
+      "provider_series_id": "DHSGRG",
       "locator": {
         "table_name": "U20404",
         "frequency": "M",
         "year": "ALL",
+        "series_code": "DHSGRG",
+        "line_number": "153",
+        "line_description": "Housing",
+        "metric_name": "Fisher Price Index",
+        "cl_unit": "Level",
+        "unit_mult": "0",
+        "expected_first_period": "1959-01-01",
         "resolve_by": [
           "SeriesCode",
           "LineNumber",
@@ -194,7 +229,7 @@
         "allow_contains_match": false
       },
       "mapping_type": "DIRECT",
-      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "mapping_status": "READY",
       "license_class": "US_GOV_PUBLIC",
       "fallback": "FRED for headline/core only; do not use FRED IDs as BEA IDs",
       "notes": [
@@ -251,11 +286,18 @@
       "seasonal_adjustment": null,
       "recommended_source": "BEA_API",
       "dataset": "NIUnderlyingDetail",
-      "provider_series_id": null,
+      "provider_series_id": "DHLCRG",
       "locator": {
         "table_name": "U20404",
         "frequency": "M",
         "year": "ALL",
+        "series_code": "DHLCRG",
+        "line_number": "172",
+        "line_description": "Health care",
+        "metric_name": "Fisher Price Index",
+        "cl_unit": "Level",
+        "unit_mult": "0",
+        "expected_first_period": "1959-01-01",
         "resolve_by": [
           "SeriesCode",
           "LineNumber",
@@ -270,7 +312,7 @@
         "allow_contains_match": false
       },
       "mapping_type": "DIRECT",
-      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "mapping_status": "READY",
       "license_class": "US_GOV_PUBLIC",
       "fallback": "FRED for headline/core only; do not use FRED IDs as BEA IDs",
       "notes": [
@@ -289,11 +331,18 @@
       "seasonal_adjustment": null,
       "recommended_source": "BEA_API",
       "dataset": "NIUnderlyingDetail",
-      "provider_series_id": null,
+      "provider_series_id": "DHSPRG",
       "locator": {
         "table_name": "U20404",
         "frequency": "M",
         "year": "ALL",
+        "series_code": "DHSPRG",
+        "line_number": "183",
+        "line_description": "Hospitals (51)",
+        "metric_name": "Fisher Price Index",
+        "cl_unit": "Level",
+        "unit_mult": "0",
+        "expected_first_period": "1959-01-01",
         "resolve_by": [
           "SeriesCode",
           "LineNumber",
@@ -308,7 +357,7 @@
         "allow_contains_match": false
       },
       "mapping_type": "DIRECT",
-      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "mapping_status": "READY",
       "license_class": "US_GOV_PUBLIC",
       "fallback": "FRED for headline/core only; do not use FRED IDs as BEA IDs",
       "notes": [
@@ -327,11 +376,18 @@
       "seasonal_adjustment": null,
       "recommended_source": "BEA_API",
       "dataset": "NIUnderlyingDetail",
-      "provider_series_id": null,
+      "provider_series_id": "DPHYRG",
       "locator": {
         "table_name": "U20404",
         "frequency": "M",
         "year": "ALL",
+        "series_code": "DPHYRG",
+        "line_number": "174",
+        "line_description": "Physician services (44)",
+        "metric_name": "Fisher Price Index",
+        "cl_unit": "Level",
+        "unit_mult": "0",
+        "expected_first_period": "1959-01-01",
         "resolve_by": [
           "SeriesCode",
           "LineNumber",
@@ -346,7 +402,7 @@
         "allow_contains_match": false
       },
       "mapping_type": "DIRECT",
-      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "mapping_status": "READY",
       "license_class": "US_GOV_PUBLIC",
       "fallback": "FRED for headline/core only; do not use FRED IDs as BEA IDs",
       "notes": [
@@ -365,11 +421,18 @@
       "seasonal_adjustment": null,
       "recommended_source": "BEA_API",
       "dataset": "NIUnderlyingDetail",
-      "provider_series_id": null,
+      "provider_series_id": "DOMDRG",
       "locator": {
         "table_name": "U20404",
         "frequency": "M",
         "year": "ALL",
+        "series_code": "DOMDRG",
+        "line_number": "179",
+        "line_description": "Other professional medical services",
+        "metric_name": "Fisher Price Index",
+        "cl_unit": "Level",
+        "unit_mult": "0",
+        "expected_first_period": "1987-01-01",
         "resolve_by": [
           "SeriesCode",
           "LineNumber",
@@ -384,7 +447,7 @@
         "allow_contains_match": false
       },
       "mapping_type": "DIRECT",
-      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "mapping_status": "READY",
       "license_class": "US_GOV_PUBLIC",
       "fallback": "FRED for headline/core only; do not use FRED IDs as BEA IDs",
       "notes": [
@@ -403,11 +466,18 @@
       "seasonal_adjustment": null,
       "recommended_source": "BEA_API",
       "dataset": "NIUnderlyingDetail",
-      "provider_series_id": null,
+      "provider_series_id": "DDENRG",
       "locator": {
         "table_name": "U20404",
         "frequency": "M",
         "year": "ALL",
+        "series_code": "DDENRG",
+        "line_number": "175",
+        "line_description": "Dental services (45)",
+        "metric_name": "Fisher Price Index",
+        "cl_unit": "Level",
+        "unit_mult": "0",
+        "expected_first_period": "1959-01-01",
         "resolve_by": [
           "SeriesCode",
           "LineNumber",
@@ -422,7 +492,7 @@
         "allow_contains_match": false
       },
       "mapping_type": "DIRECT",
-      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "mapping_status": "READY",
       "license_class": "US_GOV_PUBLIC",
       "fallback": "FRED for headline/core only; do not use FRED IDs as BEA IDs",
       "notes": [
@@ -441,11 +511,18 @@
       "seasonal_adjustment": null,
       "recommended_source": "BEA_API",
       "dataset": "NIUnderlyingDetail",
-      "provider_series_id": null,
+      "provider_series_id": "DTAERG",
       "locator": {
         "table_name": "U20404",
         "frequency": "M",
         "year": "ALL",
+        "series_code": "DTAERG",
+        "line_number": "66",
+        "line_description": "Therapeutic appliances and equipment (42)",
+        "metric_name": "Fisher Price Index",
+        "cl_unit": "Level",
+        "unit_mult": "0",
+        "expected_first_period": "1959-01-01",
         "resolve_by": [
           "SeriesCode",
           "LineNumber",
@@ -460,7 +537,7 @@
         "allow_contains_match": false
       },
       "mapping_type": "DIRECT",
-      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "mapping_status": "READY",
       "license_class": "US_GOV_PUBLIC",
       "fallback": "FRED for headline/core only; do not use FRED IDs as BEA IDs",
       "notes": [
@@ -479,11 +556,18 @@
       "seasonal_adjustment": null,
       "recommended_source": "BEA_API",
       "dataset": "NIUnderlyingDetail",
-      "provider_series_id": null,
+      "provider_series_id": "DRXDRG",
       "locator": {
         "table_name": "U20404",
         "frequency": "M",
         "year": "ALL",
+        "series_code": "DRXDRG",
+        "line_number": "123",
+        "line_description": "Prescription drugs",
+        "metric_name": "Fisher Price Index",
+        "cl_unit": "Level",
+        "unit_mult": "0",
+        "expected_first_period": "1959-01-01",
         "resolve_by": [
           "SeriesCode",
           "LineNumber",
@@ -498,7 +582,7 @@
         "allow_contains_match": false
       },
       "mapping_type": "DIRECT",
-      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "mapping_status": "READY",
       "license_class": "US_GOV_PUBLIC",
       "fallback": "FRED for headline/core only; do not use FRED IDs as BEA IDs",
       "notes": [
@@ -517,11 +601,18 @@
       "seasonal_adjustment": null,
       "recommended_source": "BEA_API",
       "dataset": "NIUnderlyingDetail",
-      "provider_series_id": null,
+      "provider_series_id": "DHINRG",
       "locator": {
         "table_name": "U20404",
         "frequency": "M",
         "year": "ALL",
+        "series_code": "DHINRG",
+        "line_number": "275",
+        "line_description": "Net health insurance (112)",
+        "metric_name": "Fisher Price Index",
+        "cl_unit": "Level",
+        "unit_mult": "0",
+        "expected_first_period": "1959-01-01",
         "resolve_by": [
           "SeriesCode",
           "LineNumber",
@@ -536,7 +627,7 @@
         "allow_contains_match": false
       },
       "mapping_type": "DIRECT",
-      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "mapping_status": "READY",
       "license_class": "US_GOV_PUBLIC",
       "fallback": "FRED for headline/core only; do not use FRED IDs as BEA IDs",
       "notes": [
@@ -593,11 +684,18 @@
       "seasonal_adjustment": null,
       "recommended_source": "BEA_API",
       "dataset": "NIUnderlyingDetail",
-      "provider_series_id": null,
+      "provider_series_id": "DTRSRG",
       "locator": {
         "table_name": "U20404",
         "frequency": "M",
         "year": "ALL",
+        "series_code": "DTRSRG",
+        "line_number": "190",
+        "line_description": "Transportation services",
+        "metric_name": "Fisher Price Index",
+        "cl_unit": "Level",
+        "unit_mult": "0",
+        "expected_first_period": "1959-01-01",
         "resolve_by": [
           "SeriesCode",
           "LineNumber",
@@ -612,7 +710,7 @@
         "allow_contains_match": false
       },
       "mapping_type": "DIRECT",
-      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "mapping_status": "READY",
       "license_class": "US_GOV_PUBLIC",
       "fallback": "FRED for headline/core only; do not use FRED IDs as BEA IDs",
       "notes": [
@@ -631,11 +729,18 @@
       "seasonal_adjustment": null,
       "recommended_source": "BEA_API",
       "dataset": "NIUnderlyingDetail",
-      "provider_series_id": null,
+      "provider_series_id": "DRCARG",
       "locator": {
         "table_name": "U20404",
         "frequency": "M",
         "year": "ALL",
+        "series_code": "DRCARG",
+        "line_number": "209",
+        "line_description": "Recreation services",
+        "metric_name": "Fisher Price Index",
+        "cl_unit": "Level",
+        "unit_mult": "0",
+        "expected_first_period": "1959-01-01",
         "resolve_by": [
           "SeriesCode",
           "LineNumber",
@@ -650,7 +755,7 @@
         "allow_contains_match": false
       },
       "mapping_type": "DIRECT",
-      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "mapping_status": "READY",
       "license_class": "US_GOV_PUBLIC",
       "fallback": "FRED for headline/core only; do not use FRED IDs as BEA IDs",
       "notes": [
@@ -669,11 +774,18 @@
       "seasonal_adjustment": null,
       "recommended_source": "BEA_API",
       "dataset": "NIUnderlyingDetail",
-      "provider_series_id": null,
+      "provider_series_id": "DFSARG",
       "locator": {
         "table_name": "U20404",
         "frequency": "M",
         "year": "ALL",
+        "series_code": "DFSARG",
+        "line_number": "234",
+        "line_description": "Food services and accommodations",
+        "metric_name": "Fisher Price Index",
+        "cl_unit": "Level",
+        "unit_mult": "0",
+        "expected_first_period": "1959-01-01",
         "resolve_by": [
           "SeriesCode",
           "LineNumber",
@@ -688,7 +800,7 @@
         "allow_contains_match": false
       },
       "mapping_type": "DIRECT",
-      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "mapping_status": "READY",
       "license_class": "US_GOV_PUBLIC",
       "fallback": "FRED for headline/core only; do not use FRED IDs as BEA IDs",
       "notes": [
@@ -707,11 +819,18 @@
       "seasonal_adjustment": null,
       "recommended_source": "BEA_API",
       "dataset": "NIUnderlyingDetail",
-      "provider_series_id": null,
+      "provider_series_id": "DIFSRG",
       "locator": {
         "table_name": "U20404",
         "frequency": "M",
         "year": "ALL",
+        "series_code": "DIFSRG",
+        "line_number": "252",
+        "line_description": "Financial services and insurance",
+        "metric_name": "Fisher Price Index",
+        "cl_unit": "Level",
+        "unit_mult": "0",
+        "expected_first_period": "1959-01-01",
         "resolve_by": [
           "SeriesCode",
           "LineNumber",
@@ -726,7 +845,7 @@
         "allow_contains_match": false
       },
       "mapping_type": "DIRECT",
-      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "mapping_status": "READY",
       "license_class": "US_GOV_PUBLIC",
       "fallback": "FRED for headline/core only; do not use FRED IDs as BEA IDs",
       "notes": [
@@ -745,11 +864,18 @@
       "seasonal_adjustment": null,
       "recommended_source": "BEA_API",
       "dataset": "NIUnderlyingDetail",
-      "provider_series_id": null,
+      "provider_series_id": "DOTSRG",
       "locator": {
         "table_name": "U20404",
         "frequency": "M",
         "year": "ALL",
+        "series_code": "DOTSRG",
+        "line_number": "280",
+        "line_description": "Other services",
+        "metric_name": "Fisher Price Index",
+        "cl_unit": "Level",
+        "unit_mult": "0",
+        "expected_first_period": "1959-01-01",
         "resolve_by": [
           "SeriesCode",
           "LineNumber",
@@ -763,8 +889,8 @@
         "target_description_en": "Other Core Services",
         "allow_contains_match": false
       },
-      "mapping_type": "DERIVED_AGGREGATE",
-      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "mapping_type": "DIRECT",
+      "mapping_status": "READY",
       "license_class": "US_GOV_PUBLIC",
       "fallback": "FRED for headline/core only; do not use FRED IDs as BEA IDs",
       "notes": [
@@ -783,11 +909,18 @@
       "seasonal_adjustment": null,
       "recommended_source": "BEA_API",
       "dataset": "NIUnderlyingDetail",
-      "provider_series_id": null,
+      "provider_series_id": "DDURRG",
       "locator": {
         "table_name": "U20404",
         "frequency": "M",
         "year": "ALL",
+        "series_code": "DDURRG",
+        "line_number": "3",
+        "line_description": "Durable goods",
+        "metric_name": "Fisher Price Index",
+        "cl_unit": "Level",
+        "unit_mult": "0",
+        "expected_first_period": "1959-01-01",
         "resolve_by": [
           "SeriesCode",
           "LineNumber",
@@ -802,7 +935,7 @@
         "allow_contains_match": false
       },
       "mapping_type": "DIRECT",
-      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "mapping_status": "READY",
       "license_class": "US_GOV_PUBLIC",
       "fallback": "FRED for headline/core only; do not use FRED IDs as BEA IDs",
       "notes": [
@@ -821,11 +954,18 @@
       "seasonal_adjustment": null,
       "recommended_source": "BEA_API",
       "dataset": "NIUnderlyingDetail",
-      "provider_series_id": null,
+      "provider_series_id": "DNDGRG",
       "locator": {
         "table_name": "U20404",
         "frequency": "M",
         "year": "ALL",
+        "series_code": "DNDGRG",
+        "line_number": "72",
+        "line_description": "Nondurable goods",
+        "metric_name": "Fisher Price Index",
+        "cl_unit": "Level",
+        "unit_mult": "0",
+        "expected_first_period": "1959-01-01",
         "resolve_by": [
           "SeriesCode",
           "LineNumber",
@@ -840,7 +980,7 @@
         "allow_contains_match": false
       },
       "mapping_type": "DIRECT",
-      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "mapping_status": "READY",
       "license_class": "US_GOV_PUBLIC",
       "fallback": "FRED for headline/core only; do not use FRED IDs as BEA IDs",
       "notes": [
@@ -904,7 +1044,8 @@
         "min_observations_backfill": 60,
         "require_contiguous": true,
         "start_year": 1957,
-        "expected_first_period": "1957-01-01"
+        "expected_first_period": "1957-01-01",
+        "expected_catalog_title": "All items less food and energy in U.S. city average, all urban consumers, seasonally adjusted"
       },
       "mapping_type": "DIRECT",
       "mapping_status": "READY",
@@ -931,7 +1072,8 @@
         "min_observations_backfill": 60,
         "require_contiguous": true,
         "start_year": 1953,
-        "expected_first_period": "1953-01-01"
+        "expected_first_period": "1953-01-01",
+        "expected_catalog_title": "Shelter in U.S. city average, all urban consumers, seasonally adjusted"
       },
       "mapping_type": "DIRECT",
       "mapping_status": "READY",
@@ -958,7 +1100,8 @@
         "min_observations_backfill": 60,
         "require_contiguous": true,
         "start_year": 1956,
-        "expected_first_period": "1956-01-01"
+        "expected_first_period": "1956-01-01",
+        "expected_catalog_title": "Medical care services in U.S. city average, all urban consumers, seasonally adjusted"
       },
       "mapping_type": "DIRECT",
       "mapping_status": "READY",
@@ -985,7 +1128,8 @@
         "min_observations_backfill": 60,
         "require_contiguous": true,
         "start_year": 2009,
-        "expected_first_period": "2009-11-01"
+        "expected_first_period": "2009-11-01",
+        "expected_catalog_title": "PPI Commodity data for Final demand, seasonally adjusted"
       },
       "mapping_type": "DIRECT",
       "mapping_status": "READY",
@@ -1015,7 +1159,8 @@
         "min_observations_backfill": 60,
         "require_contiguous": true,
         "start_year": 2013,
-        "expected_first_period": "2013-08-01"
+        "expected_first_period": "2013-08-01",
+        "expected_catalog_title": "PPI Commodity data for Final demand less foods, energy, and trade services, seasonally adjusted"
       },
       "mapping_type": "DIRECT",
       "mapping_status": "READY",
@@ -1106,7 +1251,8 @@
         "min_observations_backfill": 60,
         "require_contiguous": true,
         "start_year": 1939,
-        "expected_first_period": "1939-02-01"
+        "expected_first_period": "1939-02-01",
+        "expected_catalog_title": "All employees, thousands, total nonfarm, seasonally adjusted"
       },
       "mapping_type": "DERIVED_TRANSFORM",
       "mapping_status": "READY",
@@ -1135,7 +1281,8 @@
         "min_observations_backfill": 60,
         "require_contiguous": true,
         "start_year": 1948,
-        "expected_first_period": "1948-01-01"
+        "expected_first_period": "1948-01-01",
+        "expected_catalog_title": "(Seas) Unemployment Rate"
       },
       "mapping_type": "DIRECT",
       "mapping_status": "READY",
@@ -1162,7 +1309,8 @@
         "min_observations_backfill": 60,
         "require_contiguous": true,
         "start_year": 1948,
-        "expected_first_period": "1948-01-01"
+        "expected_first_period": "1948-01-01",
+        "expected_catalog_title": "(Seas) Labor Force Participation Rate"
       },
       "mapping_type": "DIRECT",
       "mapping_status": "READY",
@@ -1189,7 +1337,8 @@
         "min_observations_backfill": 60,
         "require_contiguous": true,
         "start_year": 2006,
-        "expected_first_period": "2006-03-01"
+        "expected_first_period": "2006-03-01",
+        "expected_catalog_title": "Average hourly earnings of all employees, total private, seasonally adjusted"
       },
       "mapping_type": "DIRECT",
       "mapping_status": "READY",
@@ -1218,7 +1367,8 @@
         "min_observations_backfill": 20,
         "require_contiguous": true,
         "start_year": 2001,
-        "expected_first_period": "2001-01-01"
+        "expected_first_period": "2001-01-01",
+        "expected_catalog_title": "Total compensation for all civilian workers, current dollar index"
       },
       "mapping_type": "DIRECT",
       "mapping_status": "READY",
@@ -1340,23 +1490,29 @@
       "unit": "指数",
       "kind": "index",
       "seasonal_adjustment": "季调",
-      "recommended_source": "FRED_API",
+      "recommended_source": "FED_BOARD_FILES",
       "dataset": "Industrial Production and Capacity Utilization (G.17)",
-      "provider_series_id": "INDPRO",
+      "provider_series_id": "B50001",
       "locator": {
+        "file_url": "https://www.federalreserve.gov/releases/g17/current/ipdisk/ip_sa.txt",
+        "format": "g17_ip_sa",
+        "series_code": "B50001",
+        "line_description": "Total index",
+        "allow_partial_latest_year": true,
         "max_staleness_days": 90,
         "min_observations_incremental": 24,
         "min_observations_backfill": 60,
         "require_contiguous": true,
         "expected_first_period": "1919-01-01",
-        "observation_start": "1919-01-01"
+        "observation_start": "1919-01-01",
+        "expected_first_period": "1919-01-01"
       },
       "mapping_type": "DIRECT",
       "mapping_status": "READY",
       "license_class": "US_GOV_PUBLIC",
-      "fallback": "Federal Reserve G.17 XML/release files",
+      "fallback": null,
       "notes": [
-        "原始来源是 Federal Reserve Board；当前 Board 数据正在通过 FRED 扩展访问。",
+        "使用 Federal Reserve Board G.17 ip_sa.txt 的 B50001 Total index 官方文件。",
         "完整历史边界已核验并固定为 1919-01-01；回填缺少该首期时禁止发布。"
       ]
     },
@@ -1413,27 +1569,33 @@
       "name_zh": "实际个人消费支出",
       "name_en": "Real Personal Consumption Expenditures",
       "prototype_code": "BEA.PCEC96",
-      "frequency": "月度",
+      "frequency": "季度",
       "unit": "十亿美元",
       "kind": "amount",
       "seasonal_adjustment": "季调年率",
       "recommended_source": "BEA_API",
       "dataset": "NIPA",
-      "provider_series_id": null,
+      "provider_series_id": "DPCERX",
       "locator": {
-        "table_name": "T20306",
-        "frequency": "M",
+        "table_name": "T10106",
+        "frequency": "Q",
         "year": "ALL",
-        "line_match": "Personal consumption expenditures",
-        "max_staleness_days": 90,
-        "min_observations_incremental": 24,
-        "min_observations_backfill": 60,
+        "series_code": "DPCERX",
+        "line_number": "2",
+        "line_description": "Personal consumption expenditures",
+        "metric_name": "Chained Dollars",
+        "cl_unit": "Level",
+        "unit_mult": "6",
+        "value_scale_to_platform_unit": "0.001",
+        "max_staleness_days": 180,
+        "min_observations_incremental": 8,
+        "min_observations_backfill": 20,
         "require_contiguous": true,
-        "target_description_en": "Real Personal Consumption Expenditures",
-        "allow_contains_match": false
+        "expected_first_period": "1947-01-01",
+        "probe_year": "2025"
       },
       "mapping_type": "DIRECT",
-      "mapping_status": "NEEDS_METADATA_MAPPING",
+      "mapping_status": "READY",
       "license_class": "US_GOV_PUBLIC",
       "fallback": "FRED: PCEC96",
       "notes": [
@@ -1452,17 +1614,40 @@
       "seasonal_adjustment": "季调",
       "recommended_source": "CENSUS_EITS_API",
       "dataset": "advm3",
-      "provider_series_id": null,
+      "provider_series_id": "MDM",
       "locator": {
         "path": "timeseries/eits/advm3",
-        "resolve_dimensions_from_dictionary": true,
         "max_staleness_days": 90,
         "min_observations_incremental": 24,
         "min_observations_backfill": 60,
-        "require_contiguous": true
+        "require_contiguous": true,
+        "value_field": "cell_value",
+        "time_field": "time",
+        "required_variables": [
+          "data_type_code",
+          "time_slot_id",
+          "seasonally_adj",
+          "program_code",
+          "category_code",
+          "geo_level_code",
+          "error_data"
+        ],
+        "dimensions": {
+          "data_type_code": "NO",
+          "time_slot_id": "0",
+          "seasonally_adj": "yes",
+          "program_code": "M3ADV",
+          "category_code": "MDM",
+          "geo_level_code": "US",
+          "error_data": "no",
+          "for": "us:*"
+        },
+        "probe_period": "2025-01",
+        "start_year": 1992,
+        "expected_first_period": "1992-02-01"
       },
       "mapping_type": "DIRECT",
-      "mapping_status": "NEEDS_DIMENSION_MAPPING",
+      "mapping_status": "READY",
       "license_class": "US_GOV_PUBLIC_ATTRIBUTION",
       "fallback": null,
       "notes": [
@@ -1659,10 +1844,23 @@
       "unit": "百万美元",
       "kind": "amount",
       "seasonal_adjustment": "未季调",
-      "recommended_source": "FRED_API",
+      "recommended_source": "FED_BOARD_FILES",
       "dataset": "H.4.1",
-      "provider_series_id": "WALCL",
+      "provider_series_id": "RESPPA_N.WW",
       "locator": {
+        "file_url": "https://www.federalreserve.gov/releases/h41/data/FRB_h41_xml.zip",
+        "format": "sdmx_xml_zip",
+        "series_name": "RESPPA_N.WW",
+        "series_attributes": {
+          "CATEGORY": "ASSET",
+          "SUBCATEGORY": "TA",
+          "COMPONENT": "TA",
+          "DISTRIBUTION": "TOT",
+          "SERIESTYPE": "L",
+          "UNIT": "Currency",
+          "UNIT_MULT": "1000000",
+          "CURRENCY": "USD"
+        },
         "max_staleness_days": 28,
         "min_observations_incremental": 26,
         "min_observations_backfill": 100,
@@ -1756,10 +1954,23 @@
       "unit": "百万美元",
       "kind": "amount",
       "seasonal_adjustment": "未季调",
-      "recommended_source": "FRED_API",
+      "recommended_source": "FED_BOARD_FILES",
       "dataset": "H.4.1",
-      "provider_series_id": "WSHOMCB",
+      "provider_series_id": "RESPPALGASMO_N.WW",
       "locator": {
+        "file_url": "https://www.federalreserve.gov/releases/h41/data/FRB_h41_xml.zip",
+        "format": "sdmx_xml_zip",
+        "series_name": "RESPPALGASMO_N.WW",
+        "series_attributes": {
+          "CATEGORY": "ASSET",
+          "SUBCATEGORY": "ORH",
+          "COMPONENT": "MBSSHOR",
+          "DISTRIBUTION": "TOT",
+          "SERIESTYPE": "L",
+          "UNIT": "Currency",
+          "UNIT_MULT": "1000000",
+          "CURRENCY": "USD"
+        },
         "max_staleness_days": 28,
         "min_observations_incremental": 26,
         "min_observations_backfill": 100,
@@ -1818,23 +2029,28 @@
       "unit": "指数",
       "kind": "index",
       "seasonal_adjustment": "未季调",
-      "recommended_source": "FRED_API",
+      "recommended_source": "FED_BOARD_FILES",
       "dataset": "H.10",
-      "provider_series_id": "DTWEXBGS",
+      "provider_series_id": "JRXWTFB_N.B",
       "locator": {
+        "file_url": "https://www.federalreserve.gov/releases/h10/data/FRB_H10_xml.zip",
+        "format": "sdmx_xml_zip",
+        "series_name": "JRXWTFB_N.B",
+        "series_attributes": {"FX": "BRD", "FREQ": "9"},
         "max_staleness_days": 14,
         "min_observations_incremental": 20,
         "min_observations_backfill": 100,
         "require_contiguous": false,
         "expected_first_period": "2006-01-02",
-        "observation_start": "2006-01-02"
+      "observation_start": "2006-01-02"
       },
       "mapping_type": "DIRECT",
       "mapping_status": "READY",
       "license_class": "US_GOV_PUBLIC",
-      "fallback": "Federal Reserve release XML/CSV where available",
-      "notes": [
-        "完整历史边界已核验并固定为 2006-01-02；回填缺少该首期时禁止发布。"
+    "fallback": null,
+    "notes": [
+      "使用 Federal Reserve Board H.10 XML ZIP 的 JRXWTFB_N.B Nominal Broad Dollar Index。",
+      "完整历史边界已核验并固定为 2006-01-02；回填缺少该首期时禁止发布。"
       ]
     },
     {
@@ -1912,10 +2128,15 @@
       "unit": "十亿美元",
       "kind": "amount",
       "seasonal_adjustment": "季调",
-      "recommended_source": "FRED_API",
+      "recommended_source": "FED_BOARD_FILES",
       "dataset": "H.8 Assets and Liabilities of Commercial Banks in the United States",
-      "provider_series_id": "TOTBKCR",
+      "provider_series_id": "B1001NCBA",
       "locator": {
+        "file_url": "https://www.federalreserve.gov/releases/h8/data/FRB_H8_xml.zip",
+        "format": "sdmx_xml_zip",
+        "series_name": "B1001NCBA",
+        "series_attributes": {"SA": "SA", "FREQ": "19"},
+        "value_scale_to_platform_unit": "0.001",
         "max_staleness_days": 28,
         "min_observations_incremental": 26,
         "min_observations_backfill": 100,
@@ -1926,9 +2147,10 @@
       "mapping_type": "DIRECT",
       "mapping_status": "READY",
       "license_class": "US_GOV_PUBLIC",
-      "fallback": "Federal Reserve H.8 official release files",
-      "notes": [
-        "完整历史边界已核验并固定为 1973-01-03；回填缺少该首期时禁止发布。"
+    "fallback": null,
+    "notes": [
+      "使用 Federal Reserve Board H.8 XML ZIP 的 B1001NCBA，季调总商业银行信贷；官方百万美元转换为平台十亿美元。",
+      "完整历史边界已核验并固定为 1973-01-03；回填缺少该首期时禁止发布。"
       ]
     },
     {
@@ -1941,23 +2163,29 @@
       "unit": "十亿美元",
       "kind": "amount",
       "seasonal_adjustment": "季调",
-      "recommended_source": "FRED_API",
+      "recommended_source": "FED_BOARD_FILES",
       "dataset": "G.19",
-      "provider_series_id": "TOTALSL",
+      "provider_series_id": "DTCTL.M",
       "locator": {
+        "file_url": "https://www.federalreserve.gov/releases/g19/data/FRB_g19_xml.zip",
+        "format": "sdmx_xml_zip",
+        "series_name": "DTCTL.M",
+        "series_attributes": {"SA": "SA", "DATAREP": "MILLDOLL"},
+        "value_scale_to_platform_unit": "0.001",
         "max_staleness_days": 90,
         "min_observations_incremental": 24,
         "min_observations_backfill": 60,
         "require_contiguous": true,
-        "expected_first_period": "1943-01-01",
+      "expected_first_period": "1943-01-01",
         "observation_start": "1943-01-01"
       },
       "mapping_type": "DIRECT",
       "mapping_status": "READY",
       "license_class": "US_GOV_PUBLIC",
-      "fallback": "Federal Reserve release XML/CSV where available",
-      "notes": [
-        "完整历史边界已核验并固定为 1943-01-01；回填缺少该首期时禁止发布。"
+    "fallback": null,
+    "notes": [
+      "使用 Federal Reserve Board G.19 XML ZIP 的 DTCTL.M，季调总消费信贷余额；官方百万美元转换为平台十亿美元。",
+      "完整历史边界已核验并固定为 1943-01-01；回填缺少该首期时禁止发布。"
       ]
     },
     {
@@ -1970,10 +2198,24 @@
       "unit": "%",
       "kind": "rate",
       "seasonal_adjustment": "季调",
-      "recommended_source": "FRED_API",
+      "recommended_source": "FED_BOARD_FILES",
       "dataset": "Charge-Off and Delinquency Rates",
-      "provider_series_id": "DRCCLACBS",
+      "provider_series_id": "STFBQDCC%STFBAILCC_XEOP_MA.Q",
       "locator": {
+        "file_url": "https://www.federalreserve.gov/releases/chargeoff/data/FRB_CHGDEL_xml.zip",
+        "format": "sdmx_xml_zip",
+        "series_name": "STFBQDCC%STFBAILCC_XEOP_MA.Q",
+        "series_attributes": {
+          "CHGDEL": "DEL",
+          "COMPONENT": "RATIO",
+          "CURRENCY": "NA",
+          "FREQ": "162",
+          "LOANTYPE": "CONCC",
+          "SA": "SA",
+          "SIZE": "ALL",
+          "UNIT": "Percentage",
+          "UNIT_MULT": "1"
+        },
         "max_staleness_days": 180,
         "min_observations_incremental": 8,
         "min_observations_backfill": 20,
@@ -1999,10 +2241,24 @@
       "unit": "%",
       "kind": "rate",
       "seasonal_adjustment": "未季调",
-      "recommended_source": "FRED_API",
+      "recommended_source": "FED_BOARD_FILES",
       "dataset": "Senior Loan Officer Opinion Survey",
-      "provider_series_id": "DRTSCILM",
+      "provider_series_id": "SUBLPDCILS_N.Q",
       "locator": {
+        "file_url": "https://www.federalreserve.gov/releases/sloos/data/FRB_SLOOS_xml.zip",
+        "format": "sdmx_xml_zip",
+        "series_name": "SUBLPDCILS_N.Q",
+        "series_attributes": {
+          "BANKSIZE": "ALL",
+          "CURRENCY": "NA",
+          "FREQ": "162",
+          "LOANTYPE": "CILG",
+          "MEASURE": "STND",
+          "PANEL": "DOM",
+          "TERMS": "NA",
+          "UNIT": "Percentage",
+          "UNIT_MULT": "1"
+        },
         "max_staleness_days": 180,
         "min_observations_incremental": 8,
         "min_observations_backfill": 20,

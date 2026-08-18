@@ -2,16 +2,22 @@ from __future__ import annotations
 
 import json
 from datetime import UTC, date, datetime
+from hashlib import sha256
 
+import httpx
 from lxml import etree  # type: ignore[import-untyped]
 
 from macrolens_api.models import Dataset, Provider, SourceSeries
 
 from .base import (
+    MappingProbeEvidence,
+    MappingProbeIssue,
+    MappingProbeResult,
     NormalizedObservation,
     ProviderAdapter,
     ProviderDataError,
     ProviderFetchResult,
+    _build_mapping_probe_result,
     deduplicate_observations,
     parse_decimal,
     period_end,
@@ -26,6 +32,120 @@ class TreasuryAdapter(ProviderAdapter):
         "10Y_PAR_NOMINAL": "BC_10YEAR",
         "10Y_PAR_REAL": "TC_10YEAR",
     }
+
+    async def probe(
+        self,
+        provider: Provider,
+        source: SourceSeries,
+        dataset: Dataset,
+    ) -> MappingProbeResult:
+        probed_at = datetime.now(UTC)
+        provider_series_id = str(source.provider_series_id) if source.provider_series_id else None
+        field = self.FIELD_MAP.get(provider_series_id or "")
+        request_url = (
+            "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/pages/xml"
+        )
+        if not field:
+            return _build_mapping_probe_result(
+                provider_code=provider.code,
+                source_series_id=source.id,
+                provider_series_id=provider_series_id,
+                request_url=request_url,
+                http_status=None,
+                content_type="",
+                official_description="",
+                response_sha256="",
+                probed_at=probed_at,
+                evidence=MappingProbeEvidence(True, False, False, False, True),
+                issues=(
+                    MappingProbeIssue(
+                        "configuration",
+                        "unsupported_series",
+                        "Treasury provider_series_id is not pinned to a supported curve field",
+                    ),
+                ),
+            )
+        kind = (
+            "daily_treasury_real_yield_curve"
+            if provider_series_id == "10Y_PAR_REAL"
+            else "daily_treasury_yield_curve"
+        )
+        params = {"data": kind, "field_tdr_date_value": str(date.today().year)}
+        try:
+            response = await self.client.get(request_url, params=params)
+        except httpx.TransportError:
+            return _build_mapping_probe_result(
+                provider_code=provider.code,
+                source_series_id=source.id,
+                provider_series_id=provider_series_id,
+                request_url=request_url,
+                http_status=None,
+                content_type="",
+                official_description="",
+                response_sha256="",
+                probed_at=probed_at,
+                evidence=MappingProbeEvidence(False, False, False, False, True),
+                issues=(
+                    MappingProbeIssue(
+                        "transport", "transport_error", "Treasury request was unreachable"
+                    ),
+                ),
+            )
+        raw = response.content
+        digest = sha256(raw).hexdigest()
+        content_type = response.headers.get("content-type", "application/xml")
+        if not 200 <= response.status_code < 300:
+            return _build_mapping_probe_result(
+                provider_code=provider.code,
+                source_series_id=source.id,
+                provider_series_id=provider_series_id,
+                request_url=request_url,
+                http_status=response.status_code,
+                content_type=content_type,
+                official_description="",
+                response_sha256=digest,
+                probed_at=probed_at,
+                evidence=MappingProbeEvidence(True, False, False, False, True),
+                issues=(
+                    MappingProbeIssue("http", "http_status", "Treasury returned a non-2xx status"),
+                ),
+            )
+        try:
+            observations = self._parse(raw, [(source, dataset)])
+        except ProviderDataError:
+            observations = []
+        identity_match = bool(observations)
+        issues = (
+            ()
+            if identity_match
+            else (
+                MappingProbeIssue(
+                    "identity",
+                    "field_not_observed",
+                    "Treasury response did not expose the pinned curve field",
+                ),
+            )
+        )
+        return _build_mapping_probe_result(
+            provider_code=provider.code,
+            source_series_id=source.id,
+            provider_series_id=provider_series_id,
+            request_url=request_url,
+            http_status=response.status_code,
+            content_type=content_type,
+            official_description=provider_series_id or "",
+            response_sha256=digest,
+            probed_at=probed_at,
+            evidence=MappingProbeEvidence(
+                True,
+                True,
+                True,
+                identity_match,
+                True,
+                {"field": field, "observation_count": len(observations)},
+            ),
+            issues=issues,
+        )
 
     async def fetch(
         self,
