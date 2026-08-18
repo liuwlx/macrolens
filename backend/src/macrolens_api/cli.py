@@ -42,6 +42,15 @@ PROVIDERS: dict[str, dict[str, Any]] = {
         "redistribution": True,
         "attribution": "Board of Governors of the Federal Reserve System",
     },
+    "FED_BOARD_FILES": {
+        "name": "Federal Reserve Board Release Files",
+        "type": "central_bank",
+        "base_url": "https://www.federalreserve.gov",
+        "docs": "https://www.federalreserve.gov/data.htm",
+        "license": "US_GOV_PUBLIC",
+        "redistribution": True,
+        "attribution": "Board of Governors of the Federal Reserve System",
+    },
     "FRED_API": {
         "name": "Federal Reserve Economic Data (FRED)",
         "type": "central_bank",
