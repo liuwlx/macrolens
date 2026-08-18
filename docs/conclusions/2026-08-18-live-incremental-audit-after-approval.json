@@ -1,0 +1,589 @@
+{
+  "mode": "incremental",
+  "started_at": "2026-08-18T09:00:03.620418+00:00",
+  "finished_at": "2026-08-18T09:01:42.909832+00:00",
+  "provider_count": 8,
+  "executed_provider_count": 8,
+  "passed_provider_count": 3,
+  "failed_provider_count": 5,
+  "skipped_provider_count": 0,
+  "all_executed_passed": false,
+  "providers": [
+    {
+      "provider": "BEA_API",
+      "status": "passed",
+      "fetch_result_count": 2,
+      "raw_byte_count": 6703119,
+      "metrics": {
+        "mapped_series_count": 22,
+        "observed_series_count": 22,
+        "coverage_ratio": 1.0,
+        "observation_count": 1364,
+        "non_null_observation_count": 1364,
+        "blocking_issue_count": 0
+      },
+      "issues": [],
+      "series": {
+        "1": {
+          "provider_series_id": "DPCERG",
+          "dataset": "NIUnderlyingDetail",
+          "observation_count": 66,
+          "non_null_count": 66,
+          "first_period": "2021-01-01",
+          "latest_period": "2026-06-01",
+          "first_vintage": "2026-08-18T09:00:20.190368+00:00",
+          "latest_vintage": "2026-08-18T09:00:20.190368+00:00"
+        },
+        "2": {
+          "provider_series_id": "DPCCRG",
+          "dataset": "NIUnderlyingDetail",
+          "observation_count": 66,
+          "non_null_count": 66,
+          "first_period": "2021-01-01",
+          "latest_period": "2026-06-01",
+          "first_vintage": "2026-08-18T09:00:20.190368+00:00",
+          "latest_vintage": "2026-08-18T09:00:20.190368+00:00"
+        },
+        "3": {
+          "provider_series_id": "IA000062",
+          "dataset": "NIUnderlyingDetail",
+          "observation_count": 66,
+          "non_null_count": 66,
+          "first_period": "2021-01-01",
+          "latest_period": "2026-06-01",
+          "first_vintage": "2026-08-18T09:00:20.190368+00:00",
+          "latest_vintage": "2026-08-18T09:00:20.190368+00:00"
+        },
+        "4": {
+          "provider_series_id": "IA000063",
+          "dataset": "NIUnderlyingDetail",
+          "observation_count": 66,
+          "non_null_count": 66,
+          "first_period": "2021-01-01",
+          "latest_period": "2026-06-01",
+          "first_vintage": "2026-08-18T09:00:20.190368+00:00",
+          "latest_vintage": "2026-08-18T09:00:20.190368+00:00"
+        },
+        "5": {
+          "provider_series_id": "DHSGRG",
+          "dataset": "NIUnderlyingDetail",
+          "observation_count": 66,
+          "non_null_count": 66,
+          "first_period": "2021-01-01",
+          "latest_period": "2026-06-01",
+          "first_vintage": "2026-08-18T09:00:20.190368+00:00",
+          "latest_vintage": "2026-08-18T09:00:20.190368+00:00"
+        },
+        "7": {
+          "provider_series_id": "DHLCRG",
+          "dataset": "NIUnderlyingDetail",
+          "observation_count": 66,
+          "non_null_count": 66,
+          "first_period": "2021-01-01",
+          "latest_period": "2026-06-01",
+          "first_vintage": "2026-08-18T09:00:20.190368+00:00",
+          "latest_vintage": "2026-08-18T09:00:20.190368+00:00"
+        },
+        "8": {
+          "provider_series_id": "DHSPRG",
+          "dataset": "NIUnderlyingDetail",
+          "observation_count": 66,
+          "non_null_count": 66,
+          "first_period": "2021-01-01",
+          "latest_period": "2026-06-01",
+          "first_vintage": "2026-08-18T09:00:20.190368+00:00",
+          "latest_vintage": "2026-08-18T09:00:20.190368+00:00"
+        },
+        "9": {
+          "provider_series_id": "DPHYRG",
+          "dataset": "NIUnderlyingDetail",
+          "observation_count": 66,
+          "non_null_count": 66,
+          "first_period": "2021-01-01",
+          "latest_period": "2026-06-01",
+          "first_vintage": "2026-08-18T09:00:20.190368+00:00",
+          "latest_vintage": "2026-08-18T09:00:20.190368+00:00"
+        },
+        "10": {
+          "provider_series_id": "DOMDRG",
+          "dataset": "NIUnderlyingDetail",
+          "observation_count": 66,
+          "non_null_count": 66,
+          "first_period": "2021-01-01",
+          "latest_period": "2026-06-01",
+          "first_vintage": "2026-08-18T09:00:20.190368+00:00",
+          "latest_vintage": "2026-08-18T09:00:20.190368+00:00"
+        },
+        "11": {
+          "provider_series_id": "DDENRG",
+          "dataset": "NIUnderlyingDetail",
+          "observation_count": 66,
+          "non_null_count": 66,
+          "first_period": "2021-01-01",
+          "latest_period": "2026-06-01",
+          "first_vintage": "2026-08-18T09:00:20.190368+00:00",
+          "latest_vintage": "2026-08-18T09:00:20.190368+00:00"
+        },
+        "12": {
+          "provider_series_id": "DTAERG",
+          "dataset": "NIUnderlyingDetail",
+          "observation_count": 66,
+          "non_null_count": 66,
+          "first_period": "2021-01-01",
+          "latest_period": "2026-06-01",
+          "first_vintage": "2026-08-18T09:00:20.190368+00:00",
+          "latest_vintage": "2026-08-18T09:00:20.190368+00:00"
+        },
+        "13": {
+          "provider_series_id": "DRXDRG",
+          "dataset": "NIUnderlyingDetail",
+          "observation_count": 66,
+          "non_null_count": 66,
+          "first_period": "2021-01-01",
+          "latest_period": "2026-06-01",
+          "first_vintage": "2026-08-18T09:00:20.190368+00:00",
+          "latest_vintage": "2026-08-18T09:00:20.190368+00:00"
+        },
+        "14": {
+          "provider_series_id": "DHINRG",
+          "dataset": "NIUnderlyingDetail",
+          "observation_count": 66,
+          "non_null_count": 66,
+          "first_period": "2021-01-01",
+          "latest_period": "2026-06-01",
+          "first_vintage": "2026-08-18T09:00:20.190368+00:00",
+          "latest_vintage": "2026-08-18T09:00:20.190368+00:00"
+        },
+        "16": {
+          "provider_series_id": "DTRSRG",
+          "dataset": "NIUnderlyingDetail",
+          "observation_count": 66,
+          "non_null_count": 66,
+          "first_period": "2021-01-01",
+          "latest_period": "2026-06-01",
+          "first_vintage": "2026-08-18T09:00:20.190368+00:00",
+          "latest_vintage": "2026-08-18T09:00:20.190368+00:00"
+        },
+        "17": {
+          "provider_series_id": "DRCARG",
+          "dataset": "NIUnderlyingDetail",
+          "observation_count": 66,
+          "non_null_count": 66,
+          "first_period": "2021-01-01",
+          "latest_period": "2026-06-01",
+          "first_vintage": "2026-08-18T09:00:20.190368+00:00",
+          "latest_vintage": "2026-08-18T09:00:20.190368+00:00"
+        },
+        "18": {
+          "provider_series_id": "DFSARG",
+          "dataset": "NIUnderlyingDetail",
+          "observation_count": 66,
+          "non_null_count": 66,
+          "first_period": "2021-01-01",
+          "latest_period": "2026-06-01",
+          "first_vintage": "2026-08-18T09:00:20.190368+00:00",
+          "latest_vintage": "2026-08-18T09:00:20.190368+00:00"
+        },
+        "19": {
+          "provider_series_id": "DIFSRG",
+          "dataset": "NIUnderlyingDetail",
+          "observation_count": 66,
+          "non_null_count": 66,
+          "first_period": "2021-01-01",
+          "latest_period": "2026-06-01",
+          "first_vintage": "2026-08-18T09:00:20.190368+00:00",
+          "latest_vintage": "2026-08-18T09:00:20.190368+00:00"
+        },
+        "20": {
+          "provider_series_id": "DOTSRG",
+          "dataset": "NIUnderlyingDetail",
+          "observation_count": 66,
+          "non_null_count": 66,
+          "first_period": "2021-01-01",
+          "latest_period": "2026-06-01",
+          "first_vintage": "2026-08-18T09:00:20.190368+00:00",
+          "latest_vintage": "2026-08-18T09:00:20.190368+00:00"
+        },
+        "21": {
+          "provider_series_id": "DDURRG",
+          "dataset": "NIUnderlyingDetail",
+          "observation_count": 66,
+          "non_null_count": 66,
+          "first_period": "2021-01-01",
+          "latest_period": "2026-06-01",
+          "first_vintage": "2026-08-18T09:00:20.190368+00:00",
+          "latest_vintage": "2026-08-18T09:00:20.190368+00:00"
+        },
+        "22": {
+          "provider_series_id": "DNDGRG",
+          "dataset": "NIUnderlyingDetail",
+          "observation_count": 66,
+          "non_null_count": 66,
+          "first_period": "2021-01-01",
+          "latest_period": "2026-06-01",
+          "first_vintage": "2026-08-18T09:00:20.190368+00:00",
+          "latest_vintage": "2026-08-18T09:00:20.190368+00:00"
+        },
+        "38": {
+          "provider_series_id": null,
+          "dataset": "NIPA",
+          "observation_count": 22,
+          "non_null_count": 22,
+          "first_period": "2021-01-01",
+          "latest_period": "2026-04-01",
+          "first_vintage": "2026-08-18T09:00:22.202228+00:00",
+          "latest_vintage": "2026-08-18T09:00:22.202228+00:00"
+        },
+        "41": {
+          "provider_series_id": "DPCERX",
+          "dataset": "NIPA",
+          "observation_count": 22,
+          "non_null_count": 22,
+          "first_period": "2021-01-01",
+          "latest_period": "2026-04-01",
+          "first_vintage": "2026-08-18T09:00:22.202228+00:00",
+          "latest_vintage": "2026-08-18T09:00:22.202228+00:00"
+        }
+      }
+    },
+    {
+      "provider": "BLS_API_V2",
+      "status": "failed",
+      "fetch_result_count": 1,
+      "raw_byte_count": 67753,
+      "metrics": {
+        "mapped_series_count": 11,
+        "observed_series_count": 11,
+        "coverage_ratio": 1.0,
+        "observation_count": 692,
+        "non_null_observation_count": 685,
+        "blocking_issue_count": 5
+      },
+      "issues": [
+        {
+          "code": "missing_observation_value",
+          "message": "Source 24 has 1 missing latest values; allowed 0 after 0 leading periods.",
+          "source_series_id": 24,
+          "period_start": "2025-10-01"
+        },
+        {
+          "code": "missing_observation_value",
+          "message": "Source 25 has 1 missing latest values; allowed 0 after 0 leading periods.",
+          "source_series_id": 25,
+          "period_start": "2025-10-01"
+        },
+        {
+          "code": "missing_observation_value",
+          "message": "Source 26 has 1 missing latest values; allowed 0 after 0 leading periods.",
+          "source_series_id": 26,
+          "period_start": "2025-10-01"
+        },
+        {
+          "code": "missing_observation_value",
+          "message": "Source 32 has 1 missing latest values; allowed 0 after 0 leading periods.",
+          "source_series_id": 32,
+          "period_start": "2025-10-01"
+        },
+        {
+          "code": "missing_observation_value",
+          "message": "Source 33 has 1 missing latest values; allowed 0 after 0 leading periods.",
+          "source_series_id": 33,
+          "period_start": "2025-10-01"
+        }
+      ],
+      "series": {
+        "23": {
+          "provider_series_id": "CUSR0000SA0",
+          "dataset": "Public Data API",
+          "observation_count": 67,
+          "non_null_count": 66,
+          "first_period": "2021-01-01",
+          "latest_period": "2026-07-01",
+          "first_vintage": "2026-08-18T09:00:22.276860+00:00",
+          "latest_vintage": "2026-08-18T09:00:22.276860+00:00"
+        },
+        "24": {
+          "provider_series_id": "CUSR0000SA0L1E",
+          "dataset": "Public Data API",
+          "observation_count": 67,
+          "non_null_count": 66,
+          "first_period": "2021-01-01",
+          "latest_period": "2026-07-01",
+          "first_vintage": "2026-08-18T09:00:22.276860+00:00",
+          "latest_vintage": "2026-08-18T09:00:22.276860+00:00"
+        },
+        "25": {
+          "provider_series_id": "CUSR0000SAH1",
+          "dataset": "Public Data API",
+          "observation_count": 67,
+          "non_null_count": 66,
+          "first_period": "2021-01-01",
+          "latest_period": "2026-07-01",
+          "first_vintage": "2026-08-18T09:00:22.276860+00:00",
+          "latest_vintage": "2026-08-18T09:00:22.276860+00:00"
+        },
+        "26": {
+          "provider_series_id": "CUSR0000SAM2",
+          "dataset": "Public Data API",
+          "observation_count": 67,
+          "non_null_count": 66,
+          "first_period": "2021-01-01",
+          "latest_period": "2026-07-01",
+          "first_vintage": "2026-08-18T09:00:22.276860+00:00",
+          "latest_vintage": "2026-08-18T09:00:22.276860+00:00"
+        },
+        "27": {
+          "provider_series_id": "WPSFD4",
+          "dataset": "Public Data API",
+          "observation_count": 67,
+          "non_null_count": 67,
+          "first_period": "2021-01-01",
+          "latest_period": "2026-07-01",
+          "first_vintage": "2026-08-18T09:00:22.276860+00:00",
+          "latest_vintage": "2026-08-18T09:00:22.276860+00:00"
+        },
+        "28": {
+          "provider_series_id": "WPSFD49116",
+          "dataset": "Public Data API",
+          "observation_count": 67,
+          "non_null_count": 67,
+          "first_period": "2021-01-01",
+          "latest_period": "2026-07-01",
+          "first_vintage": "2026-08-18T09:00:22.276860+00:00",
+          "latest_vintage": "2026-08-18T09:00:22.276860+00:00"
+        },
+        "31": {
+          "provider_series_id": "CES0000000001",
+          "dataset": "Public Data API",
+          "observation_count": 67,
+          "non_null_count": 66,
+          "first_period": "2021-01-01",
+          "latest_period": "2026-07-01",
+          "first_vintage": "2026-08-18T09:00:22.276860+00:00",
+          "latest_vintage": "2026-08-18T09:00:22.276860+00:00"
+        },
+        "32": {
+          "provider_series_id": "LNS14000000",
+          "dataset": "Public Data API",
+          "observation_count": 67,
+          "non_null_count": 66,
+          "first_period": "2021-01-01",
+          "latest_period": "2026-07-01",
+          "first_vintage": "2026-08-18T09:00:22.276860+00:00",
+          "latest_vintage": "2026-08-18T09:00:22.276860+00:00"
+        },
+        "33": {
+          "provider_series_id": "LNS11300000",
+          "dataset": "Public Data API",
+          "observation_count": 67,
+          "non_null_count": 66,
+          "first_period": "2021-01-01",
+          "latest_period": "2026-07-01",
+          "first_vintage": "2026-08-18T09:00:22.276860+00:00",
+          "latest_vintage": "2026-08-18T09:00:22.276860+00:00"
+        },
+        "34": {
+          "provider_series_id": "CES0500000003",
+          "dataset": "Public Data API",
+          "observation_count": 67,
+          "non_null_count": 67,
+          "first_period": "2021-01-01",
+          "latest_period": "2026-07-01",
+          "first_vintage": "2026-08-18T09:00:22.276860+00:00",
+          "latest_vintage": "2026-08-18T09:00:22.276860+00:00"
+        },
+        "35": {
+          "provider_series_id": "CIS1010000000000I",
+          "dataset": "Public Data API",
+          "observation_count": 22,
+          "non_null_count": 22,
+          "first_period": "2021-01-01",
+          "latest_period": "2026-04-01",
+          "first_vintage": "2026-08-18T09:00:22.276860+00:00",
+          "latest_vintage": "2026-08-18T09:00:22.276860+00:00"
+        }
+      }
+    },
+    {
+      "provider": "CENSUS_EITS_API",
+      "status": "passed",
+      "fetch_result_count": 2,
+      "raw_byte_count": 2654498,
+      "metrics": {
+        "mapped_series_count": 2,
+        "observed_series_count": 2,
+        "coverage_ratio": 1.0,
+        "observation_count": 133,
+        "non_null_observation_count": 133,
+        "blocking_issue_count": 0
+      },
+      "issues": [],
+      "series": {
+        "40": {
+          "provider_series_id": null,
+          "dataset": "marts",
+          "observation_count": 67,
+          "non_null_count": 67,
+          "first_period": "2021-01-01",
+          "latest_period": "2026-07-01",
+          "first_vintage": "2026-08-18T09:00:32.119271+00:00",
+          "latest_vintage": "2026-08-18T09:00:32.119271+00:00"
+        },
+        "42": {
+          "provider_series_id": "MDM",
+          "dataset": "advm3",
+          "observation_count": 66,
+          "non_null_count": 66,
+          "first_period": "2021-01-01",
+          "latest_period": "2026-06-01",
+          "first_vintage": "2026-08-18T09:00:42.169371+00:00",
+          "latest_vintage": "2026-08-18T09:00:42.169371+00:00"
+        }
+      }
+    },
+    {
+      "provider": "EIA_API_V2",
+      "status": "failed",
+      "issues": [
+        {
+          "code": "provider_fetch_failed",
+          "message": "DecodingError: Error -3 while decompressing data: incorrect header check"
+        }
+      ],
+      "series": {}
+    },
+    {
+      "provider": "FED_BOARD_FILES",
+      "status": "failed",
+      "issues": [
+        {
+          "code": "provider_fetch_failed",
+          "message": "ConnectError: "
+        }
+      ],
+      "series": {}
+    },
+    {
+      "provider": "FRED_API",
+      "status": "failed",
+      "fetch_result_count": 4,
+      "raw_byte_count": 206974,
+      "metrics": {
+        "mapped_series_count": 4,
+        "observed_series_count": 4,
+        "coverage_ratio": 1.0,
+        "observation_count": 2083,
+        "non_null_observation_count": 2027,
+        "blocking_issue_count": 1
+      },
+      "issues": [
+        {
+          "code": "missing_observation_value",
+          "message": "Source 29 has 56 missing latest values; allowed 0 after 0 leading periods.",
+          "source_series_id": 29,
+          "period_start": "2021-09-06"
+        }
+      ],
+      "series": {
+        "29": {
+          "provider_series_id": "T5YIFR",
+          "dataset": "Inflation Expectations",
+          "observation_count": 1303,
+          "non_null_count": 1247,
+          "first_period": "2021-08-19",
+          "latest_period": "2026-08-17",
+          "first_vintage": "2026-08-18T09:00:59.372084+00:00",
+          "latest_vintage": "2026-08-18T09:00:59.372084+00:00"
+        },
+        "37": {
+          "provider_series_id": "ICSA",
+          "dataset": "Unemployment Insurance Weekly Claims Report",
+          "observation_count": 260,
+          "non_null_count": 260,
+          "first_period": "2021-08-21",
+          "latest_period": "2026-08-08",
+          "first_vintage": "2026-08-18T09:01:25.718982+00:00",
+          "latest_vintage": "2026-08-18T09:01:25.718982+00:00"
+        },
+        "50": {
+          "provider_series_id": "WRESBAL",
+          "dataset": "H.4.1",
+          "observation_count": 260,
+          "non_null_count": 260,
+          "first_period": "2021-08-25",
+          "latest_period": "2026-08-12",
+          "first_vintage": "2026-08-18T09:01:29.179121+00:00",
+          "latest_vintage": "2026-08-18T09:01:29.179121+00:00"
+        },
+        "56": {
+          "provider_series_id": "NFCI",
+          "dataset": "Chicago Fed National Financial Conditions Index",
+          "observation_count": 260,
+          "non_null_count": 260,
+          "first_period": "2021-08-20",
+          "latest_period": "2026-08-07",
+          "first_vintage": "2026-08-18T09:01:33.227058+00:00",
+          "latest_vintage": "2026-08-18T09:01:33.227058+00:00"
+        }
+      }
+    },
+    {
+      "provider": "NYFED_MARKETS_API",
+      "status": "passed",
+      "fetch_result_count": 3,
+      "raw_byte_count": 1562880,
+      "metrics": {
+        "mapped_series_count": 3,
+        "observed_series_count": 3,
+        "coverage_ratio": 1.0,
+        "observation_count": 3740,
+        "non_null_observation_count": 3740,
+        "blocking_issue_count": 0
+      },
+      "issues": [],
+      "series": {
+        "43": {
+          "provider_series_id": "EFFR",
+          "dataset": "Reference Rates",
+          "observation_count": 1251,
+          "non_null_count": 1251,
+          "first_period": "2021-08-19",
+          "latest_period": "2026-08-14",
+          "first_vintage": "2026-08-18T09:01:36.218681+00:00",
+          "latest_vintage": "2026-08-18T09:01:36.218681+00:00"
+        },
+        "44": {
+          "provider_series_id": "SOFR",
+          "dataset": "Reference Rates",
+          "observation_count": 1244,
+          "non_null_count": 1244,
+          "first_period": "2021-08-19",
+          "latest_period": "2026-08-14",
+          "first_vintage": "2026-08-18T09:01:36.830021+00:00",
+          "latest_vintage": "2026-08-18T09:01:36.830021+00:00"
+        },
+        "51": {
+          "provider_series_id": "RRP_TOTAL_ACCEPTED",
+          "dataset": "Reverse Repo Operations",
+          "observation_count": 1245,
+          "non_null_count": 1245,
+          "first_period": "2021-08-19",
+          "latest_period": "2026-08-17",
+          "first_vintage": "2026-08-18T09:01:37.822970+00:00",
+          "latest_vintage": "2026-08-18T09:01:37.822970+00:00"
+        }
+      }
+    },
+    {
+      "provider": "US_TREASURY_XML",
+      "status": "failed",
+      "issues": [
+        {
+          "code": "provider_fetch_failed",
+          "message": "ConnectError: "
+        }
+      ],
+      "series": {}
+    }
+  ]
+}
