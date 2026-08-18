@@ -7,8 +7,8 @@
   "sandbox_live_test_status": "not_executed_no_external_dns_or_official_credentials",
   "registry": {
     "indicator_count": 61,
-    "enabled_ready_count": 31,
-    "blocked_count": 30,
+    "enabled_ready_count": 33,
+    "blocked_count": 28,
     "all_enabled_ready": true,
     "all_registry_ready": false
   },
@@ -115,11 +115,31 @@
       "review_status": "code_reviewed_mock_contract_passed_live_audit_required"
     },
     {
+      "module": "Federal Reserve Board Release File Adapter",
+      "code": "FED_BOARD_FILES",
+      "implementation": "backend/src/macrolens_worker/providers/fed_board.py",
+      "enabled_series": 1,
+      "collection_modes": [
+        "incremental",
+        "backfill"
+      ],
+      "completeness_controls": [
+        "official file URL and format pinning",
+        "SeriesCode and line description identity check",
+        "exact twelve-month row shape validation",
+        "first-period history boundary check",
+        "duplicate-period rejection",
+        "immutable raw file preservation"
+      ],
+      "known_boundary": "The first release implemented is G.17 ip_sa.txt B50001 Total index. Other Board releases require separate field and fixture configuration before enablement.",
+      "review_status": "g17_fixture_contract_passed_live_audit_required"
+    },
+    {
       "module": "BEA API Adapter",
       "code": "BEA_API",
       "implementation": "backend/src/macrolens_worker/providers/bea.py",
-      "enabled_series": 0,
-      "blocked_series": 24,
+      "enabled_series": 1,
+      "blocked_series": 23,
       "collection_modes": [
         "incremental",
         "backfill"
@@ -131,15 +151,15 @@
         "duplicate-period rejection",
         "non-empty mapped result requirement"
       ],
-      "known_boundary": "Twenty-four BEA indicators remain disabled until exact official metadata identities are resolved and live-audited. The adapter is ready; the mappings are not. No guessed line numbers are published.",
+      "known_boundary": "Twenty-three BEA indicators remain disabled until exact official metadata identities are resolved and live-audited. Real GDP is enabled through the approved NIPA mapping. No guessed line numbers are published.",
       "review_status": "adapter_reviewed_mappings_blocked"
     },
     {
       "module": "Census EITS Adapter",
       "code": "CENSUS_EITS_API",
       "implementation": "backend/src/macrolens_worker/providers/census.py",
-      "enabled_series": 0,
-      "blocked_series": 2,
+      "enabled_series": 1,
+      "blocked_series": 1,
       "collection_modes": [
         "incremental",
         "backfill"
@@ -151,7 +171,7 @@
         "period/value validation",
         "non-empty mapped result requirement"
       ],
-      "known_boundary": "Retail sales and durable-goods mappings remain disabled until the exact Census dimension combination is fixed and validated against live responses.",
+      "known_boundary": "Retail sales is enabled through the approved MARTS dimension mapping. Durable-goods mapping remains disabled until its exact ADVM3 dimension combination is approved and validated.",
       "review_status": "adapter_reviewed_mappings_blocked"
     },
     {

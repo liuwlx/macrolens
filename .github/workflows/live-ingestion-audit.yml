@@ -94,6 +94,7 @@ jobs:
             --provider NYFED_MARKETS_API \
             --provider US_TREASURY_XML \
             --provider EIA_API_V2 \
+            --provider FED_BOARD_FILES \
             --output LIVE_INGESTION_AUDIT.json
       - if: always()
         uses: actions/upload-artifact@v4

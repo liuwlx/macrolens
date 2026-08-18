@@ -1350,23 +1350,29 @@
       "unit": "指数",
       "kind": "index",
       "seasonal_adjustment": "季调",
-      "recommended_source": "FRED_API",
+      "recommended_source": "FED_BOARD_FILES",
       "dataset": "Industrial Production and Capacity Utilization (G.17)",
-      "provider_series_id": "INDPRO",
+      "provider_series_id": "B50001",
       "locator": {
+        "file_url": "https://www.federalreserve.gov/releases/g17/current/ipdisk/ip_sa.txt",
+        "format": "g17_ip_sa",
+        "series_code": "B50001",
+        "line_description": "Total index",
+        "allow_partial_latest_year": true,
         "max_staleness_days": 90,
         "min_observations_incremental": 24,
         "min_observations_backfill": 60,
         "require_contiguous": true,
         "expected_first_period": "1919-01-01",
-        "observation_start": "1919-01-01"
+        "observation_start": "1919-01-01",
+        "expected_first_period": "1919-01-01"
       },
       "mapping_type": "DIRECT",
       "mapping_status": "READY",
       "license_class": "US_GOV_PUBLIC",
-      "fallback": "Federal Reserve G.17 XML/release files",
+      "fallback": null,
       "notes": [
-        "原始来源是 Federal Reserve Board；当前 Board 数据正在通过 FRED 扩展访问。",
+        "使用 Federal Reserve Board G.17 ip_sa.txt 的 B50001 Total index 官方文件。",
         "完整历史边界已核验并固定为 1919-01-01；回填缺少该首期时禁止发布。"
       ]
     },

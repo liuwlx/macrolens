@@ -31,6 +31,7 @@ from macrolens_worker.providers import (
     CensusEITSAdapter,
     DOLOpenDataAdapter,
     EIAAdapter,
+    FederalReserveBoardAdapter,
     FREDAdapter,
     NYFedAdapter,
     TreasuryAdapter,
@@ -51,6 +52,7 @@ ADAPTERS: dict[str, type[ProviderAdapter]] = {
     TreasuryAdapter.code: TreasuryAdapter,
     NYFedAdapter.code: NYFedAdapter,
     EIAAdapter.code: EIAAdapter,
+    FederalReserveBoardAdapter.code: FederalReserveBoardAdapter,
 }
 
 

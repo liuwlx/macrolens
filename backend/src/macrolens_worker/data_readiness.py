@@ -154,6 +154,17 @@ def _provider_blockers(
             blockers.append("locator:route")
         if not locator.get("expected_first_period"):
             blockers.append("locator:history_start")
+    elif provider == "FED_BOARD_FILES":
+        if not locator.get("file_url"):
+            blockers.append("locator:file_url")
+        if not locator.get("format"):
+            blockers.append("locator:format")
+        if not locator.get("series_code"):
+            blockers.append("locator:series_code")
+        if not locator.get("line_description"):
+            blockers.append("locator:line_description")
+        if not locator.get("expected_first_period"):
+            blockers.append("locator:history_start")
     elif provider == "NYFED_MARKETS_API":
         if not locator.get("route"):
             blockers.append("locator:route")
