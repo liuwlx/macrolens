@@ -155,6 +155,85 @@ def test_sdmx_xml_zip_parser_normalizes_quarter_end_to_quarter_start() -> None:
     assert rows[0].period_end == date(1943, 3, 31)
 
 
+@pytest.mark.parametrize(
+    ("series_name", "attributes", "frequency", "raw_period", "expected_period"),
+    [
+        (
+            "RESPPA_N.WW",
+            {
+                "CATEGORY": "ASSET",
+                "SUBCATEGORY": "TA",
+                "COMPONENT": "TA",
+                "DISTRIBUTION": "TOT",
+                "SERIESTYPE": "L",
+            },
+            "weekly",
+            "2002-12-18",
+            date(2002, 12, 18),
+        ),
+        (
+            "STFBQDCC%STFBAILCC_XEOP_MA.Q",
+            {
+                "CHGDEL": "DEL",
+                "COMPONENT": "RATIO",
+                "LOANTYPE": "CONCC",
+                "SA": "SA",
+                "SIZE": "ALL",
+            },
+            "quarterly",
+            "1991-03-31",
+            date(1991, 1, 1),
+        ),
+        (
+            "SUBLPDCILS_N.Q",
+            {
+                "BANKSIZE": "ALL",
+                "LOANTYPE": "CILG",
+                "MEASURE": "STND",
+                "PANEL": "DOM",
+                "TERMS": "NA",
+            },
+            "quarterly",
+            "1990-06-30",
+            date(1990, 4, 1),
+        ),
+    ],
+)
+def test_sdmx_xml_zip_parser_supports_verified_release_identities(
+    series_name: str,
+    attributes: dict[str, str],
+    frequency: str,
+    raw_period: str,
+    expected_period: date,
+) -> None:
+    xml = (
+        f'<message:MessageGroup xmlns:message="urn:message">'
+        f'<message:DataSet><Series SERIES_NAME="{series_name}" '
+        + " ".join(f'{key}="{value}"' for key, value in attributes.items())
+        + f'><Obs TIME_PERIOD="{raw_period}" OBS_VALUE="12.5" />'
+        "</Series></message:DataSet></message:MessageGroup>"
+    ).encode()
+    buffer = BytesIO()
+    with ZipFile(buffer, "w", compression=ZIP_DEFLATED) as archive:
+        archive.writestr("release_data.xml", xml)
+    source = _source(
+        {
+            "format": "sdmx_xml_zip",
+            "series_name": series_name,
+            "series_attributes": attributes,
+            "expected_first_period": expected_period.isoformat(),
+        }
+    )
+    source.source_frequency = frequency
+
+    rows = FederalReserveBoardAdapter._parse_sdmx_xml_zip(
+        buffer.getvalue(), source, vintage_at=None
+    )
+
+    assert rows[0].period_start == expected_period
+    assert str(rows[0].value) == "12.5"
+
+
 async def test_g17_fetch_preserves_official_raw_bytes() -> None:
     async def handler(request: httpx.Request) -> httpx.Response:
         return httpx.Response(

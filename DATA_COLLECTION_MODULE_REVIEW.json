@@ -17,7 +17,7 @@
       "module": "FRED/ALFRED Adapter",
       "code": "FRED_API",
       "implementation": "backend/src/macrolens_worker/providers/fred.py",
-      "enabled_series": 8,
+      "enabled_series": 4,
       "collection_modes": [
         "incremental",
         "backfill",
@@ -118,21 +118,22 @@
       "module": "Federal Reserve Board Release File Adapter",
       "code": "FED_BOARD_FILES",
       "implementation": "backend/src/macrolens_worker/providers/fed_board.py",
-      "enabled_series": 4,
+      "enabled_series": 8,
       "collection_modes": [
         "incremental",
         "backfill"
       ],
       "completeness_controls": [
         "official file URL and format pinning",
-        "SeriesCode and line description identity check",
-        "exact twelve-month row shape validation",
+        "SeriesCode, series name and release-specific attribute identity checks",
+        "G.17 exact twelve-month row shape validation",
+        "XML Obs period/value normalization",
         "first-period history boundary check",
         "duplicate-period rejection",
         "immutable raw file preservation"
       ],
-      "known_boundary": "G.17 B50001, H.8 B1001NCBA, G.19 DTCTL.M and H.10 JRXWTFB_N.B are configured. H.4.1, CHGDEL and SLOOS still require separate field and fixture configuration before enablement.",
-      "review_status": "g17_fixture_contract_passed_live_audit_required"
+      "known_boundary": "G.17 B50001, H.8 B1001NCBA, G.19 DTCTL.M, H.10 JRXWTFB_N.B, H.4.1 RESPPA_N.WW/RESPPALGASMO_N.WW, CHGDEL STFBQDCC%STFBAILCC_XEOP_MA.Q and SLOOS SUBLPDCILS_N.Q are configured. Reserve balances remain on FRED until the H.4.1 identity discrepancy is resolved.",
+      "review_status": "fixture_contract_passed_live_audit_required"
     },
     {
       "module": "BEA API Adapter",
