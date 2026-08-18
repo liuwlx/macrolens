@@ -7,8 +7,8 @@
   "sandbox_live_test_status": "not_executed_no_external_dns_or_official_credentials",
   "registry": {
     "indicator_count": 61,
-    "enabled_ready_count": 54,
-    "blocked_count": 7,
+    "enabled_ready_count": 55,
+    "blocked_count": 6,
     "all_enabled_ready": true,
     "all_registry_ready": false
   },
@@ -159,8 +159,8 @@
       "module": "Census EITS Adapter",
       "code": "CENSUS_EITS_API",
       "implementation": "backend/src/macrolens_worker/providers/census.py",
-      "enabled_series": 1,
-      "blocked_series": 1,
+      "enabled_series": 2,
+      "blocked_series": 0,
       "collection_modes": [
         "incremental",
         "backfill"
@@ -172,8 +172,8 @@
         "period/value validation",
         "non-empty mapped result requirement"
       ],
-      "known_boundary": "Retail sales is enabled through the approved MARTS dimension mapping. Durable-goods mapping remains disabled until its exact ADVM3 dimension combination is approved and validated.",
-      "review_status": "adapter_reviewed_mappings_blocked"
+      "known_boundary": "Retail sales and durable-goods orders are enabled through pinned MARTS and ADVM3 dimension mappings. Both mappings require periodic live audits because Census returns a multidimensional matrix and can add or revise rows.",
+      "review_status": "adapter_reviewed_mappings_live_audit_passed"
     },
     {
       "module": "DOL Open Data Adapter",
@@ -278,13 +278,6 @@
       "provider": "UMICH_SURVEYS_OF_CONSUMERS",
       "mapping_status": "LEGAL_REVIEW_REQUIRED",
       "reason": "license or legal approval required"
-    },
-    {
-      "canonical_code": "US.DURABLE.ORDERS",
-      "name_en": "Manufacturers New Orders: Durable Goods",
-      "provider": "CENSUS_EITS_API",
-      "mapping_status": "NEEDS_DIMENSION_MAPPING",
-      "reason": "official identity/dimensions unresolved"
     },
     {
       "canonical_code": "US.MORTGAGE.30Y",

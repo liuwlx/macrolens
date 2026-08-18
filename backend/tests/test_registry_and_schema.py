@@ -135,6 +135,22 @@ def test_bea_registry_pins_live_audited_identities_and_explicit_blockers() -> No
     assert personal["locator"]["frequency"] == "Q"
     assert personal["locator"]["line_number"] == "2"
 
+    durable = next(
+        item for item in payload["indicators"] if item["canonical_code"] == "US.DURABLE.ORDERS"
+    )
+    assert durable["mapping_status"] == "READY"
+    assert durable["provider_series_id"] == "MDM"
+    assert durable["locator"]["dimensions"] == {
+        "data_type_code": "NO",
+        "time_slot_id": "0",
+        "seasonally_adj": "yes",
+        "program_code": "M3ADV",
+        "category_code": "MDM",
+        "geo_level_code": "US",
+        "error_data": "no",
+        "for": "us:*",
+    }
+
 
 def test_seed_command_updates_existing_source_mappings() -> None:
     seed_source = (ROOT / "backend/src/macrolens_api/cli.py").read_text(encoding="utf-8")

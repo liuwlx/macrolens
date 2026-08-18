@@ -1614,17 +1614,40 @@
       "seasonal_adjustment": "季调",
       "recommended_source": "CENSUS_EITS_API",
       "dataset": "advm3",
-      "provider_series_id": null,
+      "provider_series_id": "MDM",
       "locator": {
         "path": "timeseries/eits/advm3",
-        "resolve_dimensions_from_dictionary": true,
         "max_staleness_days": 90,
         "min_observations_incremental": 24,
         "min_observations_backfill": 60,
-        "require_contiguous": true
+        "require_contiguous": true,
+        "value_field": "cell_value",
+        "time_field": "time",
+        "required_variables": [
+          "data_type_code",
+          "time_slot_id",
+          "seasonally_adj",
+          "program_code",
+          "category_code",
+          "geo_level_code",
+          "error_data"
+        ],
+        "dimensions": {
+          "data_type_code": "NO",
+          "time_slot_id": "0",
+          "seasonally_adj": "yes",
+          "program_code": "M3ADV",
+          "category_code": "MDM",
+          "geo_level_code": "US",
+          "error_data": "no",
+          "for": "us:*"
+        },
+        "probe_period": "2025-01",
+        "start_year": 1992,
+        "expected_first_period": "1992-02-01"
       },
       "mapping_type": "DIRECT",
-      "mapping_status": "NEEDS_DIMENSION_MAPPING",
+      "mapping_status": "READY",
       "license_class": "US_GOV_PUBLIC_ATTRIBUTION",
       "fallback": null,
       "notes": [

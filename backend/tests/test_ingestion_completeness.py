@@ -518,10 +518,10 @@ def test_source_registry_readiness_is_explicit_and_no_unmapped_series_is_enabled
         check_credentials=True,
     )
     assert report["indicator_count"] == 61
-    assert report["ready_count"] == 54
-    assert report["blocked_count"] == 7
-    assert report["enabled_indicator_count"] == 54
-    assert report["enabled_ready_count"] == 54
+    assert report["ready_count"] == 55
+    assert report["blocked_count"] == 6
+    assert report["enabled_indicator_count"] == 55
+    assert report["enabled_ready_count"] == 55
     assert report["enabled_blocked_count"] == 0
     assert report["all_enabled_ready"]
     assert not report["all_production_ready"]
@@ -570,6 +570,41 @@ def test_four_source_registry_pins_approved_bls_census_and_bea_identity() -> Non
         "probe_period": "2025-01",
         "start_year": 1992,
         "expected_first_period": "1992-01-01",
+    }
+
+    durable = by_code["US.DURABLE.ORDERS"]
+    assert durable["mapping_status"] == "READY"
+    assert durable["provider_series_id"] == "MDM"
+    assert durable["locator"] == {
+        "path": "timeseries/eits/advm3",
+        "max_staleness_days": 90,
+        "min_observations_incremental": 24,
+        "min_observations_backfill": 60,
+        "require_contiguous": True,
+        "value_field": "cell_value",
+        "time_field": "time",
+        "required_variables": [
+            "data_type_code",
+            "time_slot_id",
+            "seasonally_adj",
+            "program_code",
+            "category_code",
+            "geo_level_code",
+            "error_data",
+        ],
+        "dimensions": {
+            "data_type_code": "NO",
+            "time_slot_id": "0",
+            "seasonally_adj": "yes",
+            "program_code": "M3ADV",
+            "category_code": "MDM",
+            "geo_level_code": "US",
+            "error_data": "no",
+            "for": "us:*",
+        },
+        "probe_period": "2025-01",
+        "start_year": 1992,
+        "expected_first_period": "1992-02-01",
     }
 
     real_gdp = by_code["US.REAL.GDP"]
