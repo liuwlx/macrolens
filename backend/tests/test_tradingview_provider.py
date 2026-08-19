@@ -355,6 +355,7 @@ def test_fetch_backfill_persists_chart_history_without_raw_payload(monkeypatch) 
         assert [str(item.value) for item in results[0].observations] == ["4.1", "4.2"]
         assert results[0].persist_raw is False
         assert results[0].request_parameters["mode"] == "backfill"
+        assert adapter.symbol_errors == {}
         assert any('"chart_create_session"' in message for message in socket.sent)
         assert any('"create_series"' in message for message in socket.sent)
         resolve_symbol = next(
