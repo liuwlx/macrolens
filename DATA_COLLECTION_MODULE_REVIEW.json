@@ -246,6 +246,7 @@
       "implementation": "backend/src/macrolens_worker/providers/tradingview.py",
       "catalog_series": 535,
       "enabled_series": 340,
+      "unavailable_us_series": 195,
       "collection_modes": [
         "latest"
       ],
@@ -256,7 +257,7 @@
         "per-symbol result isolation",
         "append-only vintage publication"
       ],
-      "known_boundary": "V1 performs manual latest-value synchronization only; history backfill, automatic scheduling and raw capture are out of scope.",
+      "known_boundary": "V1 performs manual latest-value synchronization only; 195 global indicator routes return no_such_symbol for US and are catalogued as unavailable for the United States; history backfill, automatic scheduling and raw capture are out of scope.",
       "review_status": "code_reviewed_unit_contract_passed_live_smoke_required"
     },
     {

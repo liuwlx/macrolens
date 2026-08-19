@@ -132,6 +132,7 @@ def _symbol_from_source(source: SourceSeries) -> str:
 
 class TradingViewAdapter(ProviderAdapter):
     code = "TRADINGVIEW_WEB"
+    symbol_errors: dict[str, str]
 
     async def fetch(
         self,
@@ -145,6 +146,7 @@ class TradingViewAdapter(ProviderAdapter):
         if not mappings:
             return []
 
+        self.symbol_errors = {}
         settings = get_settings()
         symbol_to_mapping = {
             _symbol_from_source(source): (source, dataset) for source, dataset in mappings
@@ -196,6 +198,7 @@ class TradingViewAdapter(ProviderAdapter):
                     ],
                 },
                 {"m": "quote_add_symbols", "p": [quote_session, *symbols]},
+                {"m": "quote_fast_symbols", "p": [quote_session, *symbols]},
             ]
             for command in commands:
                 await websocket.send(encode_frame(command))
@@ -251,10 +254,17 @@ class TradingViewAdapter(ProviderAdapter):
         grouped: dict[int, tuple[Dataset, list[NormalizedObservation]]] = {}
         for symbol, (source, dataset) in symbol_to_mapping.items():
             item = latest_values.get(symbol)
-            if item is None or item.get("s") != "ok":
+            if item is None:
+                self.symbol_errors[symbol] = "no_response"
+                continue
+            if item.get("s") != "ok":
+                self.symbol_errors[symbol] = str(
+                    item.get("errmsg") or item.get("s") or "provider_error"
+                )
                 continue
             values = item.get("v")
             if not isinstance(values, dict):
+                self.symbol_errors[symbol] = "missing_value_payload"
                 continue
             frequency_code = str(values.get("data_frequency") or "")
             frequency = _frequency_label(frequency_code)
@@ -264,7 +274,11 @@ class TradingViewAdapter(ProviderAdapter):
                 frequency_code,
             )
             value = parse_decimal(values.get("lp"))
-            if period is None or value is None:
+            if period is None:
+                self.symbol_errors[symbol] = "unparsed_period"
+                continue
+            if value is None:
+                self.symbol_errors[symbol] = "missing_latest_value"
                 continue
             observation = NormalizedObservation(
                 source_series_id=source.id,

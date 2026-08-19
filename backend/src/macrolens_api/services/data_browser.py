@@ -141,7 +141,25 @@ def _deny_by_default(provider: Provider) -> LicenseInfo:
     )
 
 
+def _is_geographically_unavailable(binding: SourceBinding | None) -> bool:
+    if binding is None or getattr(binding.source, "mapping_status", None) != "disabled":
+        return False
+    locator = getattr(binding.source, "source_locator", {}) or {}
+    evidence = locator.get("availability_evidence")
+    return (
+        isinstance(evidence, dict)
+        and evidence.get("code") == "no_such_symbol"
+        and evidence.get("geography") == "US"
+    )
+
+
 def _source_reason(candidate: BrowserCandidate) -> tuple[str | None, str | None]:
+    catalog_binding = candidate.catalog_binding
+    if _is_geographically_unavailable(catalog_binding):
+        return (
+            "source_not_available_for_geography",
+            "TradingView 当前没有该指标的美国序列。",
+        )
     if candidate.source_status == "missing":
         return "source_mapping_not_ready", "该指标没有唯一且已验证的主数据源。"
     if candidate.source_status == "conflict":
@@ -737,6 +755,8 @@ def _catalog_availability(
             and catalog_binding.source.mapping_status == "license_required"
         ):
             return "pending_license"
+        if _is_geographically_unavailable(catalog_binding):
+            return "not_available_for_geography"
         return "pending_mapping"
     if license_info is None or not license_info.display_allowed:
         return "pending_license"

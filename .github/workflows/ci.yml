@@ -132,7 +132,10 @@ jobs:
         with:
           node-version: "22"
       - run: npm install --no-audit --no-fund
-      - run: npx playwright install --with-deps chromium
+      # ubuntu-latest already provides Chromium's shared-library dependencies.
+      # Avoid a second apt update here: runner mirror stalls can consume the
+      # entire acceptance timeout before any E2E test starts.
+      - run: npx playwright install chromium
       - run: npm --workspace apps/web run e2e -- --project=chromium
         env:
           PLAYWRIGHT_BASE_URL: http://localhost:3000

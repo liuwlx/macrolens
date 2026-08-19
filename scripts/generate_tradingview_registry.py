@@ -43,6 +43,7 @@ FREQUENCIES = {
     "3M": "季度",
     "12M": "年度",
 }
+FREQUENCY_CODES = {label: code for code, label in FREQUENCIES.items()}
 
 
 def route_map(js_source: str) -> dict[str, str | None]:
@@ -73,8 +74,9 @@ def flag_value(flags: list[str], prefix: str, fallback: str) -> str:
 
 async def probe(
     categories: list[dict[str, Any]],
-) -> dict[str, dict[str, str]]:
+) -> tuple[dict[str, dict[str, str]], dict[str, dict[str, str]]]:
     valid: dict[str, dict[str, str]] = {}
+    unavailable_us: dict[str, dict[str, str]] = {}
     for category in categories:
         tickers = [str(item) for item in category["tickers"]]
         mappings = [
@@ -91,9 +93,10 @@ async def probe(
             for index, ticker in enumerate(tickers, start=1)
         ]
         results = None
+        adapter = TradingViewAdapter(client=None)  # type: ignore[arg-type]
         for attempt in range(1, 4):
             try:
-                results = await TradingViewAdapter(client=None).fetch(  # type: ignore[arg-type]
+                results = await adapter.fetch(
                     SimpleNamespace(code="TRADINGVIEW_WEB"),
                     mappings,
                     mode="latest",
@@ -122,13 +125,21 @@ async def probe(
                     "VALUE",
                 ),
             }
+        for ticker in tickers:
+            symbol = f"ECONOMICS:US{ticker}"
+            if adapter.symbol_errors.get(symbol) == "no_such_symbol":
+                unavailable_us[ticker] = {
+                    "code": "no_such_symbol",
+                    "geography": "US",
+                }
         print(
-            f"{category['id']}: {len(observations)}/{len(tickers)} valid",
+            f"{category['id']}: {len(observations)}/{len(tickers)} valid, "
+            f"{sum(ticker in unavailable_us for ticker in tickers)} unavailable for US",
             file=sys.stderr,
             flush=True,
         )
         await asyncio.sleep(0.25)
-    return valid
+    return valid, unavailable_us
 
 
 def main() -> int:
@@ -174,7 +185,25 @@ def main() -> int:
     if len(ordered_tickers) != 535:
         raise RuntimeError(f"Expected 535 unique tickers, got {len(ordered_tickers)}")
 
-    valid = {} if args.skip_probe else asyncio.run(probe(categories))
+    if args.skip_probe:
+        valid = {
+            ticker: {
+                "frequency_code": FREQUENCY_CODES.get(
+                    str(item.get("frequency") or "月度"),
+                    "M",
+                ),
+                "unit": str(item.get("unit") or "VALUE"),
+            }
+            for ticker, item in overrides.items()
+            if item.get("mapping_status") == "READY"
+        }
+        unavailable_us = {
+            ticker: dict(item.get("availability_evidence") or {})
+            for ticker, item in overrides.items()
+            if item.get("mapping_status") == "UNAVAILABLE_US"
+        }
+    else:
+        valid, unavailable_us = asyncio.run(probe(categories))
     indicators: list[dict[str, Any]] = []
     canonical_by_ticker: dict[str, str] = {}
     for ticker in ordered_tickers:
@@ -183,11 +212,19 @@ def main() -> int:
         canonical_code = str(override.get("canonical_code") or f"US.TV.{ticker}")
         canonical_by_ticker[ticker] = canonical_code
         metadata = valid.get(ticker, {})
-        frequency_code = str(metadata.get("frequency_code") or "M")
+        frequency_code = str(metadata.get("frequency_code") or "")
         unit = str(metadata.get("unit") or override.get("unit") or "VALUE")
         name_en = str(override.get("name_en") or readable_name(ticker, route))
-        indicators.append(
-            {
+        mapping_status = (
+            "READY"
+            if ticker in valid
+            else "UNAVAILABLE_US"
+            if ticker in unavailable_us
+            else "READY"
+            if override.get("mapping_status") == "READY"
+            else "CANDIDATE"
+        )
+        indicator: dict[str, Any] = {
                 "canonical_code": canonical_code,
                 "name_zh": str(override.get("name_zh") or name_en),
                 "name_en": name_en,
@@ -200,9 +237,11 @@ def main() -> int:
                 "provider_series_id": f"ECONOMICS:US{ticker}",
                 "route": route,
                 "categories": memberships[ticker],
-                "mapping_status": "READY" if ticker in valid else "CANDIDATE",
+                "mapping_status": mapping_status,
             }
-        )
+        if mapping_status == "UNAVAILABLE_US":
+            indicator["availability_evidence"] = unavailable_us[ticker]
+        indicators.append(indicator)
 
     nodes: list[dict[str, Any]] = [
         {
@@ -230,13 +269,15 @@ def main() -> int:
             }
         )
 
+    ready_count = sum(item["mapping_status"] == "READY" for item in indicators)
     payload = {
         "tree_code": "macro-default",
         "extension_prefix": "tv-",
         "generated_at": datetime.now(UTC).isoformat(),
         "source_indicator_route_count": int(catalog["indicatorRouteCount"]),
         "indicator_count": len(indicators),
-        "valid_indicator_count": len(valid),
+        "valid_indicator_count": ready_count,
+        "unavailable_us_indicator_count": len(unavailable_us),
         "indicators": indicators,
         "nodes": nodes,
     }
@@ -245,7 +286,8 @@ def main() -> int:
         encoding="utf-8",
     )
     print(
-        f"Wrote {args.output}: {len(indicators)} indicators, {len(valid)} ready",
+        f"Wrote {args.output}: {len(indicators)} indicators, {ready_count} ready, "
+        f"{len(unavailable_us)} unavailable for US",
         file=sys.stderr,
     )
     return 0

@@ -15,6 +15,7 @@ type SeriesAvailability = Literal[
     "pending_license",
     "not_ingested",
     "not_available_as_of",
+    "not_available_for_geography",
 ]
 
 

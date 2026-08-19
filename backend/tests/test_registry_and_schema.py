@@ -29,7 +29,14 @@ def test_tradingview_registry_contains_v1_symbols() -> None:
     assert len({item["canonical_code"] for item in indicators}) == 535
     assert len({item["provider_series_id"] for item in indicators}) == 535
     assert all(item["provider_series_id"].startswith("ECONOMICS:US") for item in indicators)
-    assert sum(item["mapping_status"] == "READY" for item in indicators) >= 300
+    assert sum(item["mapping_status"] == "READY" for item in indicators) == 340
+    unavailable = [item for item in indicators if item["mapping_status"] == "UNAVAILABLE_US"]
+    assert len(unavailable) == 195
+    assert all(
+        item.get("availability_evidence")
+        == {"code": "no_such_symbol", "geography": "US"}
+        for item in unavailable
+    )
 
 
 def test_all_tables_compile_for_postgresql() -> None:

@@ -7,6 +7,7 @@ export type CatalogOnlyAvailability = Extract<
   | "pending_license"
   | "not_ingested"
   | "not_available_as_of"
+  | "not_available_for_geography"
 >;
 
 export type BrowserDataCapabilityState = "unknown" | "catalog_only" | "data_ready";
@@ -20,6 +21,7 @@ export const browserAvailabilityLabels: Record<
   pending_license: "待许可",
   not_ingested: "尚未采集",
   not_available_as_of: "该快照不可用",
+  not_available_for_geography: "美国无此序列",
 };
 
 export function isCatalogOnlyAvailability(

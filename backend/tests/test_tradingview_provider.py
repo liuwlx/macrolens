@@ -153,3 +153,49 @@ def test_fetch_parses_qsd_and_returns_normalized_observation(monkeypatch) -> Non
         assert any("quote_add_symbols" in message for message in socket.sent)
 
     asyncio.run(run())
+
+
+def test_fetch_records_no_such_symbol_for_registry_classification(monkeypatch) -> None:
+    async def run() -> None:
+        symbol = "ECONOMICS:USBAVCPIYY"
+        socket = _FakeSocket(
+            [
+                _frame(
+                    {
+                        "m": "qsd",
+                        "p": [
+                            "qs_test",
+                            {
+                                "n": symbol,
+                                "s": "error",
+                                "errmsg": "no_such_symbol",
+                                "v": {},
+                            },
+                        ],
+                    }
+                ),
+                _frame({"m": "quote_completed", "p": ["qs_test", symbol]}),
+            ]
+        )
+
+        def fake_connect(*_args: object, **_kwargs: object) -> _FakeConnection:
+            return _FakeConnection(socket)
+
+        monkeypatch.setattr(tradingview, "connect", fake_connect)
+        adapter = TradingViewAdapter(client=None)  # type: ignore[arg-type]
+        results = await adapter.fetch(
+            SimpleNamespace(code="TRADINGVIEW_WEB"),  # type: ignore[arg-type]
+            [
+                (
+                    SimpleNamespace(id=8, provider_series_id=symbol),
+                    SimpleNamespace(id=3, code="TRADINGVIEW_ECONOMICS"),
+                )
+            ],
+            mode="latest",
+        )
+
+        assert results == []
+        assert adapter.symbol_errors == {symbol: "no_such_symbol"}
+        assert any("quote_fast_symbols" in message for message in socket.sent)
+
+    asyncio.run(run())

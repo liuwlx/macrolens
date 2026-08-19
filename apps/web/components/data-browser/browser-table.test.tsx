@@ -61,6 +61,7 @@ describe("BrowserTable", () => {
     ["pending_mapping", "待映射"],
     ["pending_credentials", "待凭据"],
     ["pending_license", "待许可"],
+    ["not_available_for_geography", "美国无此序列"],
   ] as const)("renders %s as an explicit catalog state", (availability, label) => {
     const pending: SeriesBrowserResponse = {
       ...response,

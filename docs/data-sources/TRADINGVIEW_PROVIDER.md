@@ -4,7 +4,7 @@
 
 V1通过页面“数据同步”按钮手动触发 TradingView 最新值同步。Worker 使用轻量 WebSocket 客户端，不运行浏览器进程，不保存原始采集包。
 
-目录注册 535 个美国候选 Symbol，其中当前探测到340项有有效最新值。完整清单和状态见 `database/seed/tradingview_registry.json`。
+目录注册 535 个全球指标 route 与美国国家前缀组合。其中 340 项已有美国 Symbol 和有效最新值；其余 195 项经过长等待和 `quote_fast_symbols` 复核后均返回 `no_such_symbol`，标记为 `UNAVAILABLE_US`，不再误称为待映射。完整清单和状态见 `database/seed/tradingview_registry.json`。
 
 ## 连接协议
 
@@ -44,6 +44,8 @@ Worker 读取：
 - `quote_completed`：单个 Symbol 完成；
 - 心跳：即时应答；
 - `error`、`no_such_symbol`：记录 Symbol 级失败。
+
+Registry 生成时只有 `no_such_symbol` 才会成为 `UNAVAILABLE_US`；超时或未响应不会让既有 READY 映射自动降级。
 
 ## 数据处理
 

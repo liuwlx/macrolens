@@ -415,7 +415,8 @@ export type BrowserSeriesAvailability =
   | "pending_credentials"
   | "pending_license"
   | "not_ingested"
-  | "not_available_as_of";
+  | "not_available_as_of"
+  | "not_available_for_geography";
 
 export type BrowserMetricValue = {
   value: number | string | null;
