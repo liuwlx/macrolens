@@ -62,7 +62,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: "22"
       - run: npm install --no-audit --no-fund
@@ -127,7 +127,7 @@ jobs:
       - run: docker compose --profile acceptance up -d api worker scheduler web
       - run: bash scripts/wait_for_http.sh http://127.0.0.1:8000/api/v1/ready 180
       - run: bash scripts/wait_for_http.sh http://localhost:3000/login 180
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: "22"
       - run: npm install --no-audit --no-fund
