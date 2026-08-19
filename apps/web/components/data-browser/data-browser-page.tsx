@@ -17,7 +17,7 @@ import { BrowserDrawer } from "./browser-drawers";
 import { BrowserFilterBar } from "./browser-filter-bar";
 import { BrowserTable } from "./browser-table";
 import { MetricTree } from "./metric-tree";
-import { parseBrowserState, patchBrowserState, resetBrowserFilters, serializeBrowserState, type BrowserSort, type BrowserState } from "./browser-query";
+import { parseBrowserState, patchBrowserState, resetBrowserFilters, selectTaxonomyNode, serializeBrowserState, type BrowserSort, type BrowserState } from "./browser-query";
 import { SeriesDetailPanel } from "./series-detail-panel";
 
 type Drawer = "tree" | "filters" | "detail" | null;
@@ -195,12 +195,12 @@ export function DataBrowserPage() {
     {syncMessage && <div className={`data-browser-sync-status ${syncState === "error" ? "is-error" : ""}`} role="status">{syncMessage}</div>}
     <BrowserFilterBar {...filterProps} />
     <div className="data-browser-workspace">
-      <MetricTree state={state} onNode={(node) => updateState({ node })} onSeries={selectSeries} />
+      <MetricTree state={state} onNode={(node) => updateState(selectTaxonomyNode(state, node))} onSeries={selectSeries} />
       <BrowserTable state={state} data={browserQuery.data} isLoading={browserQuery.isLoading} isFetching={browserQuery.isFetching} error={browserQuery.error as Error | null} onRetry={() => void browserQuery.refetch()} onRefresh={refreshAll} onExport={exportBrowser} onSelect={selectItem} onSort={sort} onPage={(page) => updateState({ page })} />
       <SeriesDetailPanel {...detailProps} />
       <AnalysisPanel state={state} item={selectedItem} capabilityState={capabilityState} analytics={analyticsQuery.data} analyticsLoading={analyticsQuery.isLoading} analyticsError={analyticsQuery.error as Error | null} onChange={updateState} onRetryAnalytics={() => void analyticsQuery.refetch()} />
     </div>
-    <BrowserDrawer open={drawer} title={drawer === "tree" ? "指标树" : drawer === "filters" ? "筛选条件" : "指标详情"} onClose={closeDrawer}>{drawer === "tree" ? <MetricTree state={state} onNode={(node) => { updateState({ node }); closeDrawer(); }} onSeries={(series, node) => { selectSeries(series, node); closeDrawer(); }} /> : drawer === "filters" ? <BrowserFilterBar {...filterProps} /> : <SeriesDetailPanel {...detailProps} />}</BrowserDrawer>
+    <BrowserDrawer open={drawer} title={drawer === "tree" ? "指标树" : drawer === "filters" ? "筛选条件" : "指标详情"} onClose={closeDrawer}>{drawer === "tree" ? <MetricTree state={state} onNode={(node) => { updateState(selectTaxonomyNode(state, node)); closeDrawer(); }} onSeries={(series, node) => { selectSeries(series, node); closeDrawer(); }} /> : drawer === "filters" ? <BrowserFilterBar {...filterProps} /> : <SeriesDetailPanel {...detailProps} />}</BrowserDrawer>
     {availableSnapshot && <div className="data-browser-new-snapshot" role="status"><span>检测到新数据快照，不会自动替换当前研究上下文。</span><button className="btn btn-primary" type="button" onClick={() => { updateState({ data_as_of: availableSnapshot }); setAvailableSnapshot(""); }}>切换到新数据</button><button className="btn btn-ghost" type="button" onClick={() => setAvailableSnapshot("")}>稍后</button></div>}
     {browserQuery.isFetching && !browserQuery.isLoading && <div className="data-browser-updating" role="status"><RefreshCw className="animate-spin" size={14} />正在刷新当前快照</div>}
   </div>;

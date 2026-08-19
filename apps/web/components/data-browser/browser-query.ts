@@ -93,6 +93,10 @@ export function patchBrowserState(state: BrowserState, patch: Partial<BrowserSta
   return next;
 }
 
+export function selectTaxonomyNode(state: BrowserState, node: string): BrowserState {
+  return patchBrowserState(state, { node, q: "", series: "", page: 1 });
+}
+
 export function resetBrowserFilters(state: BrowserState): BrowserState {
   return {
     ...state,
