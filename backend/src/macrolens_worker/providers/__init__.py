@@ -6,6 +6,7 @@ from .eia import EIAAdapter
 from .fed_board import FederalReserveBoardAdapter
 from .fred import FREDAdapter
 from .nyfed import NYFedAdapter
+from .tradingview import TradingViewAdapter
 from .treasury import TreasuryAdapter
 
 __all__ = [
@@ -18,4 +19,5 @@ __all__ = [
     "FREDAdapter",
     "NYFedAdapter",
     "TreasuryAdapter",
+    "TradingViewAdapter",
 ]

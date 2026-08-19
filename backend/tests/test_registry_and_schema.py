@@ -20,6 +20,18 @@ def test_source_registry_is_complete_and_unique() -> None:
     assert all(item.get("mapping_status") for item in indicators)
 
 
+def test_tradingview_registry_contains_v1_symbols() -> None:
+    payload = json.loads(
+        (ROOT / "database/seed/tradingview_registry.json").read_text(encoding="utf-8")
+    )
+    indicators = payload["indicators"]
+    assert len(indicators) == 23
+    assert len({item["canonical_code"] for item in indicators}) == 23
+    assert len({item["provider_series_id"] for item in indicators}) == 23
+    assert all(item["provider_series_id"].startswith("ECONOMICS:US") for item in indicators)
+    assert all(item["mapping_status"] == "READY" for item in indicators)
+
+
 def test_all_tables_compile_for_postgresql() -> None:
     dialect = postgresql.dialect()
     assert len(Base.metadata.tables) >= 40
@@ -64,6 +76,8 @@ def test_api_route_surface() -> None:
         "/api/v1/me/notes",
         "/api/v1/admin/documents/fetch",
         "/api/v1/admin/publication-batches/{batch_id}/rollback",
+        "/api/v1/admin/providers/{provider_code}/sync",
+        "/api/v1/admin/jobs/{job_id}",
     }
     assert expected.issubset(paths)
 

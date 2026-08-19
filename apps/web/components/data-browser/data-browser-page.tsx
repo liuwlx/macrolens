@@ -7,7 +7,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { useAuth } from "@/components/auth-provider";
 import { apiDownload, apiFetch, ApiError, queryString } from "@/lib/api";
-import type { AICapabilitiesResponse, Favorite, SeriesAnalyticsResponse, SeriesBrowserItem, SeriesBrowserResponse, SeriesDetail, TaxonomyBrowserSeries } from "@/lib/types";
+import type { AICapabilitiesResponse, Favorite, JobPublic, SeriesAnalyticsResponse, SeriesBrowserItem, SeriesBrowserResponse, SeriesDetail, TaxonomyBrowserSeries } from "@/lib/types";
 
 import { AnalysisPanel } from "./analysis-panel";
 import { browserDataCapabilityState } from "./browser-availability";
@@ -19,6 +19,7 @@ import { parseBrowserState, patchBrowserState, resetBrowserFilters, serializeBro
 import { SeriesDetailPanel } from "./series-detail-panel";
 
 type Drawer = "tree" | "filters" | "detail" | null;
+type SyncState = "idle" | "running" | "success" | "error";
 
 function shouldRetry(count: number, error: Error) {
   if (error instanceof ApiError && error.status < 500) return false;
@@ -45,6 +46,8 @@ export function DataBrowserPage() {
   const { user } = useAuth();
   const [drawer, setDrawer] = useState<Drawer>(null);
   const [availableSnapshot, setAvailableSnapshot] = useState("");
+  const [syncState, setSyncState] = useState<SyncState>("idle");
+  const [syncMessage, setSyncMessage] = useState("");
   const state = useMemo(() => parseBrowserState(searchParams), [searchParams]);
   const permissionKey = user ? `${user.id}:${user.role}` : "anonymous";
 
@@ -63,6 +66,7 @@ export function DataBrowserPage() {
     retry: shouldRetry,
   });
   const isDemo = browserQuery.data?.data_mode === "demo";
+  const canSync = user?.role === "admin" && browserQuery.data?.data_mode === "live";
   const demoReadOnlyReason = isDemo ? "DEMO 演示数据为只读，不能收藏、写入工作台或加入 AI 上下文" : undefined;
 
   useEffect(() => {
@@ -108,6 +112,41 @@ export function DataBrowserPage() {
     });
     if (latest.data_as_of !== state.data_as_of) setAvailableSnapshot(latest.data_as_of);
   }
+
+  async function syncTradingView() {
+    if (!canSync || syncState === "running") return;
+    setSyncState("running");
+    setSyncMessage("");
+    try {
+      const providerCode = "TRADINGVIEW_WEB";
+      const created = await apiFetch<JobPublic>(`/admin/providers/${providerCode}/sync`, {
+        method: "POST",
+        body: JSON.stringify({ mode: "latest" }),
+      });
+      let job = created;
+      for (let attempt = 0; attempt < 180 && (job.status === "queued" || job.status === "running"); attempt += 1) {
+        await new Promise((resolve) => window.setTimeout(resolve, 1000));
+        job = await apiFetch<JobPublic>(`/admin/jobs/${created.id}`);
+      }
+      if (job.status !== "succeeded") {
+        throw new Error(job.last_error || "TradingView同步失败");
+      }
+      const result = job.result;
+      const succeeded = Number(result.succeeded_count ?? result.inserted_count ?? 0);
+      const failed = Number(result.failed_count ?? 0);
+      setSyncState(failed ? "error" : "success");
+      setSyncMessage(`同步完成：成功 ${succeeded} 项，失败 ${failed} 项`);
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["series-browser"] }),
+        queryClient.invalidateQueries({ queryKey: ["taxonomy-children"] }),
+        queryClient.invalidateQueries({ queryKey: ["data-browser-detail"] }),
+        queryClient.invalidateQueries({ queryKey: ["data-browser-analytics"] }),
+      ]);
+    } catch (error) {
+      setSyncState("error");
+      setSyncMessage(error instanceof Error ? error.message : "TradingView同步失败");
+    }
+  }
   const closeDrawer = useCallback(() => setDrawer(null), []);
 
   const filterProps = { state, facets: browserQuery.data?.facets, onChange: updateState, onReset: () => updateState(resetBrowserFilters(state)), onOpenFilters: () => setDrawer("filters"), onOpenTree: () => setDrawer("tree"), onOpenDetail: () => setDrawer("detail") };
@@ -115,7 +154,8 @@ export function DataBrowserPage() {
 
   return <div className="data-browser-page">
     {isDemo && <div className="data-browser-demo-banner" role="note"><strong>DEMO 演示数据</strong><span>当前页面使用固定演示快照；趋势、历史、修订、统计、只读比较和 CSV 导出可用，收藏、工作台与 AI 写入已禁用。</span></div>}
-    <header className="data-browser-page-header"><div><div className="data-browser-title"><Database size={22} /><h1>数据浏览器 / 指标树与明细表</h1></div><p>浏览、筛选并分析宏观经济指标，支持多层级指标分类与历史修订查看。</p></div><div className="data-browser-header-actions"><span>当前位置：宏观经济数据 / {selectedItem?.series.theme ?? "全部主题"} / {selectedItem?.series.name_zh ?? "请选择指标"}</span><button className={`btn ${selectedFavorite ? "btn-primary" : ""}`} type="button" onClick={() => { if (!isDemo) favoriteMutation.mutate(); }} disabled={!state.series || favoriteMutation.isPending || isDemo} title={demoReadOnlyReason}><Star size={15} fill={selectedFavorite ? "currentColor" : "none"} />{selectedFavorite ? "已收藏" : "收藏该指标"}</button></div></header>
+    <header className="data-browser-page-header"><div><div className="data-browser-title"><Database size={22} /><h1>数据浏览器 / 指标树与明细表</h1></div><p>浏览、筛选并分析宏观经济指标，支持多层级指标分类与历史修订查看。</p></div><div className="data-browser-header-actions"><span>当前位置：宏观经济数据 / {selectedItem?.series.theme ?? "全部主题"} / {selectedItem?.series.name_zh ?? "请选择指标"}</span>{canSync && <button className="btn btn-primary" type="button" onClick={() => void syncTradingView()} disabled={syncState === "running"}><RefreshCw size={15} className={syncState === "running" ? "animate-spin" : ""} />{syncState === "running" ? "同步中…" : "数据同步"}</button>}<button className={`btn ${selectedFavorite ? "btn-primary" : ""}`} type="button" onClick={() => { if (!isDemo) favoriteMutation.mutate(); }} disabled={!state.series || favoriteMutation.isPending || isDemo} title={demoReadOnlyReason}><Star size={15} fill={selectedFavorite ? "currentColor" : "none"} />{selectedFavorite ? "已收藏" : "收藏该指标"}</button></div></header>
+    {syncMessage && <div className={`data-browser-sync-status ${syncState === "error" ? "is-error" : ""}`} role="status">{syncMessage}</div>}
     <BrowserFilterBar {...filterProps} />
     <div className="data-browser-workspace">
       <MetricTree state={state} onNode={(node) => updateState({ node })} onSeries={selectSeries} />

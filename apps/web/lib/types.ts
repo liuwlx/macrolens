@@ -5,6 +5,21 @@ export type User = {
   role: string;
 };
 
+export type JobPublic = {
+  id: string;
+  job_type: string;
+  status: string;
+  priority: number;
+  payload: Record<string, unknown>;
+  attempts: number;
+  max_attempts: number;
+  last_error?: string | null;
+  result: Record<string, unknown>;
+  created_at: string;
+  started_at?: string | null;
+  finished_at?: string | null;
+};
+
 export type ProviderInfo = {
   code: string;
   name: string;

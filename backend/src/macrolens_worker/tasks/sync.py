@@ -4,7 +4,7 @@ import hashlib
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import PurePosixPath
-from typing import Literal, cast
+from typing import Any, Literal, cast
 from uuid import UUID
 
 import httpx
@@ -34,6 +34,7 @@ from macrolens_worker.providers import (
     FederalReserveBoardAdapter,
     FREDAdapter,
     NYFedAdapter,
+    TradingViewAdapter,
     TreasuryAdapter,
 )
 from macrolens_worker.providers.base import (
@@ -53,6 +54,7 @@ ADAPTERS: dict[str, type[ProviderAdapter]] = {
     NYFedAdapter.code: NYFedAdapter,
     EIAAdapter.code: EIAAdapter,
     FederalReserveBoardAdapter.code: FederalReserveBoardAdapter,
+    TradingViewAdapter.code: TradingViewAdapter,
 }
 
 
@@ -194,7 +196,7 @@ async def _merge_observation(
     observation: NormalizedObservation,
     *,
     run_id: UUID,
-    raw_object_id: UUID,
+    raw_object_id: UUID | None,
     publication_batch_id: UUID,
 ) -> str:
     replayed_vintage = await session.scalar(
@@ -320,7 +322,7 @@ async def sync_provider(
     mode: str = "incremental",
     job_id: UUID,
     source_series_ids: list[int] | None = None,
-) -> dict[str, int | str]:
+) -> dict[str, Any]:
     provider = await session.scalar(
         select(Provider).where(Provider.code == provider_code, Provider.active.is_(True))
     )
@@ -386,17 +388,22 @@ async def sync_provider(
         )
         raise RuntimeError(f"Provider {provider_code} returned no data")
 
-    staged_by_key: dict[tuple[int, object, object], tuple[NormalizedObservation, UUID]] = {}
+    staged_by_key: dict[
+        tuple[int, object, object], tuple[NormalizedObservation, UUID | None]
+    ] = {}
     for result in results:
-        raw = await _raw_object(
-            session,
-            storage,
-            provider=provider,
-            dataset=result.dataset,
-            result=result,
-        )
-        if run.raw_object_id is None:
-            run.raw_object_id = raw.id
+        raw_id: UUID | None = None
+        if result.persist_raw:
+            raw = await _raw_object(
+                session,
+                storage,
+                provider=provider,
+                dataset=result.dataset,
+                result=result,
+            )
+            raw_id = raw.id
+            if run.raw_object_id is None:
+                run.raw_object_id = raw.id
         for observation in result.observations:
             key = (observation.source_series_id, observation.period_start, observation.vintage_at)
             previous = staged_by_key.get(key)
@@ -417,7 +424,7 @@ async def sync_provider(
                     ),
                 )
                 raise RuntimeError("Provider snapshot contains contradictory duplicate rows")
-            staged_by_key.setdefault(key, (observation, raw.id))
+            staged_by_key.setdefault(key, (observation, raw_id))
     staged = list(staged_by_key.values())
 
     issues, completeness_metrics = validate_ingestion_completeness(
@@ -425,13 +432,57 @@ async def sync_provider(
         [observation for observation, _raw_id in staged],
         mode=mode,
     )
+    observed_source_ids = {
+        observation.source_series_id for observation, _raw_id in staged
+    }
+    missing_source_ids = resolved_ids - observed_source_ids
+    symbol_errors: list[dict[str, Any]] = [
+        {
+            "source_series_id": source_id,
+            "error": "TradingView returned no valid latest observation",
+        }
+        for source_id in sorted(missing_source_ids)
+    ]
+    blocking_issues = []
+    for issue in issues:
+        missing_symbol_issue = (
+            provider_code == TradingViewAdapter.code
+            and issue.source_series_id in missing_source_ids
+            and issue.code
+            in {
+                "mapped_series_missing",
+                "mapped_series_all_null",
+                "missing_observation_value",
+                "minimum_history",
+                "history_gap",
+                "stale_latest_period",
+            }
+        )
+        if missing_symbol_issue:
+            session.add(
+                QualityResult(
+                    run_id=run.id,
+                    rule_code=issue.code,
+                    severity="warning",
+                    passed=False,
+                    period_start=issue.period_start,
+                    message=(
+                        f"source_series_id={issue.source_series_id}: {issue.message}"
+                    ),
+                )
+            )
+        else:
+            blocking_issues.append(issue)
     run.metrics = {
         "fetch_result_count": len(results),
         "staged_observation_count": len(staged),
+        "requested_source_series_count": len(mapping_pairs),
+        "observed_source_series_count": len(observed_source_ids),
+        "failed_source_series_count": len(missing_source_ids),
         **completeness_metrics,
     }
-    if issues:
-        for issue in issues:
+    if blocking_issues:
+        for issue in blocking_issues:
             session.add(
                 QualityResult(
                     run_id=run.id,
@@ -445,7 +496,7 @@ async def sync_provider(
         run.status = "quarantined"
         run.error_code = "provider_completeness_failed"
         run.error_message = (
-            f"Provider completeness gate failed with {len(issues)} blocking issue(s); "
+            f"Provider completeness gate failed with {len(blocking_issues)} blocking issue(s); "
             "nothing was published."
         )
         run.finished_at = datetime.now(UTC)
@@ -566,7 +617,15 @@ async def sync_provider(
         raise RuntimeError(run.error_message or "Publication was quarantined")
     return {
         **counts,
-        "status": run.status,
+        "requested_count": len(mapping_pairs),
+        "succeeded_count": len(observed_source_ids),
+        "failed_count": len(missing_source_ids),
+        "symbol_errors": symbol_errors,
+        "status": (
+            "partial_success"
+            if missing_source_ids and provider_code == TradingViewAdapter.code
+            else run.status
+        ),
         "batch_id": str(batch.id),
         "source_series_count": len(resolved_ids),
     }

@@ -1,0 +1,40 @@
+{
+  "tree_code": "macro-default",
+  "extension_prefix": "tv-",
+  "generated_at": "2026-08-19T00:00:00Z",
+  "indicator_count": 23,
+  "indicators": [
+    {"canonical_code":"US.TV.INTEREST.RATE","name_zh":"美国利率","name_en":"United States Interest Rate","frequency":"日度","unit":"PCT","theme":"货币政策与利率","provider_series_id":"ECONOMICS:USINTR","mapping_status":"READY"},
+    {"canonical_code":"US.TV.INFLATION.YOY","name_zh":"美国通胀率同比","name_en":"United States Inflation Rate YoY","frequency":"月度","unit":"PCT","theme":"通胀与通胀预期","provider_series_id":"ECONOMICS:USIRYY","mapping_status":"READY"},
+    {"canonical_code":"US.TV.REAL.GDP.YOY","name_zh":"美国实际GDP同比","name_en":"United States Real GDP YoY","frequency":"季度","unit":"PCT","theme":"实体经济与增长","provider_series_id":"ECONOMICS:USGDPYY","mapping_status":"READY"},
+    {"canonical_code":"US.TV.BALANCE.TRADE","name_zh":"美国贸易差额","name_en":"United States Balance Of Trade","frequency":"月度","unit":"USD","theme":"对外部门","provider_series_id":"ECONOMICS:USBOT","mapping_status":"READY"},
+    {"canonical_code":"US.TV.GOV.DEBT.GDP","name_zh":"美国政府债务占GDP","name_en":"United States Government Debt To GDP","frequency":"年度","unit":"PCTGDP","theme":"财政与政府部门","provider_series_id":"ECONOMICS:USGDG","mapping_status":"READY"},
+    {"canonical_code":"US.TV.UNEMPLOYMENT.RATE","name_zh":"失业率","name_en":"United States Unemployment Rate","frequency":"月度","unit":"PCT","theme":"劳动力市场","provider_series_id":"ECONOMICS:USUR","mapping_status":"READY"},
+    {"canonical_code":"US.TV.POPULATION","name_zh":"美国人口","name_en":"United States Population","frequency":"年度","unit":"PSN","theme":"人口与长期结构","provider_series_id":"ECONOMICS:USPOP","mapping_status":"READY"},
+    {"canonical_code":"US.TV.PRODUCTIVITY","name_zh":"美国生产率","name_en":"United States Productivity","frequency":"季度","unit":"POINT","theme":"劳动力市场","provider_series_id":"ECONOMICS:USPROD","mapping_status":"READY"},
+    {"canonical_code":"US.TV.NONFARM.PRIVATE","name_zh":"私人非农就业变化","name_en":"United States Nonfarm Payrolls Private","frequency":"月度","unit":"PSN","theme":"劳动力市场","provider_series_id":"ECONOMICS:USNPP","mapping_status":"READY"},
+    {"canonical_code":"US.TV.NONFARM","name_zh":"非农就业变化","name_en":"United States Nonfarm Payrolls","frequency":"月度","unit":"PSN","theme":"劳动力市场","provider_series_id":"ECONOMICS:USNFP","mapping_status":"READY"},
+    {"canonical_code":"US.TV.MANUFACTURING.PAYROLLS","name_zh":"制造业就业变化","name_en":"United States Manufacturing Payrolls","frequency":"月度","unit":"PSN","theme":"劳动力市场","provider_series_id":"ECONOMICS:USMP","mapping_status":"READY"},
+    {"canonical_code":"US.TV.LABOR.PARTICIPATION","name_zh":"劳动参与率","name_en":"United States Labor Force Participation Rate","frequency":"月度","unit":"PCT","theme":"劳动力市场","provider_series_id":"ECONOMICS:USLFPR","mapping_status":"READY"},
+    {"canonical_code":"US.TV.JOB.QUITS","name_zh":"主动离职人数","name_en":"United States Job Quits","frequency":"月度","unit":"PSN","theme":"劳动力市场","provider_series_id":"ECONOMICS:USJQ","mapping_status":"READY"},
+    {"canonical_code":"US.TV.JOB.OFFERS","name_zh":"职位空缺与工作邀请","name_en":"United States Job Offers","frequency":"月度","unit":"PSN","theme":"劳动力市场","provider_series_id":"ECONOMICS:USJO","mapping_status":"READY"},
+    {"canonical_code":"US.TV.CLAIMS.4W","name_zh":"初请失业金四周均值","name_en":"United States Jobless Claims 4-Week Average","frequency":"周度","unit":"PSN","theme":"劳动力市场","provider_series_id":"ECONOMICS:USJC4W","mapping_status":"READY"},
+    {"canonical_code":"US.TV.CHALLENGER.CUTS","name_zh":"挑战者裁员","name_en":"United States Challenger Job Cuts","frequency":"月度","unit":"PSN","theme":"劳动力市场","provider_series_id":"ECONOMICS:USJC","mapping_status":"READY"},
+    {"canonical_code":"US.TV.INITIAL.CLAIMS","name_zh":"初次申请失业救济","name_en":"United States Initial Jobless Claims","frequency":"周度","unit":"PSN","theme":"劳动力市场","provider_series_id":"ECONOMICS:USIJC","mapping_status":"READY"},
+    {"canonical_code":"US.TV.GOVERNMENT.PAYROLLS","name_zh":"政府就业变化","name_en":"United States Government Payrolls","frequency":"月度","unit":"PSN","theme":"劳动力市场","provider_series_id":"ECONOMICS:USGPA","mapping_status":"READY"},
+    {"canonical_code":"US.TV.ADP.EMPLOYMENT","name_zh":"ADP就业变化","name_en":"United States ADP Employment Change","frequency":"月度","unit":"PSN","theme":"劳动力市场","provider_series_id":"ECONOMICS:USEC","mapping_status":"READY"},
+    {"canonical_code":"US.TV.WEEKLY.HOURS","name_zh":"平均每周工时","name_en":"United States Average Weekly Hours","frequency":"月度","unit":"HOUR","theme":"劳动力市场","provider_series_id":"ECONOMICS:USAWH","mapping_status":"READY"},
+    {"canonical_code":"US.TV.HOURLY.EARNINGS.YOY","name_zh":"平均时薪同比","name_en":"United States Average Hourly Earnings YoY","frequency":"月度","unit":"PCT","theme":"劳动力市场","provider_series_id":"ECONOMICS:USAHEYY","mapping_status":"READY"},
+    {"canonical_code":"US.TV.CONTINUING.CLAIMS","name_zh":"续请失业救济人数","name_en":"United States Continuing Jobless Claims","frequency":"周度","unit":"PSN","theme":"劳动力市场","provider_series_id":"ECONOMICS:USCJC","mapping_status":"READY"},
+    {"canonical_code":"US.TV.HOURLY.EARNINGS.MOM","name_zh":"平均时薪环比","name_en":"United States Average Hourly Earnings MoM","frequency":"月度","unit":"PCT","theme":"劳动力市场","provider_series_id":"ECONOMICS:USAHE","mapping_status":"READY"}
+  ],
+  "nodes": [
+    {"code":"tv-root","parent_code":"root","name_zh":"TradingView美国宏观","name_en":"TradingView U.S. Macro","node_type":"topic","sort_order":1,"series_codes":[]},
+    {"code":"tv-policy","parent_code":"tv-root","name_zh":"货币政策与利率","name_en":"Monetary Policy and Rates","node_type":"group","sort_order":10,"series_codes":["US.TV.INTEREST.RATE"]},
+    {"code":"tv-inflation","parent_code":"tv-root","name_zh":"通胀与通胀预期","name_en":"Inflation and Expectations","node_type":"group","sort_order":20,"series_codes":["US.TV.INFLATION.YOY"]},
+    {"code":"tv-growth","parent_code":"tv-root","name_zh":"实体经济与增长","name_en":"Real Economy and Growth","node_type":"group","sort_order":30,"series_codes":["US.TV.REAL.GDP.YOY"]},
+    {"code":"tv-labor","parent_code":"tv-root","name_zh":"劳动力市场","name_en":"Labor Market","node_type":"group","sort_order":40,"series_codes":["US.TV.UNEMPLOYMENT.RATE","US.TV.POPULATION","US.TV.PRODUCTIVITY","US.TV.NONFARM.PRIVATE","US.TV.NONFARM","US.TV.MANUFACTURING.PAYROLLS","US.TV.LABOR.PARTICIPATION","US.TV.JOB.QUITS","US.TV.JOB.OFFERS","US.TV.CLAIMS.4W","US.TV.CHALLENGER.CUTS","US.TV.INITIAL.CLAIMS","US.TV.GOVERNMENT.PAYROLLS","US.TV.ADP.EMPLOYMENT","US.TV.WEEKLY.HOURS","US.TV.HOURLY.EARNINGS.YOY","US.TV.CONTINUING.CLAIMS","US.TV.HOURLY.EARNINGS.MOM"]},
+    {"code":"tv-trade","parent_code":"tv-root","name_zh":"对外部门","name_en":"External Sector","node_type":"group","sort_order":50,"series_codes":["US.TV.BALANCE.TRADE"]},
+    {"code":"tv-government","parent_code":"tv-root","name_zh":"财政与政府部门","name_en":"Fiscal and Government","node_type":"group","sort_order":60,"series_codes":["US.TV.GOV.DEBT.GDP"]}
+  ]
+}
