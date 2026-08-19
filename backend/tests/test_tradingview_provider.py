@@ -357,6 +357,14 @@ def test_fetch_backfill_persists_chart_history_without_raw_payload(monkeypatch) 
         assert results[0].request_parameters["mode"] == "backfill"
         assert any('"chart_create_session"' in message for message in socket.sent)
         assert any('"create_series"' in message for message in socket.sent)
+        resolve_symbol = next(
+            json.loads(message.split("~m~", 2)[2])
+            for message in socket.sent
+            if '"resolve_symbol"' in message
+        )
+        symbol_descriptor = resolve_symbol["p"][2]
+        assert symbol_descriptor.startswith("=")
+        assert json.loads(symbol_descriptor[1:])["symbol"] == symbol
 
     asyncio.run(run())
 

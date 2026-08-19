@@ -492,7 +492,7 @@ class TradingViewAdapter(ProviderAdapter):
             f"united-states%2F&date={datetime.now(UTC).replace(microsecond=0).isoformat()}"
             "&auth=sessionid"
         )
-        symbol_payload = json.dumps(
+        symbol_payload = "=" + json.dumps(
             {"symbol": symbol, "adjustment": "splits", "session": "regular"},
             separators=(",", ":"),
         )
