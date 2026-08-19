@@ -2,75 +2,646 @@
   "tree_code": "macro-default",
   "expected_series_count": 61,
   "nodes": [
-    {"code": "root", "parent_code": null, "name_zh": "美国宏观", "name_en": "U.S. Macro", "node_type": "category", "sort_order": 0, "series_codes": []},
-
-    {"code": "inflation", "parent_code": "root", "name_zh": "通胀", "name_en": "Inflation", "node_type": "topic", "sort_order": 10, "series_codes": []},
-    {"code": "pce", "parent_code": "inflation", "name_zh": "PCE 价格", "name_en": "PCE Prices", "node_type": "group", "sort_order": 10, "series_codes": []},
-    {"code": "pce-headline", "parent_code": "pce", "name_zh": "总体 PCE", "name_en": "Headline PCE", "node_type": "indicator_group", "sort_order": 10, "series_codes": ["US.PCE.HEADLINE"]},
-    {"code": "pce-core", "parent_code": "pce", "name_zh": "核心 PCE", "name_en": "Core PCE", "node_type": "group", "sort_order": 20, "series_codes": ["US.PCE.CORE"]},
-    {"code": "pce-core-goods", "parent_code": "pce-core", "name_zh": "核心商品", "name_en": "Core Goods", "node_type": "indicator_group", "sort_order": 10, "series_codes": ["US.PCE.CORE.GOODS"]},
-    {"code": "pce-core-services", "parent_code": "pce-core", "name_zh": "核心服务", "name_en": "Core Services", "node_type": "group", "sort_order": 20, "series_codes": ["US.PCE.CORE.SERVICES"]},
-    {"code": "pce-core-services-housing", "parent_code": "pce-core-services", "name_zh": "住房服务", "name_en": "Housing Services", "node_type": "indicator_group", "sort_order": 10, "series_codes": ["US.PCE.HOUSING"]},
-    {"code": "pce-core-services-nonhousing", "parent_code": "pce-core-services", "name_zh": "非住房核心服务", "name_en": "Core Services Excluding Housing", "node_type": "group", "sort_order": 20, "series_codes": ["US.PCE.NONHOUSING"]},
-    {"code": "pce-medical", "parent_code": "pce-core-services-nonhousing", "name_zh": "医疗服务", "name_en": "Medical Services", "node_type": "group", "sort_order": 10, "series_codes": ["US.PCE.MEDICAL"]},
-    {"code": "pce-medical-hospital", "parent_code": "pce-medical", "name_zh": "医院服务", "name_en": "Hospital Services", "node_type": "indicator_group", "sort_order": 10, "series_codes": ["US.PCE.HOSPITAL"]},
-    {"code": "pce-medical-physician", "parent_code": "pce-medical", "name_zh": "医生和临床服务", "name_en": "Physician and Clinical Services", "node_type": "indicator_group", "sort_order": 20, "series_codes": ["US.PCE.PHYSICIAN"]},
-    {"code": "pce-medical-professional", "parent_code": "pce-medical", "name_zh": "其他医疗专业服务", "name_en": "Other Medical Professional Services", "node_type": "indicator_group", "sort_order": 30, "series_codes": ["US.PCE.OTHER.PROFESSIONAL"]},
-    {"code": "pce-medical-dental", "parent_code": "pce-medical", "name_zh": "牙科服务", "name_en": "Dental Services", "node_type": "indicator_group", "sort_order": 40, "series_codes": ["US.PCE.DENTAL"]},
-    {"code": "pce-medical-equipment", "parent_code": "pce-medical", "name_zh": "医疗设备及用品", "name_en": "Medical Equipment and Supplies", "node_type": "indicator_group", "sort_order": 50, "series_codes": ["US.PCE.MEDICAL.EQUIPMENT"]},
-    {"code": "pce-medical-prescription", "parent_code": "pce-medical", "name_zh": "处方药", "name_en": "Prescription Drugs", "node_type": "indicator_group", "sort_order": 60, "series_codes": ["US.PCE.PRESCRIPTION"]},
-    {"code": "pce-medical-insurance", "parent_code": "pce-medical", "name_zh": "健康保险服务", "name_en": "Health Insurance Services", "node_type": "indicator_group", "sort_order": 70, "series_codes": ["US.PCE.HEALTH.INSURANCE"]},
-    {"code": "pce-medical-longterm", "parent_code": "pce-medical", "name_zh": "长期护理服务", "name_en": "Long-Term Care Services", "node_type": "indicator_group", "sort_order": 80, "series_codes": ["US.PCE.LONGTERM.CARE"]},
-    {"code": "pce-services-transport", "parent_code": "pce-core-services-nonhousing", "name_zh": "交通服务", "name_en": "Transportation Services", "node_type": "indicator_group", "sort_order": 20, "series_codes": ["US.PCE.TRANSPORT"]},
-    {"code": "pce-services-recreation", "parent_code": "pce-core-services-nonhousing", "name_zh": "娱乐服务", "name_en": "Recreation Services", "node_type": "indicator_group", "sort_order": 30, "series_codes": ["US.PCE.RECREATION"]},
-    {"code": "pce-services-food", "parent_code": "pce-core-services-nonhousing", "name_zh": "餐饮和住宿", "name_en": "Food Services and Accommodation", "node_type": "indicator_group", "sort_order": 40, "series_codes": ["US.PCE.FOOD.SERVICES"]},
-    {"code": "pce-services-finance", "parent_code": "pce-core-services-nonhousing", "name_zh": "金融和保险服务", "name_en": "Financial Services and Insurance", "node_type": "indicator_group", "sort_order": 50, "series_codes": ["US.PCE.FINANCE"]},
-    {"code": "pce-services-other", "parent_code": "pce-core-services-nonhousing", "name_zh": "其他核心服务", "name_en": "Other Core Services", "node_type": "indicator_group", "sort_order": 60, "series_codes": ["US.PCE.OTHER.SERVICES"]},
-    {"code": "pce-durables", "parent_code": "pce", "name_zh": "耐用品", "name_en": "Durable Goods", "node_type": "indicator_group", "sort_order": 30, "series_codes": ["US.PCE.DURABLES"]},
-    {"code": "pce-nondurables", "parent_code": "pce", "name_zh": "非耐用品", "name_en": "Nondurable Goods", "node_type": "indicator_group", "sort_order": 40, "series_codes": ["US.PCE.NONDURABLES"]},
-    {"code": "cpi", "parent_code": "inflation", "name_zh": "CPI", "name_en": "Consumer Prices", "node_type": "group", "sort_order": 20, "series_codes": []},
-    {"code": "cpi-headline", "parent_code": "cpi", "name_zh": "总体 CPI", "name_en": "Headline CPI", "node_type": "indicator_group", "sort_order": 10, "series_codes": ["US.CPI.HEADLINE"]},
-    {"code": "cpi-core", "parent_code": "cpi", "name_zh": "核心 CPI", "name_en": "Core CPI", "node_type": "indicator_group", "sort_order": 20, "series_codes": ["US.CPI.CORE"]},
-    {"code": "cpi-shelter", "parent_code": "cpi", "name_zh": "CPI 住房", "name_en": "CPI Shelter", "node_type": "indicator_group", "sort_order": 30, "series_codes": ["US.CPI.SHELTER"]},
-    {"code": "cpi-medical", "parent_code": "cpi", "name_zh": "CPI 医疗服务", "name_en": "CPI Medical Care Services", "node_type": "indicator_group", "sort_order": 40, "series_codes": ["US.CPI.MEDICAL"]},
-    {"code": "ppi", "parent_code": "inflation", "name_zh": "PPI", "name_en": "Producer Prices", "node_type": "group", "sort_order": 30, "series_codes": []},
-    {"code": "ppi-final", "parent_code": "ppi", "name_zh": "PPI 最终需求", "name_en": "PPI Final Demand", "node_type": "indicator_group", "sort_order": 10, "series_codes": ["US.PPI.FINAL"]},
-    {"code": "ppi-core", "parent_code": "ppi", "name_zh": "核心 PPI", "name_en": "Core PPI", "node_type": "indicator_group", "sort_order": 20, "series_codes": ["US.PPI.CORE"]},
-    {"code": "inflation-expectations", "parent_code": "inflation", "name_zh": "通胀预期", "name_en": "Inflation Expectations", "node_type": "group", "sort_order": 40, "series_codes": []},
-    {"code": "breakeven-5y5y", "parent_code": "inflation-expectations", "name_zh": "5年5年远期", "name_en": "5Y5Y Forward", "node_type": "indicator_group", "sort_order": 10, "series_codes": ["US.BREAKEVEN.5Y5Y"]},
-    {"code": "michigan-1y", "parent_code": "inflation-expectations", "name_zh": "密歇根大学1年", "name_en": "Michigan 1Y", "node_type": "indicator_group", "sort_order": 20, "series_codes": ["US.MICHIGAN.1Y"]},
-
-    {"code": "employment", "parent_code": "root", "name_zh": "就业", "name_en": "Employment", "node_type": "topic", "sort_order": 20, "series_codes": []},
-    {"code": "employment-payrolls", "parent_code": "employment", "name_zh": "非农就业", "name_en": "Payrolls", "node_type": "indicator_group", "sort_order": 10, "series_codes": ["US.PAYROLLS"]},
-    {"code": "employment-unemployment", "parent_code": "employment", "name_zh": "失业率", "name_en": "Unemployment", "node_type": "indicator_group", "sort_order": 20, "series_codes": ["US.UNEMPLOYMENT"]},
-    {"code": "employment-participation", "parent_code": "employment", "name_zh": "劳动参与率", "name_en": "Participation", "node_type": "indicator_group", "sort_order": 30, "series_codes": ["US.PARTICIPATION"]},
-    {"code": "employment-hourly", "parent_code": "employment", "name_zh": "平均时薪", "name_en": "Average Hourly Earnings", "node_type": "indicator_group", "sort_order": 40, "series_codes": ["US.AVERAGE.HOURLY"]},
-    {"code": "employment-eci", "parent_code": "employment", "name_zh": "就业成本", "name_en": "Employment Cost", "node_type": "indicator_group", "sort_order": 50, "series_codes": ["US.ECI"]},
-    {"code": "employment-openings", "parent_code": "employment", "name_zh": "职位空缺", "name_en": "Job Openings", "node_type": "indicator_group", "sort_order": 60, "series_codes": ["US.JOB.OPENINGS"]},
-    {"code": "employment-claims", "parent_code": "employment", "name_zh": "初请失业金", "name_en": "Initial Claims", "node_type": "indicator_group", "sort_order": 70, "series_codes": ["US.INITIAL.CLAIMS"]},
-
-    {"code": "growth", "parent_code": "root", "name_zh": "增长", "name_en": "Growth", "node_type": "topic", "sort_order": 30, "series_codes": []},
-    {"code": "growth-output", "parent_code": "growth", "name_zh": "产出", "name_en": "Output", "node_type": "group", "sort_order": 10, "series_codes": ["US.REAL.GDP", "US.INDUSTRIAL.PRODUCTION"]},
-    {"code": "growth-consumption", "parent_code": "growth", "name_zh": "消费", "name_en": "Consumption", "node_type": "group", "sort_order": 20, "series_codes": ["US.RETAIL.SALES", "US.PERSONAL.CONSUMPTION"]},
-    {"code": "growth-business", "parent_code": "growth", "name_zh": "企业需求", "name_en": "Business Demand", "node_type": "group", "sort_order": 30, "series_codes": ["US.DURABLE.ORDERS"]},
-
-    {"code": "rates-policy", "parent_code": "root", "name_zh": "利率与政策", "name_en": "Rates and Policy", "node_type": "topic", "sort_order": 40, "series_codes": []},
-    {"code": "policy-rates", "parent_code": "rates-policy", "name_zh": "政策利率", "name_en": "Policy Rates", "node_type": "group", "sort_order": 10, "series_codes": ["US.FED.FUNDS", "US.SOFR"]},
-    {"code": "treasury-rates", "parent_code": "rates-policy", "name_zh": "国债利率", "name_en": "Treasury Rates", "node_type": "group", "sort_order": 20, "series_codes": ["US.TREASURY.2Y", "US.TREASURY.10Y", "US.REAL.10Y"]},
-    {"code": "mortgage-rates", "parent_code": "rates-policy", "name_zh": "抵押贷款利率", "name_en": "Mortgage Rates", "node_type": "group", "sort_order": 30, "series_codes": ["US.MORTGAGE.30Y"]},
-    {"code": "fed-balance-sheet", "parent_code": "rates-policy", "name_zh": "美联储资产负债表", "name_en": "Federal Reserve Balance Sheet", "node_type": "group", "sort_order": 40, "series_codes": ["US.FED.ASSETS", "US.BANK.RESERVES", "US.REVERSE.REPO", "US.FED.MBS"]},
-
-    {"code": "financial-markets", "parent_code": "root", "name_zh": "金融市场", "name_en": "Financial Markets", "node_type": "topic", "sort_order": 50, "series_codes": []},
-    {"code": "market-equities", "parent_code": "financial-markets", "name_zh": "股票", "name_en": "Equities", "node_type": "group", "sort_order": 10, "series_codes": ["US.SP500"]},
-    {"code": "market-fx", "parent_code": "financial-markets", "name_zh": "外汇", "name_en": "Foreign Exchange", "node_type": "group", "sort_order": 20, "series_codes": ["US.DOLLAR.INDEX"]},
-    {"code": "market-commodities", "parent_code": "financial-markets", "name_zh": "大宗商品", "name_en": "Commodities", "node_type": "group", "sort_order": 30, "series_codes": ["US.WTI"]},
-    {"code": "market-conditions", "parent_code": "financial-markets", "name_zh": "金融条件", "name_en": "Financial Conditions", "node_type": "group", "sort_order": 40, "series_codes": ["US.FINANCIAL.CONDITIONS"]},
-    {"code": "market-credit-spreads", "parent_code": "financial-markets", "name_zh": "信用利差", "name_en": "Credit Spreads", "node_type": "group", "sort_order": 50, "series_codes": ["US.CORPORATE.SPREAD"]},
-
-    {"code": "credit-banking", "parent_code": "root", "name_zh": "信贷与银行", "name_en": "Credit and Banking", "node_type": "topic", "sort_order": 60, "series_codes": []},
-    {"code": "bank-credit", "parent_code": "credit-banking", "name_zh": "银行信贷", "name_en": "Bank Credit", "node_type": "group", "sort_order": 10, "series_codes": ["US.BANK.CREDIT"]},
-    {"code": "consumer-credit", "parent_code": "credit-banking", "name_zh": "消费信贷", "name_en": "Consumer Credit", "node_type": "group", "sort_order": 20, "series_codes": ["US.CONSUMER.CREDIT"]},
-    {"code": "credit-quality", "parent_code": "credit-banking", "name_zh": "信贷质量", "name_en": "Credit Quality", "node_type": "group", "sort_order": 30, "series_codes": ["US.CARD.DELINQUENCY"]},
-    {"code": "credit-standards", "parent_code": "credit-banking", "name_zh": "贷款标准", "name_en": "Lending Standards", "node_type": "group", "sort_order": 40, "series_codes": ["US.SLOOS"]}
+    {
+      "code": "root",
+      "parent_code": null,
+      "name_zh": "美国宏观与金融体系",
+      "name_en": "U.S. Macro and Financial System",
+      "node_type": "category",
+      "sort_order": 0,
+      "series_codes": []
+    },
+    {
+      "code": "rates-policy",
+      "parent_code": "root",
+      "name_zh": "货币政策与利率",
+      "name_en": "Monetary Policy and Rates",
+      "node_type": "topic",
+      "sort_order": 10,
+      "series_codes": []
+    },
+    {
+      "code": "inflation",
+      "parent_code": "root",
+      "name_zh": "通胀与通胀预期",
+      "name_en": "Inflation and Expectations",
+      "node_type": "topic",
+      "sort_order": 20,
+      "series_codes": []
+    },
+    {
+      "code": "growth",
+      "parent_code": "root",
+      "name_zh": "实体经济与增长",
+      "name_en": "Real Economy and Growth",
+      "node_type": "topic",
+      "sort_order": 30,
+      "series_codes": []
+    },
+    {
+      "code": "employment",
+      "parent_code": "root",
+      "name_zh": "劳动力市场",
+      "name_en": "Labor Market",
+      "node_type": "topic",
+      "sort_order": 40,
+      "series_codes": []
+    },
+    {
+      "code": "credit-banking",
+      "parent_code": "root",
+      "name_zh": "信贷与银行体系",
+      "name_en": "Credit and Banking",
+      "node_type": "topic",
+      "sort_order": 50,
+      "series_codes": []
+    },
+    {
+      "code": "financial-markets",
+      "parent_code": "root",
+      "name_zh": "金融条件与金融市场",
+      "name_en": "Financial Conditions and Markets",
+      "node_type": "topic",
+      "sort_order": 60,
+      "series_codes": []
+    },
+    {
+      "code": "housing-household",
+      "parent_code": "root",
+      "name_zh": "住房与家庭部门",
+      "name_en": "Housing and Households",
+      "node_type": "topic",
+      "sort_order": 70,
+      "series_codes": []
+    },
+    {
+      "code": "tv-fed-policy-rates",
+      "parent_code": "rates-policy",
+      "name_zh": "政策利率",
+      "name_en": "Policy Rates",
+      "node_type": "group",
+      "sort_order": 10,
+      "series_codes": [
+        "US.FED.FUNDS"
+      ]
+    },
+    {
+      "code": "tv-fed-policy-operations",
+      "parent_code": "rates-policy",
+      "name_zh": "公开市场操作与政策执行",
+      "name_en": "Open Market Operations and Implementation",
+      "node_type": "group",
+      "sort_order": 20,
+      "series_codes": [
+        "US.REVERSE.REPO"
+      ]
+    },
+    {
+      "code": "tv-fed-central-bank-balance-sheet",
+      "parent_code": "rates-policy",
+      "name_zh": "央行资产负债表",
+      "name_en": "Central Bank Balance Sheet",
+      "node_type": "group",
+      "sort_order": 30,
+      "series_codes": [
+        "US.FED.ASSETS",
+        "US.BANK.RESERVES",
+        "US.FED.MBS"
+      ]
+    },
+    {
+      "code": "tv-fed-money-supply",
+      "parent_code": "rates-policy",
+      "name_zh": "货币供应与系统流动性",
+      "name_en": "Money Supply and Liquidity",
+      "node_type": "group",
+      "sort_order": 40,
+      "series_codes": []
+    },
+    {
+      "code": "tv-fed-rate-transmission",
+      "parent_code": "rates-policy",
+      "name_zh": "利率传导",
+      "name_en": "Rate Transmission",
+      "node_type": "group",
+      "sort_order": 50,
+      "series_codes": [
+        "US.SOFR"
+      ]
+    },
+    {
+      "code": "tv-fed-headline-inflation",
+      "parent_code": "inflation",
+      "name_zh": "总体消费通胀",
+      "name_en": "Headline Consumer Inflation",
+      "node_type": "group",
+      "sort_order": 10,
+      "series_codes": [
+        "US.CPI.HEADLINE"
+      ]
+    },
+    {
+      "code": "tv-fed-core-inflation",
+      "parent_code": "inflation",
+      "name_zh": "核心与趋势通胀",
+      "name_en": "Core and Trend Inflation",
+      "node_type": "group",
+      "sort_order": 20,
+      "series_codes": [
+        "US.CPI.CORE"
+      ]
+    },
+    {
+      "code": "tv-fed-inflation-pce",
+      "parent_code": "inflation",
+      "name_zh": "PCE 通胀",
+      "name_en": "PCE Inflation",
+      "node_type": "group",
+      "sort_order": 30,
+      "series_codes": [
+        "US.PCE.HEADLINE",
+        "US.PCE.CORE",
+        "US.PCE.CORE.GOODS",
+        "US.PCE.CORE.SERVICES",
+        "US.PCE.NONHOUSING",
+        "US.PCE.MEDICAL",
+        "US.PCE.HOSPITAL",
+        "US.PCE.PHYSICIAN",
+        "US.PCE.OTHER.PROFESSIONAL",
+        "US.PCE.DENTAL",
+        "US.PCE.MEDICAL.EQUIPMENT",
+        "US.PCE.PRESCRIPTION",
+        "US.PCE.HEALTH.INSURANCE",
+        "US.PCE.LONGTERM.CARE",
+        "US.PCE.TRANSPORT",
+        "US.PCE.RECREATION",
+        "US.PCE.FOOD.SERVICES",
+        "US.PCE.FINANCE",
+        "US.PCE.OTHER.SERVICES",
+        "US.PCE.DURABLES",
+        "US.PCE.NONDURABLES"
+      ]
+    },
+    {
+      "code": "tv-fed-inflation-components",
+      "parent_code": "inflation",
+      "name_zh": "商品与服务通胀",
+      "name_en": "Goods and Services Inflation",
+      "node_type": "group",
+      "sort_order": 40,
+      "series_codes": [
+        "US.CPI.MEDICAL"
+      ]
+    },
+    {
+      "code": "tv-fed-inflation-housing",
+      "parent_code": "inflation",
+      "name_zh": "住房通胀",
+      "name_en": "Housing Inflation",
+      "node_type": "group",
+      "sort_order": 50,
+      "series_codes": [
+        "US.PCE.HOUSING",
+        "US.CPI.SHELTER"
+      ]
+    },
+    {
+      "code": "tv-fed-inflation-pipeline",
+      "parent_code": "inflation",
+      "name_zh": "上游价格压力",
+      "name_en": "Pipeline Price Pressures",
+      "node_type": "group",
+      "sort_order": 60,
+      "series_codes": [
+        "US.PPI.FINAL",
+        "US.PPI.CORE"
+      ]
+    },
+    {
+      "code": "tv-fed-wage-pressures",
+      "parent_code": "inflation",
+      "name_zh": "工资成本压力",
+      "name_en": "Wage Cost Pressures",
+      "node_type": "group",
+      "sort_order": 70,
+      "series_codes": []
+    },
+    {
+      "code": "tv-fed-inflation-expectations",
+      "parent_code": "inflation",
+      "name_zh": "通胀预期",
+      "name_en": "Inflation Expectations",
+      "node_type": "group",
+      "sort_order": 80,
+      "series_codes": [
+        "US.BREAKEVEN.5Y5Y",
+        "US.MICHIGAN.1Y"
+      ]
+    },
+    {
+      "code": "tv-fed-growth-gdp",
+      "parent_code": "growth",
+      "name_zh": "GDP 与国民账户",
+      "name_en": "GDP and National Accounts",
+      "node_type": "group",
+      "sort_order": 10,
+      "series_codes": [
+        "US.REAL.GDP"
+      ]
+    },
+    {
+      "code": "tv-fed-consumption-demand",
+      "parent_code": "growth",
+      "name_zh": "消费需求",
+      "name_en": "Consumption Demand",
+      "node_type": "group",
+      "sort_order": 20,
+      "series_codes": [
+        "US.RETAIL.SALES",
+        "US.PERSONAL.CONSUMPTION"
+      ]
+    },
+    {
+      "code": "tv-fed-business-investment",
+      "parent_code": "growth",
+      "name_zh": "企业投资",
+      "name_en": "Business Investment",
+      "node_type": "group",
+      "sort_order": 30,
+      "series_codes": []
+    },
+    {
+      "code": "tv-fed-production-capacity",
+      "parent_code": "growth",
+      "name_zh": "生产与产能",
+      "name_en": "Production and Capacity",
+      "node_type": "group",
+      "sort_order": 40,
+      "series_codes": [
+        "US.INDUSTRIAL.PRODUCTION"
+      ]
+    },
+    {
+      "code": "tv-fed-orders-inventories-sales",
+      "parent_code": "growth",
+      "name_zh": "订单、库存与销售",
+      "name_en": "Orders, Inventories and Sales",
+      "node_type": "group",
+      "sort_order": 50,
+      "series_codes": [
+        "US.DURABLE.ORDERS"
+      ]
+    },
+    {
+      "code": "tv-fed-business-sentiment",
+      "parent_code": "growth",
+      "name_zh": "企业景气",
+      "name_en": "Business Sentiment",
+      "node_type": "group",
+      "sort_order": 60,
+      "series_codes": []
+    },
+    {
+      "code": "tv-fed-fiscal-government",
+      "parent_code": "growth",
+      "name_zh": "财政与政府部门",
+      "name_en": "Fiscal and Government",
+      "node_type": "group",
+      "sort_order": 70,
+      "series_codes": []
+    },
+    {
+      "code": "tv-fed-external-demand",
+      "parent_code": "growth",
+      "name_zh": "对外贸易与外部需求",
+      "name_en": "Trade and External Demand",
+      "node_type": "group",
+      "sort_order": 80,
+      "series_codes": []
+    },
+    {
+      "code": "tv-fed-productivity-potential",
+      "parent_code": "growth",
+      "name_zh": "生产率与潜在增长",
+      "name_en": "Productivity and Potential Growth",
+      "node_type": "group",
+      "sort_order": 90,
+      "series_codes": []
+    },
+    {
+      "code": "tv-fed-energy-climate",
+      "parent_code": "growth",
+      "name_zh": "能源与气候供给约束",
+      "name_en": "Energy and Climate Supply Constraints",
+      "node_type": "group",
+      "sort_order": 100,
+      "series_codes": []
+    },
+    {
+      "code": "tv-fed-labor-employment",
+      "parent_code": "employment",
+      "name_zh": "就业规模",
+      "name_en": "Employment",
+      "node_type": "group",
+      "sort_order": 10,
+      "series_codes": [
+        "US.PAYROLLS"
+      ]
+    },
+    {
+      "code": "tv-fed-labor-demand",
+      "parent_code": "employment",
+      "name_zh": "劳动力需求",
+      "name_en": "Labor Demand",
+      "node_type": "group",
+      "sort_order": 20,
+      "series_codes": [
+        "US.JOB.OPENINGS"
+      ]
+    },
+    {
+      "code": "tv-fed-labor-separations",
+      "parent_code": "employment",
+      "name_zh": "离职、裁员与失业救济",
+      "name_en": "Separations, Layoffs and Claims",
+      "node_type": "group",
+      "sort_order": 30,
+      "series_codes": [
+        "US.INITIAL.CLAIMS"
+      ]
+    },
+    {
+      "code": "tv-fed-labor-supply",
+      "parent_code": "employment",
+      "name_zh": "劳动力供给",
+      "name_en": "Labor Supply",
+      "node_type": "group",
+      "sort_order": 40,
+      "series_codes": [
+        "US.PARTICIPATION"
+      ]
+    },
+    {
+      "code": "tv-fed-labor-unemployment",
+      "parent_code": "employment",
+      "name_zh": "失业与闲置程度",
+      "name_en": "Unemployment and Slack",
+      "node_type": "group",
+      "sort_order": 50,
+      "series_codes": [
+        "US.UNEMPLOYMENT"
+      ]
+    },
+    {
+      "code": "tv-fed-labor-wages",
+      "parent_code": "employment",
+      "name_zh": "工资与薪酬",
+      "name_en": "Wages and Compensation",
+      "node_type": "group",
+      "sort_order": 60,
+      "series_codes": [
+        "US.AVERAGE.HOURLY",
+        "US.ECI"
+      ]
+    },
+    {
+      "code": "tv-fed-labor-hours",
+      "parent_code": "employment",
+      "name_zh": "工时、成本与生产率",
+      "name_en": "Hours, Costs and Productivity",
+      "node_type": "group",
+      "sort_order": 70,
+      "series_codes": []
+    },
+    {
+      "code": "tv-fed-bank-balance-sheet",
+      "parent_code": "credit-banking",
+      "name_zh": "银行资产负债表",
+      "name_en": "Bank Balance Sheets",
+      "node_type": "group",
+      "sort_order": 10,
+      "series_codes": []
+    },
+    {
+      "code": "tv-fed-business-credit",
+      "parent_code": "credit-banking",
+      "name_zh": "企业信贷",
+      "name_en": "Business Credit",
+      "node_type": "group",
+      "sort_order": 20,
+      "series_codes": [
+        "US.BANK.CREDIT"
+      ]
+    },
+    {
+      "code": "tv-fed-consumer-credit",
+      "parent_code": "credit-banking",
+      "name_zh": "消费信贷",
+      "name_en": "Consumer Credit",
+      "node_type": "group",
+      "sort_order": 30,
+      "series_codes": [
+        "US.CONSUMER.CREDIT"
+      ]
+    },
+    {
+      "code": "tv-fed-housing-credit",
+      "parent_code": "credit-banking",
+      "name_zh": "住房信贷",
+      "name_en": "Housing Credit",
+      "node_type": "group",
+      "sort_order": 40,
+      "series_codes": []
+    },
+    {
+      "code": "tv-fed-credit-pricing-standards",
+      "parent_code": "credit-banking",
+      "name_zh": "信贷价格与标准",
+      "name_en": "Credit Pricing and Standards",
+      "node_type": "group",
+      "sort_order": 50,
+      "series_codes": [
+        "US.SLOOS"
+      ]
+    },
+    {
+      "code": "tv-fed-credit-quality",
+      "parent_code": "credit-banking",
+      "name_zh": "信用质量",
+      "name_en": "Credit Quality",
+      "node_type": "group",
+      "sort_order": 60,
+      "series_codes": [
+        "US.CARD.DELINQUENCY"
+      ]
+    },
+    {
+      "code": "tv-fed-leverage-debt",
+      "parent_code": "credit-banking",
+      "name_zh": "杠杆与债务负担",
+      "name_en": "Leverage and Debt Burden",
+      "node_type": "group",
+      "sort_order": 70,
+      "series_codes": []
+    },
+    {
+      "code": "tv-fed-riskfree-yield-curve",
+      "parent_code": "financial-markets",
+      "name_zh": "无风险利率与收益率曲线",
+      "name_en": "Risk-Free Rates and Yield Curve",
+      "node_type": "group",
+      "sort_order": 10,
+      "series_codes": [
+        "US.TREASURY.2Y",
+        "US.TREASURY.10Y",
+        "US.REAL.10Y"
+      ]
+    },
+    {
+      "code": "tv-fed-credit-spreads",
+      "parent_code": "financial-markets",
+      "name_zh": "信用利差与融资条件",
+      "name_en": "Credit Spreads and Financing Conditions",
+      "node_type": "group",
+      "sort_order": 20,
+      "series_codes": [
+        "US.FINANCIAL.CONDITIONS",
+        "US.CORPORATE.SPREAD"
+      ]
+    },
+    {
+      "code": "tv-fed-fx-dollar",
+      "parent_code": "financial-markets",
+      "name_zh": "美元与外汇",
+      "name_en": "Dollar and FX",
+      "node_type": "group",
+      "sort_order": 30,
+      "series_codes": [
+        "US.DOLLAR.INDEX"
+      ]
+    },
+    {
+      "code": "tv-fed-capital-flows",
+      "parent_code": "financial-markets",
+      "name_zh": "资本流动",
+      "name_en": "Capital Flows",
+      "node_type": "group",
+      "sort_order": 40,
+      "series_codes": []
+    },
+    {
+      "code": "tv-fed-reserves-external-finance",
+      "parent_code": "financial-markets",
+      "name_zh": "国际储备与外部融资",
+      "name_en": "International Reserves and External Finance",
+      "node_type": "group",
+      "sort_order": 50,
+      "series_codes": []
+    },
+    {
+      "code": "tv-fed-equity-volatility-risk",
+      "parent_code": "financial-markets",
+      "name_zh": "权益、波动与风险偏好",
+      "name_en": "Equity, Volatility and Risk Appetite",
+      "node_type": "group",
+      "sort_order": 60,
+      "series_codes": [
+        "US.SP500"
+      ]
+    },
+    {
+      "code": "tv-fed-commodity-energy-markets",
+      "parent_code": "financial-markets",
+      "name_zh": "大宗商品与能源市场",
+      "name_en": "Commodity and Energy Markets",
+      "node_type": "group",
+      "sort_order": 70,
+      "series_codes": [
+        "US.WTI"
+      ]
+    },
+    {
+      "code": "tv-fed-housing-supply",
+      "parent_code": "housing-household",
+      "name_zh": "住房供给与建设",
+      "name_en": "Housing Supply",
+      "node_type": "group",
+      "sort_order": 10,
+      "series_codes": []
+    },
+    {
+      "code": "tv-fed-housing-transactions",
+      "parent_code": "housing-household",
+      "name_zh": "房屋交易",
+      "name_en": "Housing Transactions",
+      "node_type": "group",
+      "sort_order": 20,
+      "series_codes": []
+    },
+    {
+      "code": "tv-fed-housing-prices",
+      "parent_code": "housing-household",
+      "name_zh": "房价与可负担性",
+      "name_en": "House Prices and Affordability",
+      "node_type": "group",
+      "sort_order": 30,
+      "series_codes": []
+    },
+    {
+      "code": "tv-fed-mortgage-market",
+      "parent_code": "housing-household",
+      "name_zh": "按揭市场",
+      "name_en": "Mortgage Market",
+      "node_type": "group",
+      "sort_order": 40,
+      "series_codes": [
+        "US.MORTGAGE.30Y"
+      ]
+    },
+    {
+      "code": "tv-fed-housing-rents",
+      "parent_code": "housing-household",
+      "name_zh": "租金与居住成本",
+      "name_en": "Rents and Housing Costs",
+      "node_type": "group",
+      "sort_order": 50,
+      "series_codes": []
+    },
+    {
+      "code": "tv-fed-household-income",
+      "parent_code": "housing-household",
+      "name_zh": "家庭收入",
+      "name_en": "Household Income",
+      "node_type": "group",
+      "sort_order": 60,
+      "series_codes": []
+    },
+    {
+      "code": "tv-fed-household-consumption",
+      "parent_code": "housing-household",
+      "name_zh": "家庭消费与储蓄",
+      "name_en": "Household Consumption and Saving",
+      "node_type": "group",
+      "sort_order": 70,
+      "series_codes": []
+    },
+    {
+      "code": "tv-fed-household-confidence",
+      "parent_code": "housing-household",
+      "name_zh": "家庭信心与预期",
+      "name_en": "Household Confidence and Expectations",
+      "node_type": "group",
+      "sort_order": 80,
+      "series_codes": []
+    },
+    {
+      "code": "tv-fed-household-health",
+      "parent_code": "housing-household",
+      "name_zh": "人口、健康与家庭福利",
+      "name_en": "Population, Health and Welfare",
+      "node_type": "group",
+      "sort_order": 90,
+      "series_codes": []
+    }
   ]
 }

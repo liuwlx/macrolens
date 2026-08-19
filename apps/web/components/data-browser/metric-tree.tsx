@@ -96,7 +96,7 @@ export function MetricTree({ state, onNode, onSeries }: Props) {
   const [scopeAll, setScopeAll] = useState(false);
   const branchKey = useMemo(() => `${query}:${scopeAll}`, [query, scopeAll]);
   return <section className="data-browser-card data-browser-tree-card" aria-labelledby="metric-tree-title">
-    <header className="data-browser-card-header"><div><h2 id="metric-tree-title">指标树</h2><p>按主题逐级浏览</p></div></header>
+    <header className="data-browser-card-header"><div><h2 id="metric-tree-title">指标树</h2><p>按美联储研究框架逐级浏览</p></div></header>
     <div className="data-browser-tree-search"><label><Search size={15} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="搜索指标名称" aria-label="搜索指标名称" /></label><label className="data-browser-scope"><input type="checkbox" checked={scopeAll} onChange={(event) => setScopeAll(event.target.checked)} />搜索全部</label></div>
     <div className="data-browser-tree-scroll"><TreeBranch key={branchKey} {...{ state, onNode, onSeries, query, scopeAll }} parentId={null} depth={0} /></div>
   </section>;

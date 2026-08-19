@@ -24,6 +24,7 @@ describe("MetricTree", () => {
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
     const onNode = vi.fn();
     render(<QueryClientProvider client={client}><MetricTree state={defaultBrowserState} onNode={onNode} onSeries={vi.fn()} /></QueryClientProvider>);
+    expect(screen.getByText("按美联储研究框架逐级浏览")).toBeVisible();
     const item = await screen.findByRole("treeitem", { name: /通胀/ });
     expect(screen.getByRole("tree", { name: "宏观指标树" })).toBeInTheDocument();
     fireEvent.click(item);

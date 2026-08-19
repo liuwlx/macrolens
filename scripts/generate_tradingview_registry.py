@@ -18,23 +18,14 @@ sys.path.insert(0, str(ROOT / "backend" / "src"))
 TradingViewAdapter: Any = importlib.import_module(
     "macrolens_worker.providers.tradingview"
 ).TradingViewAdapter
-
-
-CATEGORIES = {
-    "gdp": ("tv-growth", "实体经济与增长", "GDP and Growth", 10),
-    "lbr": ("tv-labor", "劳动力市场", "Labor Market", 20),
-    "prce": ("tv-inflation", "通胀与价格", "Prices", 30),
-    "hlth": ("tv-health", "健康", "Health", 40),
-    "mny": ("tv-policy", "货币、利率与流动性", "Money and Rates", 50),
-    "trd": ("tv-trade", "贸易与国际收支", "Trade", 60),
-    "gov": ("tv-government", "财政与政府", "Government", 70),
-    "bsnss": ("tv-business", "企业与景气", "Business", 80),
-    "cnsm": ("tv-consumer", "消费者与家庭", "Consumer", 90),
-    "hse": ("tv-housing", "住房与房地产", "Housing", 100),
-    "txs": ("tv-taxes", "税收", "Taxes", 110),
-    "enrg": ("tv-energy", "能源", "Energy", 120),
-    "clmt": ("tv-climate", "气候", "Climate", 130),
-}
+taxonomy_module = importlib.import_module(
+    "macrolens_worker.providers.tradingview_taxonomy"
+)
+FED_DOMAINS: Any = taxonomy_module.FED_DOMAINS
+FED_DOMAIN_BY_CODE: Any = taxonomy_module.FED_DOMAIN_BY_CODE
+FED_TOPICS: Any = taxonomy_module.FED_TOPICS
+FED_TOPIC_BY_CODE: Any = taxonomy_module.FED_TOPIC_BY_CODE
+classify_tradingview_indicator: Any = taxonomy_module.classify_tradingview_indicator
 
 FREQUENCIES = {
     "D": "日度",
@@ -51,10 +42,7 @@ def route_map(js_source: str) -> dict[str, str | None]:
         r'\{ticker:"(?P<ticker>[^"]+)",name:.*?,route:(?:"(?P<route>[^"]*)"|null)',
         js_source,
     )
-    return {
-        match.group("ticker"): match.group("route") or None
-        for match in matches
-    }
+    return {match.group("ticker"): match.group("route") or None for match in matches}
 
 
 def readable_name(ticker: str, route: str | None) -> str:
@@ -109,7 +97,9 @@ async def probe(
                     ) from exc
                 await asyncio.sleep(attempt)
         if results is None:
-            raise RuntimeError(f"TradingView probe returned no result for {category['id']}")
+            raise RuntimeError(
+                f"TradingView probe returned no result for {category['id']}"
+            )
         observations = [item for result in results for item in result.observations]
         for observation in observations:
             ticker = tickers[observation.source_series_id - 1]
@@ -205,12 +195,11 @@ def main() -> int:
     else:
         valid, unavailable_us = asyncio.run(probe(categories))
     indicators: list[dict[str, Any]] = []
-    canonical_by_ticker: dict[str, str] = {}
+    series_by_topic: dict[str, list[str]] = {topic.code: [] for topic in FED_TOPICS}
     for ticker in ordered_tickers:
         override = overrides.get(ticker, {})
         route = routes.get(ticker)
         canonical_code = str(override.get("canonical_code") or f"US.TV.{ticker}")
-        canonical_by_ticker[ticker] = canonical_code
         metadata = valid.get(ticker, {})
         frequency_code = str(metadata.get("frequency_code") or "")
         unit = str(metadata.get("unit") or override.get("unit") or "VALUE")
@@ -224,50 +213,50 @@ def main() -> int:
             if override.get("mapping_status") == "READY"
             else "CANDIDATE"
         )
+        source_categories = tuple(memberships[ticker])
+        assignment = classify_tradingview_indicator(
+            ticker=ticker,
+            name=name_en,
+            route=route,
+            source_categories=source_categories,
+        )
+        topic = FED_TOPIC_BY_CODE[assignment.primary_topic]
+        domain = FED_DOMAIN_BY_CODE[topic.parent_code]
         indicator: dict[str, Any] = {
-                "canonical_code": canonical_code,
-                "name_zh": str(override.get("name_zh") or name_en),
-                "name_en": name_en,
-                "frequency": FREQUENCIES.get(
-                    frequency_code,
-                    str(override.get("frequency") or "月度"),
-                ),
-                "unit": unit,
-                "theme": CATEGORIES[memberships[ticker][0]][1],
-                "provider_series_id": f"ECONOMICS:US{ticker}",
-                "route": route,
-                "categories": memberships[ticker],
-                "mapping_status": mapping_status,
-            }
+            "canonical_code": canonical_code,
+            "name_zh": str(override.get("name_zh") or name_en),
+            "name_en": name_en,
+            "frequency": FREQUENCIES.get(
+                frequency_code,
+                str(override.get("frequency") or "月度"),
+            ),
+            "unit": unit,
+            "theme": domain.name_zh,
+            "provider_series_id": f"ECONOMICS:US{ticker}",
+            "route": route,
+            "categories": list(source_categories),
+            "source_categories": list(source_categories),
+            "primary_topic": assignment.primary_topic,
+            "cross_tags": list(assignment.cross_tags),
+            "mapping_status": mapping_status,
+        }
         if mapping_status == "UNAVAILABLE_US":
             indicator["availability_evidence"] = unavailable_us[ticker]
         indicators.append(indicator)
+        series_by_topic[assignment.primary_topic].append(canonical_code)
 
     nodes: list[dict[str, Any]] = [
         {
-            "code": "tv-root",
-            "parent_code": "root",
-            "name_zh": "TradingView美国宏观",
-            "name_en": "TradingView U.S. Macro",
-            "node_type": "topic",
-            "sort_order": 1,
-            "series_codes": [],
+            "code": topic.code,
+            "parent_code": topic.parent_code,
+            "name_zh": topic.name_zh,
+            "name_en": topic.name_en,
+            "node_type": "group",
+            "sort_order": topic.sort_order,
+            "series_codes": series_by_topic[topic.code],
         }
+        for topic in FED_TOPICS
     ]
-    category_by_id = {str(item["id"]): item for item in categories}
-    for category_id, (node_code, name_zh, name_en, sort_order) in CATEGORIES.items():
-        tickers = [str(item) for item in category_by_id[category_id]["tickers"]]
-        nodes.append(
-            {
-                "code": node_code,
-                "parent_code": "tv-root",
-                "name_zh": name_zh,
-                "name_en": name_en,
-                "node_type": "group",
-                "sort_order": sort_order,
-                "series_codes": [canonical_by_ticker[ticker] for ticker in tickers],
-            }
-        )
 
     ready_count = sum(item["mapping_status"] == "READY" for item in indicators)
     payload = {
@@ -278,6 +267,15 @@ def main() -> int:
         "indicator_count": len(indicators),
         "valid_indicator_count": ready_count,
         "unavailable_us_indicator_count": len(unavailable_us),
+        "framework_domains": [
+            {
+                "code": domain.code,
+                "name_zh": domain.name_zh,
+                "name_en": domain.name_en,
+                "sort_order": domain.sort_order,
+            }
+            for domain in FED_DOMAINS
+        ],
         "indicators": indicators,
         "nodes": nodes,
     }

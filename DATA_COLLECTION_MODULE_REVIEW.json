@@ -255,6 +255,7 @@
         "length-prefixed frame decoder",
         "qsd status and value validation",
         "per-symbol result isolation",
+        "seven-domain research taxonomy with one primary topic per series",
         "append-only vintage publication"
       ],
       "known_boundary": "V1 performs manual latest-value synchronization only; 195 global indicator routes return no_such_symbol for US and are catalogued as unavailable for the United States; history backfill, automatic scheduling and raw capture are out of scope.",
