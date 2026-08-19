@@ -10,9 +10,11 @@ import pytest
 from macrolens_worker.providers import tradingview
 from macrolens_worker.providers.base import ProviderDataError
 from macrolens_worker.providers.tradingview import (
+    ChartHistoryDecoder,
     FrameDecoder,
     TradingViewAdapter,
     encode_frame,
+    parse_chart_period,
     parse_observation_period,
 )
 
@@ -224,5 +226,210 @@ def test_fetch_normalizes_tls_connection_reset(monkeypatch) -> None:
                 ],
                 mode="latest",
             )
+
+    asyncio.run(run())
+
+
+def test_parse_chart_period_aligns_economic_months() -> None:
+    assert parse_chart_period(1751328000, "monthly") == date(2025, 7, 1)
+    assert parse_chart_period(1751328000, "quarterly") == date(2025, 7, 1)
+    assert parse_chart_period(1751328000, "annual") == date(2025, 1, 1)
+
+
+def test_chart_history_decoder_extracts_economic_values_and_metadata() -> None:
+    decoder = ChartHistoryDecoder(frequency="monthly")
+    decoder.consume(
+        {
+            "m": "symbol_resolved",
+            "p": [
+                "sds_sym_1",
+                {
+                    "type": "economic",
+                    "data_frequency": "M",
+                    "available_data_range_begin_date": 946684800,
+                },
+            ],
+        }
+    )
+    decoder.consume(
+        {
+            "m": "timescale_update",
+            "p": [
+                "cs_test",
+                {
+                    "sds_1": {
+                        "s": [
+                            {"i": 0, "v": [1751328000, 4.1]},
+                            # Extra values must not be interpreted as extra economic observations.
+                            {"i": 1, "v": [1754006400, 4.2, 99.0, 98.0, 97.0]},
+                        ]
+                    }
+                },
+            ],
+        }
+    )
+    decoder.consume({"m": "series_completed", "p": ["sds_1", "streaming"]})
+
+    result = decoder.finish()
+    assert result.completed is True
+    assert result.available_data_range_begin_date == date(2000, 1, 1)
+    assert [(point.period_start, str(point.value)) for point in result.points] == [
+        (date(2025, 7, 1), "4.1"),
+        (date(2025, 8, 1), "4.2"),
+    ]
+
+
+def test_chart_history_decoder_rejects_incomplete_series() -> None:
+    decoder = ChartHistoryDecoder(frequency="monthly")
+    decoder.consume(
+        {
+            "m": "timescale_update",
+            "p": ["cs_test", {"sds_1": {"s": [{"i": 0, "v": [1751328000, 4.1]}]}}],
+        }
+    )
+
+    with pytest.raises(tradingview.ProviderDataError, match="series_completed"):
+        decoder.finish()
+
+
+def test_fetch_backfill_persists_chart_history_without_raw_payload(monkeypatch) -> None:
+    async def run() -> None:
+        symbol = "ECONOMICS:USUR"
+        socket = _FakeSocket(
+            [
+                _frame(
+                    {
+                        "m": "symbol_resolved",
+                        "p": [
+                            "sds_sym_1",
+                            {
+                                "type": "economic",
+                                "data_frequency": "M",
+                                "available_data_range_begin_date": 1751328000,
+                            },
+                        ],
+                    }
+                ),
+                _frame(
+                    {
+                        "m": "timescale_update",
+                        "p": [
+                            "cs_test",
+                            {
+                                "sds_1": {
+                                    "s": [
+                                        {"i": 0, "v": [1751328000, 4.1]},
+                                        {"i": 1, "v": [1754006400, 4.2]},
+                                    ]
+                                }
+                            },
+                        ],
+                    }
+                ),
+                _frame({"m": "series_completed", "p": ["sds_1", "streaming"]}),
+            ]
+        )
+
+        def fake_connect(*_args: object, **_kwargs: object) -> _FakeConnection:
+            return _FakeConnection(socket)
+
+        monkeypatch.setattr(tradingview, "connect", fake_connect)
+        adapter = TradingViewAdapter(client=None)  # type: ignore[arg-type]
+        results = await adapter.fetch(
+            SimpleNamespace(code="TRADINGVIEW_WEB"),  # type: ignore[arg-type]
+            [
+                (
+                    SimpleNamespace(
+                        id=7,
+                        provider_series_id=symbol,
+                        source_frequency="monthly",
+                        source_unit="percent",
+                    ),
+                    SimpleNamespace(id=3, code="TRADINGVIEW_ECONOMICS"),
+                )
+            ],
+            mode="backfill",
+        )
+
+        assert len(results) == 1
+        assert [str(item.value) for item in results[0].observations] == ["4.1", "4.2"]
+        assert results[0].persist_raw is False
+        assert results[0].request_parameters["mode"] == "backfill"
+        assert any('"chart_create_session"' in message for message in socket.sent)
+        assert any('"create_series"' in message for message in socket.sent)
+
+    asyncio.run(run())
+
+
+def test_fetch_backfill_requests_more_data_until_provider_start(monkeypatch) -> None:
+    async def run() -> None:
+        socket = _FakeSocket(
+            [
+                _frame(
+                    {
+                        "m": "symbol_resolved",
+                        "p": [
+                            "sds_sym_1",
+                            {
+                                "type": "economic",
+                                "data_frequency": "M",
+                                "available_data_range_begin_date": 1751328000,
+                            },
+                        ],
+                    }
+                ),
+                _frame(
+                    {
+                        "m": "timescale_update",
+                        "p": [
+                            "cs_test",
+                            {"sds_1": {"s": [{"i": 0, "v": [1782864000, 5.1]}]}},
+                        ],
+                    }
+                ),
+                _frame({"m": "series_completed", "p": ["sds_1", "streaming"]}),
+                _frame(
+                    {
+                        "m": "timescale_update",
+                        "p": [
+                            "cs_test",
+                            {
+                                "sds_1": {
+                                    "s": [
+                                        {"i": 0, "v": [1751328000, 4.1]},
+                                        {"i": 1, "v": [1754006400, 4.2]},
+                                    ]
+                                }
+                            },
+                        ],
+                    }
+                ),
+                _frame({"m": "series_completed", "p": ["sds_1", "streaming"]}),
+            ]
+        )
+
+        def fake_connect(*_args: object, **_kwargs: object) -> _FakeConnection:
+            return _FakeConnection(socket)
+
+        monkeypatch.setattr(tradingview, "connect", fake_connect)
+        adapter = TradingViewAdapter(client=None)  # type: ignore[arg-type]
+        results = await adapter.fetch(
+            SimpleNamespace(code="TRADINGVIEW_WEB"),  # type: ignore[arg-type]
+            [
+                (
+                    SimpleNamespace(
+                        id=7,
+                        provider_series_id="ECONOMICS:USUR",
+                        source_frequency="monthly",
+                    ),
+                    SimpleNamespace(id=3, code="TRADINGVIEW_ECONOMICS"),
+                )
+            ],
+            mode="backfill",
+        )
+
+        assert len(results[0].observations) == 3
+        assert results[0].request_parameters["request_more_data_count"] == 1
+        assert any('"request_more_data"' in message for message in socket.sent)
 
     asyncio.run(run())

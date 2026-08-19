@@ -636,6 +636,7 @@ async def sync_provider(
         raise RuntimeError(run.error_message or "Publication was quarantined")
     return {
         **counts,
+        "staged_observation_count": len(staged),
         "requested_count": len(mapping_pairs),
         "succeeded_count": len(observed_source_ids),
         "failed_count": len(missing_source_ids),

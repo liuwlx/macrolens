@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { formatTradingViewSyncError } from "./sync-errors";
+import { formatTradingViewHistoryError, formatTradingViewSyncError } from "./sync-errors";
 
 describe("TradingView sync error messages", () => {
   it("turns a reset during the websocket handshake into an actionable message", () => {
@@ -14,5 +14,11 @@ describe("TradingView sync error messages", () => {
 
   it("keeps unrelated worker errors visible", () => {
     expect(formatTradingViewSyncError("Provider returned no data")).toBe("Provider returned no data");
+  });
+
+  it("prefixes non-network history failures with the history operation", () => {
+    expect(formatTradingViewHistoryError("TradingView chart history returned no observations")).toBe(
+      "历史同步失败：TradingView chart history returned no observations",
+    );
   });
 });

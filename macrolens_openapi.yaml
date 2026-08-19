@@ -3077,6 +3077,47 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/admin/providers/{provider_code}/series/{series_id}/history:
+    post:
+      tags:
+      - Admin
+      summary: Sync Series History Manually
+      operationId: sync_series_history_manually_api_v1_admin_providers__provider_code__series__series_id__history_post
+      parameters:
+      - name: provider_code
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Provider Code
+      - name: series_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Series Id
+      - name: macrolens_access
+        in: cookie
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Macrolens Access
+      responses:
+        '202':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobPublic'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /api/v1/admin/jobs:
     post:
       tags:

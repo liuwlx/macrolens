@@ -7,6 +7,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { useAuth } from "@/components/auth-provider";
 import { apiDownload, apiFetch, ApiError, queryString } from "@/lib/api";
+import { formatTradingViewHistoryError } from "@/lib/sync-errors";
 import type { AICapabilitiesResponse, Favorite, JobPublic, SeriesAnalyticsResponse, SeriesBrowserItem, SeriesBrowserResponse, SeriesDetail, TaxonomyBrowserSeries } from "@/lib/types";
 import { formatTradingViewSyncError } from "@/lib/sync-errors";
 
@@ -49,6 +50,8 @@ export function DataBrowserPage() {
   const [availableSnapshot, setAvailableSnapshot] = useState("");
   const [syncState, setSyncState] = useState<SyncState>("idle");
   const [syncMessage, setSyncMessage] = useState("");
+  const [historySyncState, setHistorySyncState] = useState<SyncState>("idle");
+  const [historySyncMessage, setHistorySyncMessage] = useState("");
   const state = useMemo(() => parseBrowserState(searchParams), [searchParams]);
   const permissionKey = user ? `${user.id}:${user.role}` : "anonymous";
 
@@ -83,6 +86,7 @@ export function DataBrowserPage() {
   }, [browserQuery.data, browserQuery.isPlaceholderData, state.series, state.data_as_of, updateState]);
 
   const selectedItem = browserQuery.data?.items.find((item) => item.series.id === state.series);
+  const canSyncHistory = canSync && selectedItem?.availability === "available" && selectedItem.series.provider?.code === "TRADINGVIEW_WEB";
   const capabilityState = browserDataCapabilityState(
     selectedItem,
     browserQuery.data !== undefined && !browserQuery.isPlaceholderData,
@@ -148,10 +152,42 @@ export function DataBrowserPage() {
       setSyncMessage(formatTradingViewSyncError(error));
     }
   }
+
+  async function syncTradingViewHistory() {
+    if (!canSyncHistory || !state.series || historySyncState === "running") return;
+    setHistorySyncState("running");
+    setHistorySyncMessage("");
+    try {
+      const providerCode = "TRADINGVIEW_WEB";
+      const created = await apiFetch<JobPublic>(`/admin/providers/${providerCode}/series/${state.series}/history`, {
+        method: "POST",
+      });
+      let job = created;
+      for (let attempt = 0; attempt < 600 && (job.status === "queued" || job.status === "running"); attempt += 1) {
+        await new Promise((resolve) => window.setTimeout(resolve, 1000));
+        job = await apiFetch<JobPublic>(`/admin/jobs/${created.id}`);
+      }
+      if (job.status !== "succeeded") {
+        throw new Error(job.last_error || "未完成历史同步");
+      }
+      const result = job.result;
+      setHistorySyncState("success");
+      setHistorySyncMessage(`历史同步完成：新增 ${Number(result.inserted ?? 0)} 项，修订 ${Number(result.revised ?? 0)} 项，历史点 ${Number(result.staged_observation_count ?? result.observation_count ?? 0)} 项`);
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["series-browser"] }),
+        queryClient.invalidateQueries({ queryKey: ["data-browser-detail"] }),
+        queryClient.invalidateQueries({ queryKey: ["data-browser-observations"] }),
+        queryClient.invalidateQueries({ queryKey: ["data-browser-analytics"] }),
+      ]);
+    } catch (error) {
+      setHistorySyncState("error");
+      setHistorySyncMessage(formatTradingViewHistoryError(error));
+    }
+  }
   const closeDrawer = useCallback(() => setDrawer(null), []);
 
   const filterProps = { state, facets: browserQuery.data?.facets, onChange: updateState, onReset: () => updateState(resetBrowserFilters(state)), onOpenFilters: () => setDrawer("filters"), onOpenTree: () => setDrawer("tree"), onOpenDetail: () => setDrawer("detail") };
-  const detailProps = { item: selectedItem, detail: detailQuery.data, analytics: analyticsQuery.data, ai: aiQuery.data, isLoading: detailQuery.isLoading, isFavorite: Boolean(selectedFavorite), favoritePending: favoriteMutation.isPending, readOnlyReason: demoReadOnlyReason, onFavorite: () => { if (!isDemo) favoriteMutation.mutate(); }, onHistory: showHistory, onCompare: () => router.push(`/compare?series=${encodeURIComponent(state.series)}`), onExport: exportSelected, onAI: () => { if (!isDemo) router.push(`/ai?series=${encodeURIComponent(state.series)}&data_as_of=${encodeURIComponent(state.data_as_of)}`); } };
+  const detailProps = { item: selectedItem, detail: detailQuery.data, analytics: analyticsQuery.data, ai: aiQuery.data, isLoading: detailQuery.isLoading, isFavorite: Boolean(selectedFavorite), favoritePending: favoriteMutation.isPending, readOnlyReason: demoReadOnlyReason, onFavorite: () => { if (!isDemo) favoriteMutation.mutate(); }, onHistory: showHistory, canSyncHistory, onSyncHistory: () => void syncTradingViewHistory(), historySyncPending: historySyncState === "running", historySyncMessage, onCompare: () => router.push(`/compare?series=${encodeURIComponent(state.series)}`), onExport: exportSelected, onAI: () => { if (!isDemo) router.push(`/ai?series=${encodeURIComponent(state.series)}&data_as_of=${encodeURIComponent(state.data_as_of)}`); } };
 
   return <div className="data-browser-page">
     {isDemo && <div className="data-browser-demo-banner" role="note"><strong>DEMO 演示数据</strong><span>当前页面使用固定演示快照；趋势、历史、修订、统计、只读比较和 CSV 导出可用，收藏、工作台与 AI 写入已禁用。</span></div>}

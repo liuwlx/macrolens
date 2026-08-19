@@ -170,6 +170,7 @@ def test_api_route_surface() -> None:
         "/api/v1/admin/documents/fetch",
         "/api/v1/admin/publication-batches/{batch_id}/rollback",
         "/api/v1/admin/providers/{provider_code}/sync",
+        "/api/v1/admin/providers/{provider_code}/series/{series_id}/history",
         "/api/v1/admin/jobs/{job_id}",
     }
     assert expected.issubset(paths)

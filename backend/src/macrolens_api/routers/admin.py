@@ -193,6 +193,94 @@ async def sync_provider_manually(
     return JobPublic.model_validate(job)
 
 
+@router.post(
+    "/providers/{provider_code}/series/{series_id}/history",
+    response_model=JobPublic,
+    status_code=202,
+)
+async def sync_series_history_manually(
+    provider_code: str,
+    series_id: UUID,
+    session: SessionDep,
+    _admin: AdminUser,
+) -> JobPublic:
+    normalized_code = provider_code.upper()
+    if normalized_code != "TRADINGVIEW_WEB":
+        raise AppError(
+            400,
+            "不支持的历史同步",
+            "当前只允许手动同步 TradingView 历史数据。",
+            "provider_history_not_supported",
+        )
+    provider = await session.scalar(
+        select(Provider).where(Provider.code == normalized_code, Provider.active.is_(True))
+    )
+    if provider is None:
+        raise AppError(
+            404,
+            "数据提供方不存在",
+            "TradingView Provider 尚未启用。",
+            "provider_not_found",
+        )
+    source = await session.scalar(
+        select(SourceSeries)
+        .join(Dataset, Dataset.id == SourceSeries.dataset_id)
+        .where(
+            SourceSeries.series_id == series_id,
+            SourceSeries.mapping_status == "verified",
+            SourceSeries.is_primary.is_(True),
+            Dataset.provider_id == provider.id,
+            Dataset.active.is_(True),
+        )
+    )
+    if source is None:
+        raise AppError(
+            409,
+            "指标暂无可用历史映射",
+            "该指标没有已审核且可用的 TradingView 主数据映射。",
+            "series_history_mapping_unavailable",
+        )
+
+    active_jobs = list(
+        (
+            await session.scalars(
+                select(Job)
+                .where(
+                    Job.job_type == "sync_provider",
+                    Job.status.in_(["queued", "running"]),
+                )
+                .order_by(Job.created_at.desc())
+                .limit(50)
+            )
+        ).all()
+    )
+    for existing in active_jobs:
+        payload = existing.payload
+        if (
+            payload.get("provider_code") == normalized_code
+            and payload.get("mode") == "backfill"
+            and payload.get("source_series_ids") == [source.id]
+        ):
+            return JobPublic.model_validate(existing)
+
+    from datetime import UTC, datetime
+
+    slot = datetime.now(UTC).strftime("%Y%m%d%H%M")
+    job = await enqueue_job(
+        session,
+        job_type="sync_provider",
+        payload={
+            "provider_code": normalized_code,
+            "mode": "backfill",
+            "source_series_ids": [source.id],
+        },
+        idempotency_key=f"manual-history:{normalized_code}:{source.id}:{slot}",
+        priority=12,
+        max_attempts=3,
+    )
+    return JobPublic.model_validate(job)
+
+
 @router.post("/jobs", response_model=JobPublic, status_code=202)
 async def create_job(payload: JobCreate, session: SessionDep, _admin: AdminUser) -> JobPublic:
     job = await enqueue_job(
