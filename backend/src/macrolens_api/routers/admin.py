@@ -397,6 +397,26 @@ async def create_provider_history_batch(
     if active is not None:
         batch_id = _history_batch_id(active)
         jobs = await _load_history_batch(session, batch_id)
+        active_metadata = active.payload.get("history_batch")
+        replay_marker, _created = await reserve_job(
+            session,
+            job_type="history_batch_marker",
+            payload={
+                "provider_code": normalized_code,
+                "mode": "backfill",
+                "history_batch_id": str(batch_id),
+                "history_request_key_sha256": request_digest,
+                "history_batch": (
+                    active_metadata if isinstance(active_metadata, dict) else {}
+                ),
+            },
+            idempotency_key=f"manual-history-batch:{request_digest}:active-reuse",
+            priority=5,
+            max_attempts=1,
+        )
+        replay_marker.status = "succeeded"
+        replay_marker.finished_at = datetime.now(UTC)
+        await session.commit()
         return _history_batch_public(jobs, batch_id=batch_id)
 
     completed_jobs = list(

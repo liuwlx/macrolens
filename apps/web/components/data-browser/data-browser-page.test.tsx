@@ -96,6 +96,7 @@ describe("DataBrowserPage bulk TradingView history sync", () => {
       {
         method: "POST",
         body: expect.stringMatching(/^\{"idempotency_key":".+","limit":500\}$/),
+        signal: expect.any(AbortSignal),
       },
     ));
     let posts = apiFetch.mock.calls.filter(([path]) => path === "/admin/providers/TRADINGVIEW_WEB/history");
@@ -203,7 +204,7 @@ describe("DataBrowserPage bulk TradingView history sync", () => {
     expect(screen.queryByRole("button", { name: "批量同步历史" })).not.toBeInTheDocument();
   });
 
-  it("shows but disables the batch action outside a TradingView selection", async () => {
+  it("hides the batch action outside a TradingView selection", async () => {
     searchParams.delete("provider");
     apiFetch.mockImplementation((path: string) => {
       if (path.startsWith("/series/browser")) return Promise.resolve(browserResponse);
@@ -213,9 +214,8 @@ describe("DataBrowserPage bulk TradingView history sync", () => {
     });
     renderPage();
 
-    await waitFor(() => {
-      expect(screen.getByRole("button", { name: "批量同步历史" })).toBeDisabled();
-    });
+    await screen.findAllByText(/共 0 条/);
+    expect(screen.queryByRole("button", { name: "批量同步历史" })).not.toBeInTheDocument();
   });
 
   it("shows the batch action for a selected TradingView indicator without a provider filter", async () => {
@@ -289,5 +289,40 @@ describe("DataBrowserPage bulk TradingView history sync", () => {
     await act(async () => vi.advanceTimersByTimeAsync(10_000));
 
     expect(batchReads).toBe(0);
+  });
+
+  it("aborts an in-flight batch read when the page unmounts", async () => {
+    const queuedBatch: HistoryBatchPublic = {
+      ...emptyBatch,
+      status: "queued",
+      candidate_count: 339,
+      skipped_completed: 0,
+      queued: 339,
+    };
+    let readSignal: AbortSignal | undefined;
+    apiFetch.mockImplementation((path: string, init?: RequestInit) => {
+      if (path.startsWith("/series/browser")) return Promise.resolve(browserResponse);
+      if (path.startsWith("/taxonomies/")) return Promise.resolve(taxonomyResponse);
+      if (path === "/me/favorites") return Promise.resolve([]);
+      if (path === "/admin/providers/TRADINGVIEW_WEB/history" && init?.method === "POST") {
+        return Promise.resolve(queuedBatch);
+      }
+      if (path === "/admin/providers/TRADINGVIEW_WEB/history/batch-1") {
+        readSignal = init?.signal ?? undefined;
+        return new Promise(() => {});
+      }
+      throw new Error(`Unexpected API path: ${path}`);
+    });
+    const { unmount } = renderPage();
+    const button = await screen.findByRole("button", { name: "批量同步历史" });
+
+    vi.useFakeTimers();
+    fireEvent.click(button);
+    await act(async () => {});
+    await act(async () => vi.advanceTimersByTimeAsync(2000));
+    expect(readSignal?.aborted).toBe(false);
+
+    unmount();
+    expect(readSignal?.aborted).toBe(true);
   });
 });

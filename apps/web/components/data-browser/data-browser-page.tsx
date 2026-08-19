@@ -74,6 +74,7 @@ export function DataBrowserPage() {
   const [historyBatchIdempotencyKey] = useState(() => `data-browser-history-${crypto.randomUUID()}`);
   const historyBatchMounted = useRef(true);
   const historyBatchPollCancel = useRef<(() => void) | null>(null);
+  const historyBatchAbortController = useRef<AbortController | null>(null);
   const state = useMemo(() => parseBrowserState(searchParams), [searchParams]);
   const permissionKey = user ? `${user.id}:${user.role}` : "anonymous";
 
@@ -82,6 +83,7 @@ export function DataBrowserPage() {
     return () => {
       historyBatchMounted.current = false;
       historyBatchPollCancel.current?.();
+      historyBatchAbortController.current?.abort();
     };
   }, []);
 
@@ -224,10 +226,14 @@ export function DataBrowserPage() {
     setHistoryBatchPending(true);
     setHistoryBatch(null);
     setHistoryBatchError("");
+    const abortController = new AbortController();
+    historyBatchAbortController.current = abortController;
     try {
-      let batch = await apiFetch<HistoryBatchPublic>("/admin/providers/TRADINGVIEW_WEB/history", {
+      const providerCode = "TRADINGVIEW_WEB";
+      let batch = await apiFetch<HistoryBatchPublic>(`/admin/providers/${providerCode}/history`, {
         method: "POST",
         body: JSON.stringify({ idempotency_key: historyBatchIdempotencyKey, limit: 500 }),
+        signal: abortController.signal,
       });
       if (!historyBatchMounted.current) return;
       setHistoryBatch(batch);
@@ -244,7 +250,9 @@ export function DataBrowserPage() {
           };
         });
         if (!continuePolling || !historyBatchMounted.current) return;
-        batch = await apiFetch<HistoryBatchPublic>(`/admin/providers/TRADINGVIEW_WEB/history/${batch.batch_id}`);
+        batch = await apiFetch<HistoryBatchPublic>(`/admin/providers/${providerCode}/history/${batch.batch_id}`, {
+          signal: abortController.signal,
+        });
         if (!historyBatchMounted.current) return;
         setHistoryBatch(batch);
       }
@@ -258,6 +266,9 @@ export function DataBrowserPage() {
     } catch (error) {
       if (historyBatchMounted.current) setHistoryBatchError(formatTradingViewHistoryError(error));
     } finally {
+      if (historyBatchAbortController.current === abortController) {
+        historyBatchAbortController.current = null;
+      }
       if (historyBatchMounted.current) setHistoryBatchPending(false);
     }
   }
@@ -268,7 +279,7 @@ export function DataBrowserPage() {
 
   return <div className="data-browser-page">
     {isDemo && <div className="data-browser-demo-banner" role="note"><strong>DEMO 演示数据</strong><span>当前页面使用固定演示快照；趋势、历史、修订、统计、只读比较和 CSV 导出可用，收藏、工作台与 AI 写入已禁用。</span></div>}
-    <header className="data-browser-page-header"><div><div className="data-browser-title"><Database size={22} /><h1>数据浏览器 / 指标树与明细表</h1></div><p>浏览、筛选并分析宏观经济指标，支持多层级指标分类与历史修订查看。</p></div><div className="data-browser-header-actions"><span>当前位置：宏观经济数据 / {selectedItem?.series.theme ?? "全部主题"} / {selectedItem?.series.name_zh ?? "请选择指标"}</span>{canSync && <button className="btn" type="button" onClick={() => void syncTradingViewHistoryBatch()} disabled={!canSyncHistoryBatch || historyBatchPending} title={canSyncHistoryBatch ? "同步 TradingView 指标的历史数据" : "请筛选 TradingView 或选择 TradingView 指标"}><RefreshCw size={15} className={historyBatchPending ? "animate-spin" : ""} />{historyBatchPending ? "批量同步中…" : "批量同步历史"}</button>}{canSync && <button className="btn btn-primary" type="button" onClick={() => void syncTradingView()} disabled={syncState === "running"}><RefreshCw size={15} className={syncState === "running" ? "animate-spin" : ""} />{syncState === "running" ? "同步中…" : "数据同步"}</button>}<button className={`btn ${selectedFavorite ? "btn-primary" : ""}`} type="button" onClick={() => { if (!isDemo) favoriteMutation.mutate(); }} disabled={!state.series || favoriteMutation.isPending || isDemo} title={demoReadOnlyReason}><Star size={15} fill={selectedFavorite ? "currentColor" : "none"} />{selectedFavorite ? "已收藏" : "收藏该指标"}</button></div></header>
+    <header className="data-browser-page-header"><div><div className="data-browser-title"><Database size={22} /><h1>数据浏览器 / 指标树与明细表</h1></div><p>浏览、筛选并分析宏观经济指标，支持多层级指标分类与历史修订查看。</p></div><div className="data-browser-header-actions"><span>当前位置：宏观经济数据 / {selectedItem?.series.theme ?? "全部主题"} / {selectedItem?.series.name_zh ?? "请选择指标"}</span>{canSyncHistoryBatch && <button className="btn" type="button" onClick={() => void syncTradingViewHistoryBatch()} disabled={historyBatchPending} title="同步 TradingView 指标的历史数据"><RefreshCw size={15} className={historyBatchPending ? "animate-spin" : ""} />{historyBatchPending ? "批量同步中…" : "批量同步历史"}</button>}{canSync && <button className="btn btn-primary" type="button" onClick={() => void syncTradingView()} disabled={syncState === "running"}><RefreshCw size={15} className={syncState === "running" ? "animate-spin" : ""} />{syncState === "running" ? "同步中…" : "数据同步"}</button>}<button className={`btn ${selectedFavorite ? "btn-primary" : ""}`} type="button" onClick={() => { if (!isDemo) favoriteMutation.mutate(); }} disabled={!state.series || favoriteMutation.isPending || isDemo} title={demoReadOnlyReason}><Star size={15} fill={selectedFavorite ? "currentColor" : "none"} />{selectedFavorite ? "已收藏" : "收藏该指标"}</button></div></header>
     {(historyBatch || historyBatchError) && <div className={`data-browser-sync-status ${historyBatchError || historyBatch?.status === "failed" || historyBatch?.status === "partial_failure" ? "is-error" : ""}`} role="status">{historyBatchError ? `批量${historyBatchError}` : historyBatch ? formatHistoryBatchProgress(historyBatch) : null}</div>}
     {syncMessage && <div className={`data-browser-sync-status ${syncState === "error" ? "is-error" : ""}`} role="status">{syncMessage}</div>}
     <BrowserFilterBar {...filterProps} />

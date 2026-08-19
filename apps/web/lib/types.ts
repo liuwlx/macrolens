@@ -28,6 +28,12 @@ export type HistoryBatchStatus =
   | "failed"
   | "empty";
 
+export type HistoryBatchFailure = {
+  job_id: string;
+  source_series_id: number;
+  error: string;
+};
+
 export type HistoryBatchPublic = {
   batch_id: string;
   status: HistoryBatchStatus;
@@ -42,7 +48,7 @@ export type HistoryBatchPublic = {
   revised: number;
   unchanged: number;
   staged_observation_count: number;
-  failures: unknown[];
+  failures: HistoryBatchFailure[];
 };
 
 export type ProviderInfo = {

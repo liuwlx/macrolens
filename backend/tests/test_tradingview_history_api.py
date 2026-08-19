@@ -176,6 +176,49 @@ def test_history_batch_enqueues_remaining_sources_in_frequency_order(
     )
 
 
+def test_history_batch_default_limit_enqueues_all_339_remaining_sources(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    completed = _job(
+        {
+            "provider_code": "TRADINGVIEW_WEB",
+            "mode": "backfill",
+            "source_series_ids": [1],
+        },
+        status="succeeded",
+    )
+    session = _BatchSession(
+        provider=SimpleNamespace(id=11),
+        eligible=[(source_id, "monthly") for source_id in range(1, 341)],
+        completed_jobs=[completed],
+    )
+    captured: list[JobReservation] = []
+
+    async def fake_reserve_many(
+        _session: object, reservations: list[JobReservation]
+    ) -> list[object]:
+        captured.extend(reservations)
+        return [_job(reservation.payload) for reservation in reservations]
+
+    monkeypatch.setattr(admin_router, "reserve_jobs", fake_reserve_many)
+    result = asyncio.run(
+        admin_router.create_provider_history_batch(
+            "TRADINGVIEW_WEB",
+            HistoryBatchCreate(idempotency_key="enqueue-all-remaining-339"),
+            session,  # type: ignore[arg-type]
+            None,  # type: ignore[arg-type]
+        )
+    )
+
+    assert result.total == 340
+    assert result.candidate_count == result.queued == len(captured) == 339
+    assert result.skipped_completed == 1
+    assert captured[0].payload["source_series_ids"] == [2]
+    assert captured[-1].payload["source_series_ids"] == [340]
+    assert {item.priority for item in captured} == {5}
+    assert {item.max_attempts for item in captured} == {1}
+
+
 def test_history_batch_reuses_active_batch_after_taking_advisory_lock(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -204,11 +247,26 @@ def test_history_batch_reuses_active_batch_after_taking_advisory_lock(
     async def unexpected_reserve(*_args: object, **_kwargs: object) -> None:
         raise AssertionError("an active history batch must be reused")
 
+    replay_markers: list[object] = []
+
+    async def fake_reserve_marker(
+        _session: object, **kwargs: object
+    ) -> tuple[object, bool]:
+        marker = _job(
+            kwargs["payload"],  # type: ignore[arg-type]
+            job_type=str(kwargs["job_type"]),
+            idempotency_key=str(kwargs["idempotency_key"]),
+        )
+        replay_markers.append(marker)
+        return marker, True
+
     monkeypatch.setattr(admin_router, "reserve_jobs", unexpected_reserve)
+    monkeypatch.setattr(admin_router, "reserve_job", fake_reserve_marker)
+    request = HistoryBatchCreate(idempotency_key="another-admin-request")
     result = asyncio.run(
         admin_router.create_provider_history_batch(
             "TRADINGVIEW_WEB",
-            HistoryBatchCreate(idempotency_key="another-admin-request"),
+            request,
             session,  # type: ignore[arg-type]
             None,  # type: ignore[arg-type]
         )
@@ -216,8 +274,34 @@ def test_history_batch_reuses_active_batch_after_taking_advisory_lock(
 
     assert result.batch_id == batch_id
     assert result.status == "queued"
-    assert session.commits == 0
+    assert session.commits == 1
     assert any("pg_advisory_xact_lock" in str(item) for item in session.statements)
+    assert len(replay_markers) == 1
+    marker = replay_markers[0]
+    digest = hashlib.sha256(request.idempotency_key.encode()).hexdigest()
+    assert marker.job_type == "history_batch_marker"
+    assert marker.status == "succeeded"
+    assert marker.finished_at is not None
+    assert marker.payload["history_batch_id"] == str(batch_id)
+    assert marker.payload["history_request_key_sha256"] == digest
+    assert marker.idempotency_key == f"manual-history-batch:{digest}:active-reuse"
+
+    replay_session = _BatchSession(
+        provider=SimpleNamespace(id=11),
+        eligible=[],
+        completed_jobs=[active, marker],
+    )
+    replay_session._scalar_rows = iter([SimpleNamespace(id=11), marker])
+    replay = asyncio.run(
+        admin_router.create_provider_history_batch(
+            "TRADINGVIEW_WEB",
+            request,
+            replay_session,  # type: ignore[arg-type]
+            None,  # type: ignore[arg-type]
+        )
+    )
+    assert replay.batch_id == batch_id
+    assert replay_session.commits == 0
 
 
 def test_history_batch_replays_the_same_request_key(
