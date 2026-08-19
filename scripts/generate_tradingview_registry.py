@@ -18,6 +18,9 @@ sys.path.insert(0, str(ROOT / "backend" / "src"))
 TradingViewAdapter: Any = importlib.import_module(
     "macrolens_worker.providers.tradingview"
 ).TradingViewAdapter
+tradingview_name_zh: Any = importlib.import_module(
+    "macrolens_worker.providers.tradingview_names"
+).tradingview_name_zh
 taxonomy_module = importlib.import_module(
     "macrolens_worker.providers.tradingview_taxonomy"
 )
@@ -224,7 +227,11 @@ def main() -> int:
         domain = FED_DOMAIN_BY_CODE[topic.parent_code]
         indicator: dict[str, Any] = {
             "canonical_code": canonical_code,
-            "name_zh": str(override.get("name_zh") or name_en),
+            "name_zh": tradingview_name_zh(
+                canonical_code,
+                name_en,
+                str(override.get("name_zh") or "") or None,
+            ),
             "name_en": name_en,
             "frequency": FREQUENCIES.get(
                 frequency_code,

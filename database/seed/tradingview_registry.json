@@ -53,7 +53,7 @@
   "indicators": [
     {
       "canonical_code": "US.TV.EAI",
-      "name_zh": "Economic Activity Index",
+      "name_zh": "经济活动指数",
       "name_en": "Economic Activity Index",
       "frequency": "月度",
       "unit": "VALUE",
@@ -76,7 +76,7 @@
     },
     {
       "canonical_code": "US.TV.FYGDPG",
-      "name_zh": "Full Year Gdp Growth",
+      "name_zh": "全年 GDP 增长",
       "name_en": "Full Year Gdp Growth",
       "frequency": "年度",
       "unit": "PCT",
@@ -95,7 +95,7 @@
     },
     {
       "canonical_code": "US.TV.GDP",
-      "name_zh": "Gdp",
+      "name_zh": "GDP指标",
       "name_en": "Gdp",
       "frequency": "年度",
       "unit": "VALUE",
@@ -114,7 +114,7 @@
     },
     {
       "canonical_code": "US.TV.GDPA",
-      "name_zh": "Gdp From Agriculture",
+      "name_zh": "GDP 农业",
       "name_en": "Gdp From Agriculture",
       "frequency": "季度",
       "unit": "VALUE",
@@ -133,7 +133,7 @@
     },
     {
       "canonical_code": "US.TV.GDPC",
-      "name_zh": "Gdp From Construction",
+      "name_zh": "GDP 建筑业",
       "name_en": "Gdp From Construction",
       "frequency": "季度",
       "unit": "VALUE",
@@ -152,7 +152,7 @@
     },
     {
       "canonical_code": "US.TV.GDPCP",
-      "name_zh": "Real Gdp",
+      "name_zh": "实际 GDP",
       "name_en": "Real Gdp",
       "frequency": "季度",
       "unit": "VALUE",
@@ -171,7 +171,7 @@
     },
     {
       "canonical_code": "US.TV.GDPEDC",
-      "name_zh": "Gdp External Demand Contribution",
+      "name_zh": "GDP 外部需求贡献",
       "name_en": "Gdp External Demand Contribution",
       "frequency": "月度",
       "unit": "VALUE",
@@ -194,7 +194,7 @@
     },
     {
       "canonical_code": "US.TV.GDPGA",
-      "name_zh": "Gdp Growth Annualized",
+      "name_zh": "GDP 增长年化",
       "name_en": "Gdp Growth Annualized",
       "frequency": "月度",
       "unit": "VALUE",
@@ -217,7 +217,7 @@
     },
     {
       "canonical_code": "US.TV.GDPMAN",
-      "name_zh": "Gdp From Manufacturing",
+      "name_zh": "GDP 制造业",
       "name_en": "Gdp From Manufacturing",
       "frequency": "季度",
       "unit": "VALUE",
@@ -236,7 +236,7 @@
     },
     {
       "canonical_code": "US.TV.GDPMIN",
-      "name_zh": "Gdp From Mining",
+      "name_zh": "GDP 采矿业",
       "name_en": "Gdp From Mining",
       "frequency": "季度",
       "unit": "VALUE",
@@ -255,7 +255,7 @@
     },
     {
       "canonical_code": "US.TV.GDPPA",
-      "name_zh": "Gdp From Public Administration",
+      "name_zh": "GDP 公共管理",
       "name_en": "Gdp From Public Administration",
       "frequency": "季度",
       "unit": "VALUE",
@@ -274,7 +274,7 @@
     },
     {
       "canonical_code": "US.TV.GDPPC",
-      "name_zh": "Gdp Per Capita",
+      "name_zh": "GDP 人均",
       "name_en": "Gdp Per Capita",
       "frequency": "年度",
       "unit": "VALUE",
@@ -293,7 +293,7 @@
     },
     {
       "canonical_code": "US.TV.GDPPCP",
-      "name_zh": "Gdp Per Capita Ppp",
+      "name_zh": "GDP 人均 Ppp",
       "name_en": "Gdp Per Capita Ppp",
       "frequency": "年度",
       "unit": "VALUE",
@@ -312,7 +312,7 @@
     },
     {
       "canonical_code": "US.TV.GDPQQ",
-      "name_zh": "Gdp Growth Rate",
+      "name_zh": "GDP 增长率",
       "name_en": "Gdp Growth Rate",
       "frequency": "季度",
       "unit": "PCT",
@@ -331,7 +331,7 @@
     },
     {
       "canonical_code": "US.TV.GDPS",
-      "name_zh": "Gdp From Services",
+      "name_zh": "GDP 服务业",
       "name_en": "Gdp From Services",
       "frequency": "季度",
       "unit": "VALUE",
@@ -350,7 +350,7 @@
     },
     {
       "canonical_code": "US.TV.GDPSA",
-      "name_zh": "Gdp Sales",
+      "name_zh": "GDP 销售",
       "name_en": "Gdp Sales",
       "frequency": "季度",
       "unit": "PCT",
@@ -369,7 +369,7 @@
     },
     {
       "canonical_code": "US.TV.GDPT",
-      "name_zh": "Gdp From Transport",
+      "name_zh": "GDP 运输业",
       "name_en": "Gdp From Transport",
       "frequency": "季度",
       "unit": "VALUE",
@@ -388,7 +388,7 @@
     },
     {
       "canonical_code": "US.TV.GDPU",
-      "name_zh": "Gdp From Utilities",
+      "name_zh": "GDP 公用事业",
       "name_en": "Gdp From Utilities",
       "frequency": "季度",
       "unit": "VALUE",
@@ -426,7 +426,7 @@
     },
     {
       "canonical_code": "US.TV.GFCF",
-      "name_zh": "Gross Fixed Capital Formation",
+      "name_zh": "固定资本形成总额",
       "name_en": "Gross Fixed Capital Formation",
       "frequency": "季度",
       "unit": "VALUE",
@@ -445,7 +445,7 @@
     },
     {
       "canonical_code": "US.TV.GNP",
-      "name_zh": "Gross National Product",
+      "name_zh": "国民生产总值",
       "name_en": "Gross National Product",
       "frequency": "季度",
       "unit": "VALUE",
@@ -464,7 +464,7 @@
     },
     {
       "canonical_code": "US.TV.MGDPMM",
-      "name_zh": "Monthly Gdp Mom",
+      "name_zh": "月度 GDP 环比",
       "name_en": "Monthly Gdp Mom",
       "frequency": "月度",
       "unit": "VALUE",
@@ -487,7 +487,7 @@
     },
     {
       "canonical_code": "US.TV.MGDPYY",
-      "name_zh": "Monthly Gdp Yoy",
+      "name_zh": "月度 GDP 同比",
       "name_en": "Monthly Gdp Yoy",
       "frequency": "月度",
       "unit": "VALUE",
@@ -510,7 +510,7 @@
     },
     {
       "canonical_code": "US.TV.RCNSMSPND",
-      "name_zh": "Real Consumer Spending",
+      "name_zh": "实际居民消费支出",
       "name_en": "Real Consumer Spending",
       "frequency": "季度",
       "unit": "PCT",
@@ -529,7 +529,7 @@
     },
     {
       "canonical_code": "US.TV.WEI",
-      "name_zh": "Weekly Economic Index",
+      "name_zh": "周度经济指数",
       "name_en": "Weekly Economic Index",
       "frequency": "周度",
       "unit": "PCT",
@@ -548,7 +548,7 @@
     },
     {
       "canonical_code": "US.TV.AEEB",
-      "name_zh": "Average Earnings Excluding Bonus",
+      "name_zh": "平均收入不含奖金",
       "name_en": "Average Earnings Excluding Bonus",
       "frequency": "月度",
       "unit": "VALUE",
@@ -615,7 +615,7 @@
     },
     {
       "canonical_code": "US.TV.AWE",
-      "name_zh": "Average Weekly Earnings",
+      "name_zh": "平均周薪",
       "name_en": "Average Weekly Earnings",
       "frequency": "月度",
       "unit": "VALUE",
@@ -661,7 +661,7 @@
     },
     {
       "canonical_code": "US.TV.CCC",
-      "name_zh": "Claimant Count Change",
+      "name_zh": "失业救济申请人数变化",
       "name_en": "Claimant Count Change",
       "frequency": "月度",
       "unit": "VALUE",
@@ -703,7 +703,7 @@
     },
     {
       "canonical_code": "US.TV.DBALAL",
-      "name_zh": "Debt Balance Auto Loans",
+      "name_zh": "汽车贷款余额",
       "name_en": "Debt Balance Auto Loans",
       "frequency": "季度",
       "unit": "VALUE",
@@ -724,7 +724,7 @@
     },
     {
       "canonical_code": "US.TV.DBALCC",
-      "name_zh": "Debt Balance Credit Cards",
+      "name_zh": "信用卡贷款余额",
       "name_en": "Debt Balance Credit Cards",
       "frequency": "季度",
       "unit": "VALUE",
@@ -745,7 +745,7 @@
     },
     {
       "canonical_code": "US.TV.DBALM",
-      "name_zh": "Debt Balance Mortgages",
+      "name_zh": "抵押贷款余额",
       "name_en": "Debt Balance Mortgages",
       "frequency": "季度",
       "unit": "VALUE",
@@ -766,7 +766,7 @@
     },
     {
       "canonical_code": "US.TV.DBALSL",
-      "name_zh": "Debt Balance Student Loans",
+      "name_zh": "学生贷款余额",
       "name_en": "Debt Balance Student Loans",
       "frequency": "季度",
       "unit": "VALUE",
@@ -787,7 +787,7 @@
     },
     {
       "canonical_code": "US.TV.DBALT",
-      "name_zh": "Debt Balance Total",
+      "name_zh": "债务余额总计",
       "name_en": "Debt Balance Total",
       "frequency": "季度",
       "unit": "VALUE",
@@ -827,7 +827,7 @@
     },
     {
       "canonical_code": "US.TV.EMC",
-      "name_zh": "Employment Change",
+      "name_zh": "就业变化",
       "name_en": "Employment Change",
       "frequency": "月度",
       "unit": "VALUE",
@@ -850,7 +850,7 @@
     },
     {
       "canonical_code": "US.TV.EMCI",
-      "name_zh": "Employment Cost Index",
+      "name_zh": "就业成本指数",
       "name_en": "Employment Cost Index",
       "frequency": "季度",
       "unit": "PCT",
@@ -871,7 +871,7 @@
     },
     {
       "canonical_code": "US.TV.EMCIB",
-      "name_zh": "Employment Cost Index Benefits",
+      "name_zh": "就业成本指数：福利",
       "name_en": "Employment Cost Index Benefits",
       "frequency": "季度",
       "unit": "PCT",
@@ -892,7 +892,7 @@
     },
     {
       "canonical_code": "US.TV.EMCIW",
-      "name_zh": "Employment Cost Index Wages",
+      "name_zh": "就业成本指数：工资",
       "name_en": "Employment Cost Index Wages",
       "frequency": "季度",
       "unit": "PCT",
@@ -913,7 +913,7 @@
     },
     {
       "canonical_code": "US.TV.EMP",
-      "name_zh": "Employed Persons",
+      "name_zh": "就业人数",
       "name_en": "Employed Persons",
       "frequency": "月度",
       "unit": "PSN",
@@ -932,7 +932,7 @@
     },
     {
       "canonical_code": "US.TV.EMR",
-      "name_zh": "Employment Rate",
+      "name_zh": "就业率",
       "name_en": "Employment Rate",
       "frequency": "月度",
       "unit": "PCT",
@@ -951,7 +951,7 @@
     },
     {
       "canonical_code": "US.TV.FTE",
-      "name_zh": "Full Time Employment",
+      "name_zh": "全职就业",
       "name_en": "Full Time Employment",
       "frequency": "月度",
       "unit": "PSN",
@@ -989,7 +989,7 @@
     },
     {
       "canonical_code": "US.TV.HPA",
-      "name_zh": "Hiring Plans Announcements",
+      "name_zh": "招聘计划公告",
       "name_en": "Hiring Plans Announcements",
       "frequency": "月度",
       "unit": "PSN",
@@ -1008,7 +1008,7 @@
     },
     {
       "canonical_code": "US.TV.HUNEMPR",
-      "name_zh": "Harmonised Unemployment Rate",
+      "name_zh": "调和失业率",
       "name_en": "Harmonised Unemployment Rate",
       "frequency": "月度",
       "unit": "VALUE",
@@ -1050,7 +1050,7 @@
     },
     {
       "canonical_code": "US.TV.INAR",
-      "name_zh": "Inactivity Rate",
+      "name_zh": "闲置率",
       "name_en": "Inactivity Rate",
       "frequency": "月度",
       "unit": "VALUE",
@@ -1073,7 +1073,7 @@
     },
     {
       "canonical_code": "US.TV.JA",
-      "name_zh": "Job Advertisements",
+      "name_zh": "招聘广告数量",
       "name_en": "Job Advertisements",
       "frequency": "月度",
       "unit": "VALUE",
@@ -1096,7 +1096,7 @@
     },
     {
       "canonical_code": "US.TV.JAR",
-      "name_zh": "Jobs To Applications Ratio",
+      "name_zh": "职位申请比",
       "name_en": "Jobs To Applications Ratio",
       "frequency": "月度",
       "unit": "VALUE",
@@ -1157,7 +1157,7 @@
     },
     {
       "canonical_code": "US.TV.JLD",
-      "name_zh": "Job Layoffs And Discharges",
+      "name_zh": "裁员与解雇人数",
       "name_en": "Job Layoffs And Discharges",
       "frequency": "月度",
       "unit": "PSN",
@@ -1214,7 +1214,7 @@
     },
     {
       "canonical_code": "US.TV.JQR",
-      "name_zh": "Job Quits Rate",
+      "name_zh": "主动离职率",
       "name_en": "Job Quits Rate",
       "frequency": "月度",
       "unit": "PCT",
@@ -1233,7 +1233,7 @@
     },
     {
       "canonical_code": "US.TV.JV",
-      "name_zh": "Job Vacancies",
+      "name_zh": "职位空缺数",
       "name_en": "Job Vacancies",
       "frequency": "月度",
       "unit": "PSN",
@@ -1252,7 +1252,7 @@
     },
     {
       "canonical_code": "US.TV.JVR",
-      "name_zh": "Job Vacancy Rate",
+      "name_zh": "职位空缺率",
       "name_en": "Job Vacancy Rate",
       "frequency": "月度",
       "unit": "VALUE",
@@ -1275,7 +1275,7 @@
     },
     {
       "canonical_code": "US.TV.LC",
-      "name_zh": "Labour Costs",
+      "name_zh": "劳动力成本",
       "name_en": "Labour Costs",
       "frequency": "季度",
       "unit": "POINT",
@@ -1315,7 +1315,7 @@
     },
     {
       "canonical_code": "US.TV.LTUR",
-      "name_zh": "Long Term Unemployment Rate",
+      "name_zh": "长期失业率",
       "name_en": "Long Term Unemployment Rate",
       "frequency": "月度",
       "unit": "PCT",
@@ -1334,7 +1334,7 @@
     },
     {
       "canonical_code": "US.TV.LWF",
-      "name_zh": "Living Wage Family",
+      "name_zh": "家庭生活工资",
       "name_en": "Living Wage Family",
       "frequency": "年度",
       "unit": "VALUE",
@@ -1355,7 +1355,7 @@
     },
     {
       "canonical_code": "US.TV.LWI",
-      "name_zh": "Living Wage Individual",
+      "name_zh": "个人生活工资",
       "name_en": "Living Wage Individual",
       "frequency": "年度",
       "unit": "VALUE",
@@ -1395,7 +1395,7 @@
     },
     {
       "canonical_code": "US.TV.MW",
-      "name_zh": "Minimum Wages",
+      "name_zh": "最低工资",
       "name_en": "Minimum Wages",
       "frequency": "年度",
       "unit": "VALUE",
@@ -1435,7 +1435,7 @@
     },
     {
       "canonical_code": "US.TV.NFPRQQ",
-      "name_zh": "Nonfarm Productivity Qoq",
+      "name_zh": "非农生产率季度环比",
       "name_en": "Nonfarm Productivity Qoq",
       "frequency": "季度",
       "unit": "PCT",
@@ -1475,7 +1475,7 @@
     },
     {
       "canonical_code": "US.TV.NWG",
-      "name_zh": "Negotiated Wage Growth",
+      "name_zh": "协商工资增长",
       "name_en": "Negotiated Wage Growth",
       "frequency": "月度",
       "unit": "VALUE",
@@ -1500,7 +1500,7 @@
     },
     {
       "canonical_code": "US.TV.OPYY",
-      "name_zh": "Overtime Pay Yoy",
+      "name_zh": "加班薪酬同比",
       "name_en": "Overtime Pay Yoy",
       "frequency": "月度",
       "unit": "VALUE",
@@ -1563,7 +1563,7 @@
     },
     {
       "canonical_code": "US.TV.PTE",
-      "name_zh": "Part Time Employment",
+      "name_zh": "非全职就业",
       "name_en": "Part Time Employment",
       "frequency": "月度",
       "unit": "PSN",
@@ -1582,7 +1582,7 @@
     },
     {
       "canonical_code": "US.TV.PUAC",
-      "name_zh": "Pandemic Unemployment Assistance Claims",
+      "name_zh": "疫情失业援助申请",
       "name_en": "Pandemic Unemployment Assistance Claims",
       "frequency": "周度",
       "unit": "PSN",
@@ -1601,7 +1601,7 @@
     },
     {
       "canonical_code": "US.TV.RAM",
-      "name_zh": "Retirement Age Men",
+      "name_zh": "男性退休年龄",
       "name_en": "Retirement Age Men",
       "frequency": "年度",
       "unit": "YEAR",
@@ -1620,7 +1620,7 @@
     },
     {
       "canonical_code": "US.TV.RAW",
-      "name_zh": "Retirement Age Women",
+      "name_zh": "女性退休年龄",
       "name_en": "Retirement Age Women",
       "frequency": "年度",
       "unit": "YEAR",
@@ -1639,7 +1639,7 @@
     },
     {
       "canonical_code": "US.TV.REEB",
-      "name_zh": "Real Earnings Excluding Bonuses",
+      "name_zh": "实际收入不含奖金",
       "name_en": "Real Earnings Excluding Bonuses",
       "frequency": "月度",
       "unit": "VALUE",
@@ -1664,7 +1664,7 @@
     },
     {
       "canonical_code": "US.TV.REIB",
-      "name_zh": "Real Earnings Including Bonuses",
+      "name_zh": "实际收入含奖金",
       "name_en": "Real Earnings Including Bonuses",
       "frequency": "月度",
       "unit": "VALUE",
@@ -1689,7 +1689,7 @@
     },
     {
       "canonical_code": "US.TV.RJR",
-      "name_zh": "RJR",
+      "name_zh": "RJR指标",
       "name_en": "RJR",
       "frequency": "月度",
       "unit": "VALUE",
@@ -1712,7 +1712,7 @@
     },
     {
       "canonical_code": "US.TV.U6UR",
-      "name_zh": "U6 Unemployment Rate",
+      "name_zh": "U6 失业率",
       "name_en": "U6 Unemployment Rate",
       "frequency": "月度",
       "unit": "PCT",
@@ -1731,7 +1731,7 @@
     },
     {
       "canonical_code": "US.TV.UC",
-      "name_zh": "Unemployment Change",
+      "name_zh": "失业变化",
       "name_en": "Unemployment Change",
       "frequency": "月度",
       "unit": "VALUE",
@@ -1754,7 +1754,7 @@
     },
     {
       "canonical_code": "US.TV.ULCQQ",
-      "name_zh": "Unit Labour Costs Qoq",
+      "name_zh": "单位劳动成本季度环比",
       "name_en": "Unit Labour Costs Qoq",
       "frequency": "季度",
       "unit": "PCT",
@@ -1775,7 +1775,7 @@
     },
     {
       "canonical_code": "US.TV.UP",
-      "name_zh": "Unemployed Persons",
+      "name_zh": "失业人数",
       "name_en": "Unemployed Persons",
       "frequency": "月度",
       "unit": "PSN",
@@ -1813,7 +1813,7 @@
     },
     {
       "canonical_code": "US.TV.WAG",
-      "name_zh": "Wages",
+      "name_zh": "工资",
       "name_en": "Wages",
       "frequency": "月度",
       "unit": "VALUE",
@@ -1834,7 +1834,7 @@
     },
     {
       "canonical_code": "US.TV.WG",
-      "name_zh": "Wage Growth Yoy",
+      "name_zh": "工资增长同比",
       "name_en": "Wage Growth Yoy",
       "frequency": "月度",
       "unit": "PCT",
@@ -1855,7 +1855,7 @@
     },
     {
       "canonical_code": "US.TV.WHS",
-      "name_zh": "Wages High Skilled",
+      "name_zh": "高技能劳动者工资",
       "name_en": "Wages High Skilled",
       "frequency": "年度",
       "unit": "VALUE",
@@ -1876,7 +1876,7 @@
     },
     {
       "canonical_code": "US.TV.WLS",
-      "name_zh": "Wages Low Skilled",
+      "name_zh": "低技能劳动者工资",
       "name_en": "Wages Low Skilled",
       "frequency": "年度",
       "unit": "VALUE",
@@ -1897,7 +1897,7 @@
     },
     {
       "canonical_code": "US.TV.WM",
-      "name_zh": "Wages In Manufacturing",
+      "name_zh": "制造业工资",
       "name_en": "Wages In Manufacturing",
       "frequency": "月度",
       "unit": "VALUE",
@@ -1918,7 +1918,7 @@
     },
     {
       "canonical_code": "US.TV.YUR",
-      "name_zh": "Youth Unemployment Rate",
+      "name_zh": "青年失业率",
       "name_en": "Youth Unemployment Rate",
       "frequency": "月度",
       "unit": "PCT",
@@ -1937,7 +1937,7 @@
     },
     {
       "canonical_code": "US.TV.BAVCPIYY",
-      "name_zh": "Bavaria Cpi Yoy",
+      "name_zh": "巴伐利亚 CPI 同比",
       "name_en": "Bavaria Cpi Yoy",
       "frequency": "月度",
       "unit": "VALUE",
@@ -1960,7 +1960,7 @@
     },
     {
       "canonical_code": "US.TV.BCI",
-      "name_zh": "Business Conditions Index",
+      "name_zh": "商业状况指数",
       "name_en": "Business Conditions Index",
       "frequency": "月度",
       "unit": "VALUE",
@@ -1983,7 +1983,7 @@
     },
     {
       "canonical_code": "US.TV.BRANDCPIYY",
-      "name_zh": "Brandenburg Cpi Yoy",
+      "name_zh": "勃兰登堡 CPI 同比",
       "name_en": "Brandenburg Cpi Yoy",
       "frequency": "月度",
       "unit": "VALUE",
@@ -2006,7 +2006,7 @@
     },
     {
       "canonical_code": "US.TV.BWUCPIYY",
-      "name_zh": "Baden Wuerttemberg Cpi Yoy",
+      "name_zh": "巴登-符腾堡 CPI 同比",
       "name_en": "Baden Wuerttemberg Cpi Yoy",
       "frequency": "月度",
       "unit": "VALUE",
@@ -2029,7 +2029,7 @@
     },
     {
       "canonical_code": "US.TV.CCP",
-      "name_zh": "Core Consumer Prices",
+      "name_zh": "核心消费价格",
       "name_en": "Core Consumer Prices",
       "frequency": "月度",
       "unit": "POINT",
@@ -2048,7 +2048,7 @@
     },
     {
       "canonical_code": "US.TV.CCPI",
-      "name_zh": "Core Cpi",
+      "name_zh": "核心 CPI",
       "name_en": "Core Cpi",
       "frequency": "月度",
       "unit": "PCT",
@@ -2067,7 +2067,7 @@
     },
     {
       "canonical_code": "US.TV.CIR",
-      "name_zh": "Core Inflation Rate Yoy",
+      "name_zh": "核心通胀率同比",
       "name_en": "Core Inflation Rate Yoy",
       "frequency": "月度",
       "unit": "PCT",
@@ -2086,7 +2086,7 @@
     },
     {
       "canonical_code": "US.TV.CIRMM",
-      "name_zh": "Core Inflation Rate Mom",
+      "name_zh": "核心通胀率环比",
       "name_en": "Core Inflation Rate Mom",
       "frequency": "月度",
       "unit": "PCT",
@@ -2105,7 +2105,7 @@
     },
     {
       "canonical_code": "US.TV.CLDPMM",
-      "name_zh": "Corelogic Dwelling Prices Mom",
+      "name_zh": "CoreLogic住宅价格环比",
       "name_en": "Corelogic Dwelling Prices Mom",
       "frequency": "月度",
       "unit": "VALUE",
@@ -2130,7 +2130,7 @@
     },
     {
       "canonical_code": "US.TV.CPCEPI",
-      "name_zh": "Core Pce Price Index",
+      "name_zh": "核心PCE价格指数",
       "name_en": "Core Pce Price Index",
       "frequency": "月度",
       "unit": "POINT",
@@ -2149,7 +2149,7 @@
     },
     {
       "canonical_code": "US.TV.CPCEPIAC",
-      "name_zh": "Core Pce Price Index Annual Change",
+      "name_zh": "核心PCE价格指数年度变化",
       "name_en": "Core Pce Price Index Annual Change",
       "frequency": "月度",
       "unit": "PCT",
@@ -2168,7 +2168,7 @@
     },
     {
       "canonical_code": "US.TV.CPCEPIMM",
-      "name_zh": "Core Pce Price Index Mom",
+      "name_zh": "核心PCE价格指数环比",
       "name_en": "Core Pce Price Index Mom",
       "frequency": "月度",
       "unit": "PCT",
@@ -2187,7 +2187,7 @@
     },
     {
       "canonical_code": "US.TV.CPCEPQQ",
-      "name_zh": "Core Pce Prices Qoq",
+      "name_zh": "核心PCE价格季度环比",
       "name_en": "Core Pce Prices Qoq",
       "frequency": "季度",
       "unit": "PCT",
@@ -2206,7 +2206,7 @@
     },
     {
       "canonical_code": "US.TV.CPFIR",
-      "name_zh": "CPFIR",
+      "name_zh": "CPFIR指标",
       "name_en": "CPFIR",
       "frequency": "月度",
       "unit": "VALUE",
@@ -2229,7 +2229,7 @@
     },
     {
       "canonical_code": "US.TV.CPFIRMM",
-      "name_zh": "Cpi With Fixed Interest Rate Mom",
+      "name_zh": "固定利率CPI 环比",
       "name_en": "Cpi With Fixed Interest Rate Mom",
       "frequency": "月度",
       "unit": "VALUE",
@@ -2252,7 +2252,7 @@
     },
     {
       "canonical_code": "US.TV.CPFIRYY",
-      "name_zh": "Cpi With Fixed Interest Rate Yoy",
+      "name_zh": "固定利率CPI 同比",
       "name_en": "Cpi With Fixed Interest Rate Yoy",
       "frequency": "月度",
       "unit": "VALUE",
@@ -2275,7 +2275,7 @@
     },
     {
       "canonical_code": "US.TV.CPI",
-      "name_zh": "Consumer Price Index",
+      "name_zh": "消费者价格指数",
       "name_en": "Consumer Price Index",
       "frequency": "月度",
       "unit": "POINT",
@@ -2294,7 +2294,7 @@
     },
     {
       "canonical_code": "US.TV.CPIHU",
-      "name_zh": "Cpi Housing Utilities",
+      "name_zh": "CPI住房与公用事业",
       "name_en": "Cpi Housing Utilities",
       "frequency": "月度",
       "unit": "POINT",
@@ -2315,7 +2315,7 @@
     },
     {
       "canonical_code": "US.TV.CPIM",
-      "name_zh": "Cpi Median",
+      "name_zh": "CPI 中位数",
       "name_en": "Cpi Median",
       "frequency": "月度",
       "unit": "PCT",
@@ -2334,7 +2334,7 @@
     },
     {
       "canonical_code": "US.TV.CPIT",
-      "name_zh": "Cpi Transportation",
+      "name_zh": "CPI交通",
       "name_en": "Cpi Transportation",
       "frequency": "月度",
       "unit": "POINT",
@@ -2353,7 +2353,7 @@
     },
     {
       "canonical_code": "US.TV.CPITM",
-      "name_zh": "Cpi Trimmed Mean",
+      "name_zh": "截尾均值CPI",
       "name_en": "Cpi Trimmed Mean",
       "frequency": "月度",
       "unit": "PCT",
@@ -2372,7 +2372,7 @@
     },
     {
       "canonical_code": "US.TV.CPPI",
-      "name_zh": "Core Producer Price Index",
+      "name_zh": "核心生产者价格指数",
       "name_en": "Core Producer Price Index",
       "frequency": "月度",
       "unit": "POINT",
@@ -2393,7 +2393,7 @@
     },
     {
       "canonical_code": "US.TV.CPPMM",
-      "name_zh": "Core Producer Prices Mom",
+      "name_zh": "核心生产者价格环比",
       "name_en": "Core Producer Prices Mom",
       "frequency": "月度",
       "unit": "PCT",
@@ -2414,7 +2414,7 @@
     },
     {
       "canonical_code": "US.TV.CPPYY",
-      "name_zh": "Core Producer Prices Yoy",
+      "name_zh": "核心生产者价格同比",
       "name_en": "Core Producer Prices Yoy",
       "frequency": "月度",
       "unit": "PCT",
@@ -2435,7 +2435,7 @@
     },
     {
       "canonical_code": "US.TV.CPSA",
-      "name_zh": "Cpi Seasonally Adjusted",
+      "name_zh": "季节调整CPI",
       "name_en": "Cpi Seasonally Adjusted",
       "frequency": "月度",
       "unit": "POINT",
@@ -2454,7 +2454,7 @@
     },
     {
       "canonical_code": "US.TV.CPYY",
-      "name_zh": "Commodity Prices Yoy",
+      "name_zh": "大宗商品价格同比",
       "name_en": "Commodity Prices Yoy",
       "frequency": "月度",
       "unit": "VALUE",
@@ -2479,7 +2479,7 @@
     },
     {
       "canonical_code": "US.TV.CRLPI",
-      "name_zh": "Cereals Price Index",
+      "name_zh": "谷物价格指数",
       "name_en": "Cereals Price Index",
       "frequency": "月度",
       "unit": "VALUE",
@@ -2502,7 +2502,7 @@
     },
     {
       "canonical_code": "US.TV.DRPI",
-      "name_zh": "Dairy Price Index",
+      "name_zh": "乳制品价格指数",
       "name_en": "Dairy Price Index",
       "frequency": "月度",
       "unit": "VALUE",
@@ -2525,7 +2525,7 @@
     },
     {
       "canonical_code": "US.TV.EI",
-      "name_zh": "Energy Inflation",
+      "name_zh": "能源通胀",
       "name_en": "Energy Inflation",
       "frequency": "月度",
       "unit": "PCT",
@@ -2544,7 +2544,7 @@
     },
     {
       "canonical_code": "US.TV.EP",
-      "name_zh": "Export Prices",
+      "name_zh": "出口价格",
       "name_en": "Export Prices",
       "frequency": "月度",
       "unit": "POINT",
@@ -2565,7 +2565,7 @@
     },
     {
       "canonical_code": "US.TV.EPMM",
-      "name_zh": "Export Prices Mom",
+      "name_zh": "出口价格环比",
       "name_en": "Export Prices Mom",
       "frequency": "月度",
       "unit": "PCT",
@@ -2586,7 +2586,7 @@
     },
     {
       "canonical_code": "US.TV.EPYY",
-      "name_zh": "Export Prices Yoy",
+      "name_zh": "出口价格同比",
       "name_en": "Export Prices Yoy",
       "frequency": "月度",
       "unit": "PCT",
@@ -2607,7 +2607,7 @@
     },
     {
       "canonical_code": "US.TV.FI",
-      "name_zh": "Food Inflation Yoy",
+      "name_zh": "食品通胀同比",
       "name_en": "Food Inflation Yoy",
       "frequency": "月度",
       "unit": "PCT",
@@ -2626,7 +2626,7 @@
     },
     {
       "canonical_code": "US.TV.FPI",
-      "name_zh": "Food Price Index",
+      "name_zh": "食品价格指数",
       "name_en": "Food Price Index",
       "frequency": "月度",
       "unit": "VALUE",
@@ -2651,7 +2651,7 @@
     },
     {
       "canonical_code": "US.TV.GDPCPI",
-      "name_zh": "Gdp Chain Price Index",
+      "name_zh": "GDP链式价格指数",
       "name_en": "Gdp Chain Price Index",
       "frequency": "月度",
       "unit": "VALUE",
@@ -2674,7 +2674,7 @@
     },
     {
       "canonical_code": "US.TV.GDPD",
-      "name_zh": "Gdp Deflator",
+      "name_zh": "GDP平减指数",
       "name_en": "Gdp Deflator",
       "frequency": "季度",
       "unit": "POINT",
@@ -2693,7 +2693,7 @@
     },
     {
       "canonical_code": "US.TV.GI",
-      "name_zh": "Goods Inflation",
+      "name_zh": "商品通胀",
       "name_en": "Goods Inflation",
       "frequency": "月度",
       "unit": "VALUE",
@@ -2716,7 +2716,7 @@
     },
     {
       "canonical_code": "US.TV.HESSCPIYY",
-      "name_zh": "Hesse Cpi Yoy",
+      "name_zh": "黑森 CPI 同比",
       "name_en": "Hesse Cpi Yoy",
       "frequency": "月度",
       "unit": "VALUE",
@@ -2739,7 +2739,7 @@
     },
     {
       "canonical_code": "US.TV.HICP",
-      "name_zh": "Harmonised Index Of Consumer Prices",
+      "name_zh": "调和消费者价格指数",
       "name_en": "Harmonised Index Of Consumer Prices",
       "frequency": "月度",
       "unit": "VALUE",
@@ -2762,7 +2762,7 @@
     },
     {
       "canonical_code": "US.TV.HIRMM",
-      "name_zh": "HIRMM",
+      "name_zh": "HIRMM指标",
       "name_en": "HIRMM",
       "frequency": "月度",
       "unit": "VALUE",
@@ -2785,7 +2785,7 @@
     },
     {
       "canonical_code": "US.TV.HIRYY",
-      "name_zh": "Harmonised Inflation Rate Yoy",
+      "name_zh": "调和通胀率同比",
       "name_en": "Harmonised Inflation Rate Yoy",
       "frequency": "月度",
       "unit": "VALUE",
@@ -2808,7 +2808,7 @@
     },
     {
       "canonical_code": "US.TV.IE",
-      "name_zh": "Inflation Expectations",
+      "name_zh": "通胀预期",
       "name_en": "Inflation Expectations",
       "frequency": "月度",
       "unit": "PCT",
@@ -2827,7 +2827,7 @@
     },
     {
       "canonical_code": "US.TV.IGPMMM",
-      "name_zh": "Igp M Inflation Mom",
+      "name_zh": "Igp M 通胀环比",
       "name_en": "Igp M Inflation Mom",
       "frequency": "月度",
       "unit": "VALUE",
@@ -2850,7 +2850,7 @@
     },
     {
       "canonical_code": "US.TV.IPCFMM",
-      "name_zh": "Ipc Fipe Inflation Mom",
+      "name_zh": "IPC-Fipe 通胀环比",
       "name_en": "Ipc Fipe Inflation Mom",
       "frequency": "月度",
       "unit": "VALUE",
@@ -2873,7 +2873,7 @@
     },
     {
       "canonical_code": "US.TV.IPRI",
-      "name_zh": "Import Prices",
+      "name_zh": "进口价格",
       "name_en": "Import Prices",
       "frequency": "月度",
       "unit": "POINT",
@@ -2894,7 +2894,7 @@
     },
     {
       "canonical_code": "US.TV.IPRIMM",
-      "name_zh": "Import Prices Mom",
+      "name_zh": "进口价格环比",
       "name_en": "Import Prices Mom",
       "frequency": "月度",
       "unit": "PCT",
@@ -2915,7 +2915,7 @@
     },
     {
       "canonical_code": "US.TV.IPRIYY",
-      "name_zh": "Import Prices Yoy",
+      "name_zh": "进口价格同比",
       "name_en": "Import Prices Yoy",
       "frequency": "月度",
       "unit": "PCT",
@@ -2936,7 +2936,7 @@
     },
     {
       "canonical_code": "US.TV.IRMM",
-      "name_zh": "Inflation Rate Mom",
+      "name_zh": "通胀率环比",
       "name_en": "Inflation Rate Mom",
       "frequency": "月度",
       "unit": "PCT",
@@ -2974,7 +2974,7 @@
     },
     {
       "canonical_code": "US.TV.MCIRMM",
-      "name_zh": "Mid Month Core Inflation Rate Mom",
+      "name_zh": "Mid 月核心通胀率环比",
       "name_en": "Mid Month Core Inflation Rate Mom",
       "frequency": "月度",
       "unit": "VALUE",
@@ -2997,7 +2997,7 @@
     },
     {
       "canonical_code": "US.TV.MCIRYY",
-      "name_zh": "MCIRYY",
+      "name_zh": "MCIRYY指标",
       "name_en": "MCIRYY",
       "frequency": "月度",
       "unit": "VALUE",
@@ -3020,7 +3020,7 @@
     },
     {
       "canonical_code": "US.TV.MCPI",
-      "name_zh": "Monthly Cpi Indicator",
+      "name_zh": "月度CPI指标",
       "name_en": "Monthly Cpi Indicator",
       "frequency": "月度",
       "unit": "VALUE",
@@ -3043,7 +3043,7 @@
     },
     {
       "canonical_code": "US.TV.MIE1Y",
-      "name_zh": "Michigan Inflation Expectations",
+      "name_zh": "密歇根大学通胀预期",
       "name_en": "Michigan Inflation Expectations",
       "frequency": "月度",
       "unit": "PCT",
@@ -3062,7 +3062,7 @@
     },
     {
       "canonical_code": "US.TV.MIE5Y",
-      "name_zh": "Michigan 5 Year Inflation Expectations",
+      "name_zh": "密歇根大学5年通胀预期",
       "name_en": "Michigan 5 Year Inflation Expectations",
       "frequency": "月度",
       "unit": "PCT",
@@ -3081,7 +3081,7 @@
     },
     {
       "canonical_code": "US.TV.MIIGMM",
-      "name_zh": "Mi Inflation Gauge Mom",
+      "name_zh": "Mi 通胀指标环比",
       "name_en": "Mi Inflation Gauge Mom",
       "frequency": "月度",
       "unit": "VALUE",
@@ -3104,7 +3104,7 @@
     },
     {
       "canonical_code": "US.TV.MIRMM",
-      "name_zh": "Mid Month Inflation Rate Mom",
+      "name_zh": "Mid 月通胀率环比",
       "name_en": "Mid Month Inflation Rate Mom",
       "frequency": "月度",
       "unit": "VALUE",
@@ -3127,7 +3127,7 @@
     },
     {
       "canonical_code": "US.TV.MIRYY",
-      "name_zh": "Mid Month Inflation Rate Yoy",
+      "name_zh": "Mid 月通胀率同比",
       "name_en": "Mid Month Inflation Rate Yoy",
       "frequency": "月度",
       "unit": "VALUE",
@@ -3150,7 +3150,7 @@
     },
     {
       "canonical_code": "US.TV.MPI",
-      "name_zh": "Meat Price Index",
+      "name_zh": "肉类价格指数",
       "name_en": "Meat Price Index",
       "frequency": "月度",
       "unit": "VALUE",
@@ -3173,7 +3173,7 @@
     },
     {
       "canonical_code": "US.TV.NRWCPIYY",
-      "name_zh": "North Rhine Westphalia Cpi Yoy",
+      "name_zh": "北莱茵-威斯特法伦 CPI 同比",
       "name_en": "North Rhine Westphalia Cpi Yoy",
       "frequency": "月度",
       "unit": "VALUE",
@@ -3196,7 +3196,7 @@
     },
     {
       "canonical_code": "US.TV.OPI",
-      "name_zh": "Oils Price Index",
+      "name_zh": "油脂价格指数",
       "name_en": "Oils Price Index",
       "frequency": "月度",
       "unit": "VALUE",
@@ -3219,7 +3219,7 @@
     },
     {
       "canonical_code": "US.TV.PCEPI",
-      "name_zh": "Pce Price Index",
+      "name_zh": "PCE价格指数",
       "name_en": "Pce Price Index",
       "frequency": "月度",
       "unit": "POINT",
@@ -3238,7 +3238,7 @@
     },
     {
       "canonical_code": "US.TV.PCEPIAC",
-      "name_zh": "Pce Price Index Annual Change",
+      "name_zh": "PCE价格指数年度变化",
       "name_en": "Pce Price Index Annual Change",
       "frequency": "月度",
       "unit": "PCT",
@@ -3257,7 +3257,7 @@
     },
     {
       "canonical_code": "US.TV.PCEPIMC",
-      "name_zh": "Pce Price Index Monthly Change",
+      "name_zh": "PCE价格指数月度变化",
       "name_en": "Pce Price Index Monthly Change",
       "frequency": "月度",
       "unit": "PCT",
@@ -3276,7 +3276,7 @@
     },
     {
       "canonical_code": "US.TV.PCEPQQ",
-      "name_zh": "Pce Prices Qoq",
+      "name_zh": "Pce 价格季度环比",
       "name_en": "Pce Prices Qoq",
       "frequency": "季度",
       "unit": "PCT",
@@ -3295,7 +3295,7 @@
     },
     {
       "canonical_code": "US.TV.PPI",
-      "name_zh": "Producer Price Index",
+      "name_zh": "生产者价格指数",
       "name_en": "Producer Price Index",
       "frequency": "月度",
       "unit": "POINT",
@@ -3316,7 +3316,7 @@
     },
     {
       "canonical_code": "US.TV.PPIEFETS",
-      "name_zh": "Ppi Ex Food Energy And Trade Services",
+      "name_zh": "Ppi Ex 食品能源与贸易服务",
       "name_en": "Ppi Ex Food Energy And Trade Services",
       "frequency": "月度",
       "unit": "POINT",
@@ -3337,7 +3337,7 @@
     },
     {
       "canonical_code": "US.TV.PPIEFETSMM",
-      "name_zh": "Ppi Ex Food Energy And Trade Services Mom",
+      "name_zh": "Ppi Ex 食品能源与贸易服务环比",
       "name_en": "Ppi Ex Food Energy And Trade Services Mom",
       "frequency": "月度",
       "unit": "PCT",
@@ -3358,7 +3358,7 @@
     },
     {
       "canonical_code": "US.TV.PPIEFETSYY",
-      "name_zh": "Ppi Ex Food Energy And Trade Services Yoy",
+      "name_zh": "Ppi Ex 食品能源与贸易服务同比",
       "name_en": "Ppi Ex Food Energy And Trade Services Yoy",
       "frequency": "月度",
       "unit": "PCT",
@@ -3379,7 +3379,7 @@
     },
     {
       "canonical_code": "US.TV.PPII",
-      "name_zh": "Producer Price Index Input",
+      "name_zh": "生产者价格指数投入项",
       "name_en": "Producer Price Index Input",
       "frequency": "月度",
       "unit": "VALUE",
@@ -3404,7 +3404,7 @@
     },
     {
       "canonical_code": "US.TV.PPIIN",
-      "name_zh": "Ppi Input",
+      "name_zh": "Ppi 投入",
       "name_en": "Ppi Input",
       "frequency": "月度",
       "unit": "VALUE",
@@ -3429,7 +3429,7 @@
     },
     {
       "canonical_code": "US.TV.PPIINYY",
-      "name_zh": "Ppi Input Yoy",
+      "name_zh": "Ppi 投入同比",
       "name_en": "Ppi Input Yoy",
       "frequency": "月度",
       "unit": "VALUE",
@@ -3454,7 +3454,7 @@
     },
     {
       "canonical_code": "US.TV.PPIMM",
-      "name_zh": "Producer Price Inflation Mom",
+      "name_zh": "生产者价格通胀环比",
       "name_en": "Producer Price Inflation Mom",
       "frequency": "月度",
       "unit": "PCT",
@@ -3475,7 +3475,7 @@
     },
     {
       "canonical_code": "US.TV.PPIYY",
-      "name_zh": "Producer Prices Index Yoy",
+      "name_zh": "生产者价格指数同比",
       "name_en": "Producer Prices Index Yoy",
       "frequency": "月度",
       "unit": "PCT",
@@ -3496,7 +3496,7 @@
     },
     {
       "canonical_code": "US.TV.RINF",
-      "name_zh": "Rent Inflation",
+      "name_zh": "租金通胀",
       "name_en": "Rent Inflation",
       "frequency": "月度",
       "unit": "PCT",
@@ -3517,7 +3517,7 @@
     },
     {
       "canonical_code": "US.TV.RPI",
-      "name_zh": "Retail Price Index",
+      "name_zh": "零售价格指数",
       "name_en": "Retail Price Index",
       "frequency": "月度",
       "unit": "VALUE",
@@ -3540,7 +3540,7 @@
     },
     {
       "canonical_code": "US.TV.SAXCPIYY",
-      "name_zh": "Saxony Cpi Yoy",
+      "name_zh": "萨克森 CPI 同比",
       "name_en": "Saxony Cpi Yoy",
       "frequency": "月度",
       "unit": "VALUE",
@@ -3563,7 +3563,7 @@
     },
     {
       "canonical_code": "US.TV.SI",
-      "name_zh": "Services Inflation",
+      "name_zh": "服务通胀",
       "name_en": "Services Inflation",
       "frequency": "月度",
       "unit": "PCT",
@@ -3582,7 +3582,7 @@
     },
     {
       "canonical_code": "US.TV.SPE",
-      "name_zh": "Selling Price Expectations",
+      "name_zh": "销售价格预期",
       "name_en": "Selling Price Expectations",
       "frequency": "月度",
       "unit": "VALUE",
@@ -3605,7 +3605,7 @@
     },
     {
       "canonical_code": "US.TV.SPI",
-      "name_zh": "Sugar Price Index",
+      "name_zh": "糖价格指数",
       "name_en": "Sugar Price Index",
       "frequency": "月度",
       "unit": "VALUE",
@@ -3628,7 +3628,7 @@
     },
     {
       "canonical_code": "US.TV.TCCPI",
-      "name_zh": "Tokyo Core Cpi",
+      "name_zh": "东京核心CPI",
       "name_en": "Tokyo Core Cpi",
       "frequency": "月度",
       "unit": "VALUE",
@@ -3651,7 +3651,7 @@
     },
     {
       "canonical_code": "US.TV.TCPI",
-      "name_zh": "Tokyo Cpi",
+      "name_zh": "东京 CPI",
       "name_en": "Tokyo Cpi",
       "frequency": "月度",
       "unit": "VALUE",
@@ -3674,7 +3674,7 @@
     },
     {
       "canonical_code": "US.TV.TCPIEFA",
-      "name_zh": "Tokyo Cpi Ex Food And Energy",
+      "name_zh": "东京 CPI Ex 食品与能源",
       "name_en": "Tokyo Cpi Ex Food And Energy",
       "frequency": "月度",
       "unit": "VALUE",
@@ -3697,7 +3697,7 @@
     },
     {
       "canonical_code": "US.TV.TMCPIQQ",
-      "name_zh": "Trimmed Mean Cpi Qoq",
+      "name_zh": "截尾均值CPI 季度环比",
       "name_en": "Trimmed Mean Cpi Qoq",
       "frequency": "月度",
       "unit": "VALUE",
@@ -3720,7 +3720,7 @@
     },
     {
       "canonical_code": "US.TV.WMEDCPIQQ",
-      "name_zh": "Weighted Median Cpi Qoq",
+      "name_zh": "加权中位数CPI 季度环比",
       "name_en": "Weighted Median Cpi Qoq",
       "frequency": "月度",
       "unit": "VALUE",
@@ -3743,7 +3743,7 @@
     },
     {
       "canonical_code": "US.TV.WMEDCPIYY",
-      "name_zh": "Weighted Median Cpi Yoy",
+      "name_zh": "加权中位数CPI 同比",
       "name_en": "Weighted Median Cpi Yoy",
       "frequency": "月度",
       "unit": "VALUE",
@@ -3766,7 +3766,7 @@
     },
     {
       "canonical_code": "US.TV.WPI",
-      "name_zh": "Wholesale Prices",
+      "name_zh": "批发价格",
       "name_en": "Wholesale Prices",
       "frequency": "月度",
       "unit": "VALUE",
@@ -3791,7 +3791,7 @@
     },
     {
       "canonical_code": "US.TV.WPIFLYY",
-      "name_zh": "Wpi Fuel Yoy",
+      "name_zh": "Wpi 燃料同比",
       "name_en": "Wpi Fuel Yoy",
       "frequency": "月度",
       "unit": "VALUE",
@@ -3816,7 +3816,7 @@
     },
     {
       "canonical_code": "US.TV.WPIFYY",
-      "name_zh": "Wpi Food Index Yoy",
+      "name_zh": "Wpi 食品指数同比",
       "name_en": "Wpi Food Index Yoy",
       "frequency": "月度",
       "unit": "VALUE",
@@ -3841,7 +3841,7 @@
     },
     {
       "canonical_code": "US.TV.WPIMANYY",
-      "name_zh": "Wpi Manufacturing Yoy",
+      "name_zh": "Wpi 制造业同比",
       "name_en": "Wpi Manufacturing Yoy",
       "frequency": "月度",
       "unit": "VALUE",
@@ -3866,7 +3866,7 @@
     },
     {
       "canonical_code": "US.TV.WPIMM",
-      "name_zh": "WPIMM",
+      "name_zh": "WPIMM指标",
       "name_en": "WPIMM",
       "frequency": "月度",
       "unit": "VALUE",
@@ -3891,7 +3891,7 @@
     },
     {
       "canonical_code": "US.TV.WPIYY",
-      "name_zh": "Wholesale Prices Yoy",
+      "name_zh": "批发价格同比",
       "name_en": "Wholesale Prices Yoy",
       "frequency": "月度",
       "unit": "VALUE",
@@ -3916,7 +3916,7 @@
     },
     {
       "canonical_code": "US.TV.HB",
-      "name_zh": "Hospital Beds",
+      "name_zh": "医院床位",
       "name_en": "Hospital Beds",
       "frequency": "年度",
       "unit": "PTP",
@@ -3935,7 +3935,7 @@
     },
     {
       "canonical_code": "US.TV.HOSP",
-      "name_zh": "Hospitals",
+      "name_zh": "医院",
       "name_en": "Hospitals",
       "frequency": "年度",
       "unit": "PMP",
@@ -3954,7 +3954,7 @@
     },
     {
       "canonical_code": "US.TV.ICUB",
-      "name_zh": "Icu Beds",
+      "name_zh": "重症监护床位",
       "name_en": "Icu Beds",
       "frequency": "月度",
       "unit": "VALUE",
@@ -3977,7 +3977,7 @@
     },
     {
       "canonical_code": "US.TV.MD",
-      "name_zh": "Medical Doctors",
+      "name_zh": "医生人数",
       "name_en": "Medical Doctors",
       "frequency": "年度",
       "unit": "PTP",
@@ -3996,7 +3996,7 @@
     },
     {
       "canonical_code": "US.TV.NURS",
-      "name_zh": "Nurses",
+      "name_zh": "护士",
       "name_en": "Nurses",
       "frequency": "年度",
       "unit": "PTP",
@@ -4015,7 +4015,7 @@
     },
     {
       "canonical_code": "US.TV.14RRR",
-      "name_zh": "14 Day Reverse Repo Rate",
+      "name_zh": "14 日逆回购利率",
       "name_en": "14 Day Reverse Repo Rate",
       "frequency": "月度",
       "unit": "VALUE",
@@ -4038,7 +4038,7 @@
     },
     {
       "canonical_code": "US.TV.BBS",
-      "name_zh": "Banks Balance Sheet",
+      "name_zh": "银行资产负债表",
       "name_en": "Banks Balance Sheet",
       "frequency": "周度",
       "unit": "VALUE",
@@ -4057,7 +4057,7 @@
     },
     {
       "canonical_code": "US.TV.CBBS",
-      "name_zh": "Central Bank Balance Sheet",
+      "name_zh": "央行资产负债表",
       "name_en": "Central Bank Balance Sheet",
       "frequency": "周度",
       "unit": "VALUE",
@@ -4076,7 +4076,7 @@
     },
     {
       "canonical_code": "US.TV.CRR",
-      "name_zh": "Cash Reserve Ratio",
+      "name_zh": "现金准备金率",
       "name_en": "Cash Reserve Ratio",
       "frequency": "月度",
       "unit": "VALUE",
@@ -4099,7 +4099,7 @@
     },
     {
       "canonical_code": "US.TV.DIR",
-      "name_zh": "Deposit Interest Rate",
+      "name_zh": "存款利率",
       "name_en": "Deposit Interest Rate",
       "frequency": "月度",
       "unit": "VALUE",
@@ -4122,7 +4122,7 @@
     },
     {
       "canonical_code": "US.TV.EFFR",
-      "name_zh": "Effective Federal Funds Rate",
+      "name_zh": "有效联邦基金利率",
       "name_en": "Effective Federal Funds Rate",
       "frequency": "日度",
       "unit": "PCT",
@@ -4141,7 +4141,7 @@
     },
     {
       "canonical_code": "US.TV.ENP",
-      "name_zh": "Energy Prices",
+      "name_zh": "能源价格",
       "name_en": "Energy Prices",
       "frequency": "月度",
       "unit": "VALUE",
@@ -4166,7 +4166,7 @@
     },
     {
       "canonical_code": "US.TV.ESTR",
-      "name_zh": "Euro Short Term Rate",
+      "name_zh": "欧元短期利率",
       "name_en": "Euro Short Term Rate",
       "frequency": "月度",
       "unit": "VALUE",
@@ -4189,7 +4189,7 @@
     },
     {
       "canonical_code": "US.TV.FAI",
-      "name_zh": "Fixed Asset Investment",
+      "name_zh": "固定资产投资",
       "name_en": "Fixed Asset Investment",
       "frequency": "月度",
       "unit": "VALUE",
@@ -4212,7 +4212,7 @@
     },
     {
       "canonical_code": "US.TV.FBI",
-      "name_zh": "Foreign Bond Investment",
+      "name_zh": "外国债券投资",
       "name_en": "Foreign Bond Investment",
       "frequency": "月度",
       "unit": "VALUE",
@@ -4233,7 +4233,7 @@
     },
     {
       "canonical_code": "US.TV.FCAS",
-      "name_zh": "Fed Capital Account Surplus",
+      "name_zh": "美联储资本账户盈余",
       "name_en": "Fed Capital Account Surplus",
       "frequency": "周度",
       "unit": "VALUE",
@@ -4252,7 +4252,7 @@
     },
     {
       "canonical_code": "US.TV.FER",
-      "name_zh": "Foreign Exchange Reserves",
+      "name_zh": "外汇储备",
       "name_en": "Foreign Exchange Reserves",
       "frequency": "月度",
       "unit": "VALUE",
@@ -4271,7 +4271,7 @@
     },
     {
       "canonical_code": "US.TV.FSI",
-      "name_zh": "Foreign Stock Investment",
+      "name_zh": "外国股票投资",
       "name_en": "Foreign Stock Investment",
       "frequency": "月度",
       "unit": "VALUE",
@@ -4296,7 +4296,7 @@
     },
     {
       "canonical_code": "US.TV.IFS",
-      "name_zh": "Investment In Foreign Securities",
+      "name_zh": "对外证券投资",
       "name_en": "Investment In Foreign Securities",
       "frequency": "月度",
       "unit": "VALUE",
@@ -4321,7 +4321,7 @@
     },
     {
       "canonical_code": "US.TV.INBR",
-      "name_zh": "Interbank Rate",
+      "name_zh": "银行间利率",
       "name_en": "Interbank Rate",
       "frequency": "日度",
       "unit": "PCT",
@@ -4359,7 +4359,7 @@
     },
     {
       "canonical_code": "US.TV.IRNM",
-      "name_zh": "Interest Rate On New Mortgages",
+      "name_zh": "新发放抵押贷款利率",
       "name_en": "Interest Rate On New Mortgages",
       "frequency": "月度",
       "unit": "VALUE",
@@ -4384,7 +4384,7 @@
     },
     {
       "canonical_code": "US.TV.LB",
-      "name_zh": "Loans To Banks",
+      "name_zh": "银行贷款",
       "name_en": "Loans To Banks",
       "frequency": "月度",
       "unit": "VALUE",
@@ -4407,7 +4407,7 @@
     },
     {
       "canonical_code": "US.TV.LG",
-      "name_zh": "Loan Growth Yoy",
+      "name_zh": "贷款增长同比",
       "name_en": "Loan Growth Yoy",
       "frequency": "月度",
       "unit": "VALUE",
@@ -4430,7 +4430,7 @@
     },
     {
       "canonical_code": "US.TV.LIVMLF",
-      "name_zh": "Liquidity Injections Via Mlf",
+      "name_zh": "通过MLF投放流动性",
       "name_en": "Liquidity Injections Via Mlf",
       "frequency": "月度",
       "unit": "VALUE",
@@ -4453,7 +4453,7 @@
     },
     {
       "canonical_code": "US.TV.LIVRR",
-      "name_zh": "Liquidity Injections Via Reverse Repo",
+      "name_zh": "通过逆回购投放流动性",
       "name_en": "Liquidity Injections Via Reverse Repo",
       "frequency": "月度",
       "unit": "VALUE",
@@ -4476,7 +4476,7 @@
     },
     {
       "canonical_code": "US.TV.LPR5Y",
-      "name_zh": "Loan Prime Rate 5Y",
+      "name_zh": "贷款市场报价利率 5Y",
       "name_en": "Loan Prime Rate 5Y",
       "frequency": "月度",
       "unit": "VALUE",
@@ -4501,7 +4501,7 @@
     },
     {
       "canonical_code": "US.TV.LPS",
-      "name_zh": "Loans To Private Sector",
+      "name_zh": "私人部门贷款",
       "name_en": "Loans To Private Sector",
       "frequency": "月度",
       "unit": "VALUE",
@@ -4520,7 +4520,7 @@
     },
     {
       "canonical_code": "US.TV.LR",
-      "name_zh": "Central Bank Lending Rate",
+      "name_zh": "央行银行贷款利率",
       "name_en": "Central Bank Lending Rate",
       "frequency": "月度",
       "unit": "VALUE",
@@ -4543,7 +4543,7 @@
     },
     {
       "canonical_code": "US.TV.LTRFO",
-      "name_zh": "Longer Term Refinancing Operations",
+      "name_zh": "长期再融资操作",
       "name_en": "Longer Term Refinancing Operations",
       "frequency": "月度",
       "unit": "VALUE",
@@ -4566,7 +4566,7 @@
     },
     {
       "canonical_code": "US.TV.M0",
-      "name_zh": "Money Supply M0",
+      "name_zh": "货币供应量 M0",
       "name_en": "Money Supply M0",
       "frequency": "月度",
       "unit": "VALUE",
@@ -4585,7 +4585,7 @@
     },
     {
       "canonical_code": "US.TV.M1",
-      "name_zh": "Money Supply M1",
+      "name_zh": "货币供应量 M1",
       "name_en": "Money Supply M1",
       "frequency": "月度",
       "unit": "VALUE",
@@ -4604,7 +4604,7 @@
     },
     {
       "canonical_code": "US.TV.M2",
-      "name_zh": "Money Supply M2",
+      "name_zh": "货币供应量 M2",
       "name_en": "Money Supply M2",
       "frequency": "月度",
       "unit": "VALUE",
@@ -4623,7 +4623,7 @@
     },
     {
       "canonical_code": "US.TV.M3",
-      "name_zh": "Money Supply M3",
+      "name_zh": "货币供应量 M3",
       "name_en": "Money Supply M3",
       "frequency": "月度",
       "unit": "VALUE",
@@ -4646,7 +4646,7 @@
     },
     {
       "canonical_code": "US.TV.M4",
-      "name_zh": "Money Supply M4",
+      "name_zh": "货币供应量 M4",
       "name_en": "Money Supply M4",
       "frequency": "月度",
       "unit": "VALUE",
@@ -4669,7 +4669,7 @@
     },
     {
       "canonical_code": "US.TV.OIAR",
-      "name_zh": "Overnight Interbank Average Rate",
+      "name_zh": "隔夜银行间平均利率",
       "name_en": "Overnight Interbank Average Rate",
       "frequency": "月度",
       "unit": "VALUE",
@@ -4692,7 +4692,7 @@
     },
     {
       "canonical_code": "US.TV.PDG",
-      "name_zh": "Private Debt To Gdp",
+      "name_zh": "私人债务占GDP",
       "name_en": "Private Debt To Gdp",
       "frequency": "年度",
       "unit": "PCT",
@@ -4713,7 +4713,7 @@
     },
     {
       "canonical_code": "US.TV.PFR",
-      "name_zh": "Proxy Funds Rate",
+      "name_zh": "代理基金利率",
       "name_en": "Proxy Funds Rate",
       "frequency": "月度",
       "unit": "PCT",
@@ -4732,7 +4732,7 @@
     },
     {
       "canonical_code": "US.TV.PGB",
-      "name_zh": "Purchases Of Government Bonds",
+      "name_zh": "政府债券购买",
       "name_en": "Purchases Of Government Bonds",
       "frequency": "月度",
       "unit": "VALUE",
@@ -4757,7 +4757,7 @@
     },
     {
       "canonical_code": "US.TV.RFO",
-      "name_zh": "Refinancing Operations",
+      "name_zh": "再融资操作",
       "name_en": "Refinancing Operations",
       "frequency": "月度",
       "unit": "VALUE",
@@ -4780,7 +4780,7 @@
     },
     {
       "canonical_code": "US.TV.RR",
-      "name_zh": "Repo Rate",
+      "name_zh": "回购利率",
       "name_en": "Repo Rate",
       "frequency": "日度",
       "unit": "PCT",
@@ -4799,7 +4799,7 @@
     },
     {
       "canonical_code": "US.TV.RRR",
-      "name_zh": "Reverse Repo Rate",
+      "name_zh": "逆回购利率",
       "name_en": "Reverse Repo Rate",
       "frequency": "月度",
       "unit": "VALUE",
@@ -4822,7 +4822,7 @@
     },
     {
       "canonical_code": "US.TV.SECOFR",
-      "name_zh": "Secured Overnight Financing Rate",
+      "name_zh": "担保隔夜融资利率",
       "name_en": "Secured Overnight Financing Rate",
       "frequency": "日度",
       "unit": "PCT",
@@ -4841,7 +4841,7 @@
     },
     {
       "canonical_code": "US.TV.SOIAR",
-      "name_zh": "Sterling Overnight Index Average Rate",
+      "name_zh": "英镑隔夜指数平均利率",
       "name_en": "Sterling Overnight Index Average Rate",
       "frequency": "月度",
       "unit": "VALUE",
@@ -4864,7 +4864,7 @@
     },
     {
       "canonical_code": "US.TV.AE",
-      "name_zh": "Auto Exports",
+      "name_zh": "汽车出口",
       "name_en": "Auto Exports",
       "frequency": "月度",
       "unit": "VALUE",
@@ -4910,7 +4910,7 @@
     },
     {
       "canonical_code": "US.TV.CA",
-      "name_zh": "Current Account",
+      "name_zh": "经常账户",
       "name_en": "Current Account",
       "frequency": "季度",
       "unit": "VALUE",
@@ -4931,7 +4931,7 @@
     },
     {
       "canonical_code": "US.TV.CAG",
-      "name_zh": "Current Account To Gdp",
+      "name_zh": "经常账户占GDP",
       "name_en": "Current Account To Gdp",
       "frequency": "年度",
       "unit": "PCTGDP",
@@ -4952,7 +4952,7 @@
     },
     {
       "canonical_code": "US.TV.CF",
-      "name_zh": "Capital Flows",
+      "name_zh": "资本流动",
       "name_en": "Capital Flows",
       "frequency": "月度",
       "unit": "VALUE",
@@ -4973,7 +4973,7 @@
     },
     {
       "canonical_code": "US.TV.COIR",
-      "name_zh": "Crude Oil Imports From Russia",
+      "name_zh": "俄罗斯原油进口量",
       "name_en": "Crude Oil Imports From Russia",
       "frequency": "月度",
       "unit": "VALUE",
@@ -4998,7 +4998,7 @@
     },
     {
       "canonical_code": "US.TV.COP",
-      "name_zh": "Crude Oil Production",
+      "name_zh": "原油产量",
       "name_en": "Crude Oil Production",
       "frequency": "月度",
       "unit": "BLL",
@@ -5017,7 +5017,7 @@
     },
     {
       "canonical_code": "US.TV.CURAG",
-      "name_zh": "Current Account Goods",
+      "name_zh": "经常账户商品",
       "name_en": "Current Account Goods",
       "frequency": "季度",
       "unit": "VALUE",
@@ -5038,7 +5038,7 @@
     },
     {
       "canonical_code": "US.TV.CURAS",
-      "name_zh": "Current Account Services",
+      "name_zh": "经常账户服务",
       "name_en": "Current Account Services",
       "frequency": "季度",
       "unit": "VALUE",
@@ -5059,7 +5059,7 @@
     },
     {
       "canonical_code": "US.TV.DIL",
-      "name_zh": "Direct Investment Liabilities",
+      "name_zh": "直接投资负债",
       "name_en": "Direct Investment Liabilities",
       "frequency": "月度",
       "unit": "VALUE",
@@ -5084,7 +5084,7 @@
     },
     {
       "canonical_code": "US.TV.ECE",
-      "name_zh": "Electric Car Exports",
+      "name_zh": "电动汽车出口",
       "name_en": "Electric Car Exports",
       "frequency": "月度",
       "unit": "VALUE",
@@ -5109,7 +5109,7 @@
     },
     {
       "canonical_code": "US.TV.ED",
-      "name_zh": "External Debt",
+      "name_zh": "外债",
       "name_en": "External Debt",
       "frequency": "季度",
       "unit": "VALUE",
@@ -5130,7 +5130,7 @@
     },
     {
       "canonical_code": "US.TV.EDTGDP",
-      "name_zh": "External Debt To Gdp",
+      "name_zh": "外部债务占GDP",
       "name_en": "External Debt To Gdp",
       "frequency": "月度",
       "unit": "VALUE",
@@ -5155,7 +5155,7 @@
     },
     {
       "canonical_code": "US.TV.EXP",
-      "name_zh": "Exports",
+      "name_zh": "出口",
       "name_en": "Exports",
       "frequency": "月度",
       "unit": "VALUE",
@@ -5176,7 +5176,7 @@
     },
     {
       "canonical_code": "US.TV.EXPYY",
-      "name_zh": "Exports Yoy",
+      "name_zh": "出口同比",
       "name_en": "Exports Yoy",
       "frequency": "月度",
       "unit": "VALUE",
@@ -5201,7 +5201,7 @@
     },
     {
       "canonical_code": "US.TV.FDI",
-      "name_zh": "Foreign Direct Investment",
+      "name_zh": "外国直接投资",
       "name_en": "Foreign Direct Investment",
       "frequency": "季度",
       "unit": "VALUE",
@@ -5222,7 +5222,7 @@
     },
     {
       "canonical_code": "US.TV.FT",
-      "name_zh": "Freight Traffic",
+      "name_zh": "货运交通",
       "name_en": "Freight Traffic",
       "frequency": "月度",
       "unit": "VALUE",
@@ -5247,7 +5247,7 @@
     },
     {
       "canonical_code": "US.TV.FTCA",
-      "name_zh": "Freight Traffic Civil Aviation",
+      "name_zh": "民航货运量",
       "name_en": "Freight Traffic Civil Aviation",
       "frequency": "月度",
       "unit": "VALUE",
@@ -5272,7 +5272,7 @@
     },
     {
       "canonical_code": "US.TV.FTH",
-      "name_zh": "Freight Traffic Highways",
+      "name_zh": "公路货运量",
       "name_en": "Freight Traffic Highways",
       "frequency": "月度",
       "unit": "VALUE",
@@ -5297,7 +5297,7 @@
     },
     {
       "canonical_code": "US.TV.FTR",
-      "name_zh": "Freight Traffic Railway",
+      "name_zh": "铁路货运量",
       "name_en": "Freight Traffic Railway",
       "frequency": "月度",
       "unit": "VALUE",
@@ -5322,7 +5322,7 @@
     },
     {
       "canonical_code": "US.TV.FTW",
-      "name_zh": "Freight Traffic Waterways",
+      "name_zh": "水路货运量",
       "name_en": "Freight Traffic Waterways",
       "frequency": "月度",
       "unit": "VALUE",
@@ -5347,7 +5347,7 @@
     },
     {
       "canonical_code": "US.TV.GDTPI",
-      "name_zh": "Global Dairy Trade Price Index",
+      "name_zh": "全球乳制品贸易价格指数",
       "name_en": "Global Dairy Trade Price Index",
       "frequency": "月度",
       "unit": "VALUE",
@@ -5372,7 +5372,7 @@
     },
     {
       "canonical_code": "US.TV.GRES",
-      "name_zh": "Gold Reserves",
+      "name_zh": "黄金储备",
       "name_en": "Gold Reserves",
       "frequency": "季度",
       "unit": "TNE",
@@ -5391,7 +5391,7 @@
     },
     {
       "canonical_code": "US.TV.GTB",
-      "name_zh": "Goods Trade Balance",
+      "name_zh": "货物贸易差额",
       "name_en": "Goods Trade Balance",
       "frequency": "月度",
       "unit": "VALUE",
@@ -5412,7 +5412,7 @@
     },
     {
       "canonical_code": "US.TV.IMP",
-      "name_zh": "Imports",
+      "name_zh": "进口",
       "name_en": "Imports",
       "frequency": "月度",
       "unit": "VALUE",
@@ -5433,7 +5433,7 @@
     },
     {
       "canonical_code": "US.TV.IMPYY",
-      "name_zh": "Imports Yoy",
+      "name_zh": "进口同比",
       "name_en": "Imports Yoy",
       "frequency": "月度",
       "unit": "VALUE",
@@ -5458,7 +5458,7 @@
     },
     {
       "canonical_code": "US.TV.NEGTB",
-      "name_zh": "Goods Trade Deficit With Non Eu Countries",
+      "name_zh": "货物贸易逆差含非欧盟国家",
       "name_en": "Goods Trade Deficit With Non Eu Countries",
       "frequency": "月度",
       "unit": "VALUE",
@@ -5483,7 +5483,7 @@
     },
     {
       "canonical_code": "US.TV.NGI",
-      "name_zh": "Natural Gas Imports",
+      "name_zh": "天然气进口量",
       "name_en": "Natural Gas Imports",
       "frequency": "月度",
       "unit": "VALUE",
@@ -5508,7 +5508,7 @@
     },
     {
       "canonical_code": "US.TV.NGIR",
-      "name_zh": "Natural Gas Imports From Russia",
+      "name_zh": "俄罗斯天然气进口量",
       "name_en": "Natural Gas Imports From Russia",
       "frequency": "月度",
       "unit": "VALUE",
@@ -5533,7 +5533,7 @@
     },
     {
       "canonical_code": "US.TV.NODXMM",
-      "name_zh": "Non Oil Domestic Exports",
+      "name_zh": "非石油国内出口",
       "name_en": "Non Oil Domestic Exports",
       "frequency": "月度",
       "unit": "VALUE",
@@ -5558,7 +5558,7 @@
     },
     {
       "canonical_code": "US.TV.NODXYY",
-      "name_zh": "Non Oil Domestic Exports Yoy",
+      "name_zh": "非石油国内出口同比",
       "name_en": "Non Oil Domestic Exports Yoy",
       "frequency": "月度",
       "unit": "VALUE",
@@ -5583,7 +5583,7 @@
     },
     {
       "canonical_code": "US.TV.NOE",
-      "name_zh": "Non Oil Exports",
+      "name_zh": "非石油出口",
       "name_en": "Non Oil Exports",
       "frequency": "月度",
       "unit": "VALUE",
@@ -5608,7 +5608,7 @@
     },
     {
       "canonical_code": "US.TV.OE",
-      "name_zh": "Oil Exports",
+      "name_zh": "石油出口",
       "name_en": "Oil Exports",
       "frequency": "月度",
       "unit": "VALUE",
@@ -5629,7 +5629,7 @@
     },
     {
       "canonical_code": "US.TV.REM",
-      "name_zh": "Remittances",
+      "name_zh": "汇款",
       "name_en": "Remittances",
       "frequency": "月度",
       "unit": "VALUE",
@@ -5654,7 +5654,7 @@
     },
     {
       "canonical_code": "US.TV.TA",
-      "name_zh": "Tourist Arrivals",
+      "name_zh": "游客到达量",
       "name_en": "Tourist Arrivals",
       "frequency": "月度",
       "unit": "PSN",
@@ -5675,7 +5675,7 @@
     },
     {
       "canonical_code": "US.TV.TI",
-      "name_zh": "Terrorism Index",
+      "name_zh": "恐怖主义指数",
       "name_en": "Terrorism Index",
       "frequency": "年度",
       "unit": "POINT",
@@ -5696,7 +5696,7 @@
     },
     {
       "canonical_code": "US.TV.TICNLF",
-      "name_zh": "Net Long Term Tic Flows",
+      "name_zh": "TIC长期净流动",
       "name_en": "Net Long Term Tic Flows",
       "frequency": "月度",
       "unit": "VALUE",
@@ -5717,7 +5717,7 @@
     },
     {
       "canonical_code": "US.TV.TOT",
-      "name_zh": "Terms Of Trade",
+      "name_zh": "贸易条件",
       "name_en": "Terms Of Trade",
       "frequency": "季度",
       "unit": "POINT",
@@ -5738,7 +5738,7 @@
     },
     {
       "canonical_code": "US.TV.TR",
-      "name_zh": "Tourism Revenues",
+      "name_zh": "旅游收入",
       "name_en": "Tourism Revenues",
       "frequency": "月度",
       "unit": "VALUE",
@@ -5759,7 +5759,7 @@
     },
     {
       "canonical_code": "US.TV.WCOP",
-      "name_zh": "Weekly Crude Oil Production",
+      "name_zh": "周度原油产量",
       "name_en": "Weekly Crude Oil Production",
       "frequency": "周度",
       "unit": "BLL",
@@ -5778,7 +5778,7 @@
     },
     {
       "canonical_code": "US.TV.WES",
-      "name_zh": "Weapons Sales",
+      "name_zh": "武器销售",
       "name_en": "Weapons Sales",
       "frequency": "年度",
       "unit": "TIV",
@@ -5799,7 +5799,7 @@
     },
     {
       "canonical_code": "US.TV.AA",
-      "name_zh": "Asylum Applications",
+      "name_zh": "庇护申请",
       "name_en": "Asylum Applications",
       "frequency": "年度",
       "unit": "PSN",
@@ -5818,7 +5818,7 @@
     },
     {
       "canonical_code": "US.TV.FE",
-      "name_zh": "Fiscal Expenditure",
+      "name_zh": "财政支出",
       "name_en": "Fiscal Expenditure",
       "frequency": "月度",
       "unit": "VALUE",
@@ -5839,7 +5839,7 @@
     },
     {
       "canonical_code": "US.TV.GBP",
-      "name_zh": "Budget To Gdp",
+      "name_zh": "预算占GDP",
       "name_en": "Budget To Gdp",
       "frequency": "年度",
       "unit": "PCTGDP",
@@ -5860,7 +5860,7 @@
     },
     {
       "canonical_code": "US.TV.GBV",
-      "name_zh": "Government Budget Value",
+      "name_zh": "政府预算金额",
       "name_en": "Government Budget Value",
       "frequency": "月度",
       "unit": "VALUE",
@@ -5881,7 +5881,7 @@
     },
     {
       "canonical_code": "US.TV.GD",
-      "name_zh": "Government Debt",
+      "name_zh": "政府债务",
       "name_en": "Government Debt",
       "frequency": "月度",
       "unit": "VALUE",
@@ -5923,7 +5923,7 @@
     },
     {
       "canonical_code": "US.TV.GDGDP",
-      "name_zh": "Gross Debt To Gdp",
+      "name_zh": "总额债务占GDP",
       "name_en": "Gross Debt To Gdp",
       "frequency": "月度",
       "unit": "VALUE",
@@ -5948,7 +5948,7 @@
     },
     {
       "canonical_code": "US.TV.GDPADQQ",
-      "name_zh": "Gdp Aggregate Demand Qoq",
+      "name_zh": "GDP 总需求季度环比",
       "name_en": "Gdp Aggregate Demand Qoq",
       "frequency": "月度",
       "unit": "VALUE",
@@ -5973,7 +5973,7 @@
     },
     {
       "canonical_code": "US.TV.GDPADYY",
-      "name_zh": "Gdp Aggregate Demand Yoy",
+      "name_zh": "GDP 总需求同比",
       "name_en": "Gdp Aggregate Demand Yoy",
       "frequency": "月度",
       "unit": "VALUE",
@@ -5998,7 +5998,7 @@
     },
     {
       "canonical_code": "US.TV.GDPGNOS",
-      "name_zh": "Gdp Growth Non Oil Sector",
+      "name_zh": "GDP 增长非石油部门",
       "name_en": "Gdp Growth Non Oil Sector",
       "frequency": "月度",
       "unit": "VALUE",
@@ -6023,7 +6023,7 @@
     },
     {
       "canonical_code": "US.TV.GDPGOS",
-      "name_zh": "Gdp Growth Oil Sector",
+      "name_zh": "GDP 增长石油部门",
       "name_en": "Gdp Growth Oil Sector",
       "frequency": "月度",
       "unit": "VALUE",
@@ -6048,7 +6048,7 @@
     },
     {
       "canonical_code": "US.TV.GR",
-      "name_zh": "Government Revenues",
+      "name_zh": "政府收入",
       "name_en": "Government Revenues",
       "frequency": "月度",
       "unit": "VALUE",
@@ -6069,7 +6069,7 @@
     },
     {
       "canonical_code": "US.TV.GSG",
-      "name_zh": "Government Spending To Gdp",
+      "name_zh": "政府支出占GDP",
       "name_en": "Government Spending To Gdp",
       "frequency": "年度",
       "unit": "PCTGDP",
@@ -6090,7 +6090,7 @@
     },
     {
       "canonical_code": "US.TV.GSP",
-      "name_zh": "Government Spending",
+      "name_zh": "政府支出",
       "name_en": "Government Spending",
       "frequency": "季度",
       "unit": "VALUE",
@@ -6111,7 +6111,7 @@
     },
     {
       "canonical_code": "US.TV.IPGB",
-      "name_zh": "Interest Payments On Government Debt",
+      "name_zh": "利率支付 On 政府债务",
       "name_en": "Interest Payments On Government Debt",
       "frequency": "月度",
       "unit": "VALUE",
@@ -6136,7 +6136,7 @@
     },
     {
       "canonical_code": "US.TV.ME",
-      "name_zh": "Military Expenditure",
+      "name_zh": "军事支出",
       "name_en": "Military Expenditure",
       "frequency": "年度",
       "unit": "VALUE",
@@ -6157,7 +6157,7 @@
     },
     {
       "canonical_code": "US.TV.NWFA",
-      "name_zh": "National Wealth Fund Assets",
+      "name_zh": "主权财富基金资产",
       "name_en": "National Wealth Fund Assets",
       "frequency": "月度",
       "unit": "VALUE",
@@ -6182,7 +6182,7 @@
     },
     {
       "canonical_code": "US.TV.NWFAGDP",
-      "name_zh": "National Wealth Fund Assets To Gdp",
+      "name_zh": "主权财富基金资产占GDP",
       "name_en": "National Wealth Fund Assets To Gdp",
       "frequency": "月度",
       "unit": "VALUE",
@@ -6207,7 +6207,7 @@
     },
     {
       "canonical_code": "US.TV.NWFLA",
-      "name_zh": "National Wealth Fund Liquid Assets",
+      "name_zh": "主权财富基金流动资产",
       "name_en": "National Wealth Fund Liquid Assets",
       "frequency": "月度",
       "unit": "VALUE",
@@ -6232,7 +6232,7 @@
     },
     {
       "canonical_code": "US.TV.PSNB",
-      "name_zh": "Public Sector Net Borrowing",
+      "name_zh": "公共部门净借款",
       "name_en": "Public Sector Net Borrowing",
       "frequency": "月度",
       "unit": "VALUE",
@@ -6257,7 +6257,7 @@
     },
     {
       "canonical_code": "US.TV.PSNDGDP",
-      "name_zh": "Public Sector Net Debt To Gdp",
+      "name_zh": "公共部门净债务占GDP",
       "name_en": "Public Sector Net Debt To Gdp",
       "frequency": "月度",
       "unit": "VALUE",
@@ -6282,7 +6282,7 @@
     },
     {
       "canonical_code": "US.TV.TAXR",
-      "name_zh": "Tax Revenue",
+      "name_zh": "税收收入",
       "name_en": "Tax Revenue",
       "frequency": "月度",
       "unit": "VALUE",
@@ -6307,7 +6307,7 @@
     },
     {
       "canonical_code": "US.TV.TCB",
-      "name_zh": "Treasury Cash Balance",
+      "name_zh": "财政部现金余额",
       "name_en": "Treasury Cash Balance",
       "frequency": "月度",
       "unit": "VALUE",
@@ -6332,7 +6332,7 @@
     },
     {
       "canonical_code": "US.TV.ACR",
-      "name_zh": "Api Crude Runs",
+      "name_zh": "API 原油加工量",
       "name_en": "Api Crude Runs",
       "frequency": "周度",
       "unit": "BLL",
@@ -6354,7 +6354,7 @@
     },
     {
       "canonical_code": "US.TV.AHO",
-      "name_zh": "Api Heating Oil",
+      "name_zh": "API 取暖石油",
       "name_en": "Api Heating Oil",
       "frequency": "周度",
       "unit": "BLL",
@@ -6376,7 +6376,7 @@
     },
     {
       "canonical_code": "US.TV.BCLI",
-      "name_zh": "Business Climate Indicator",
+      "name_zh": "企业景气指标",
       "name_en": "Business Climate Indicator",
       "frequency": "月度",
       "unit": "VALUE",
@@ -6399,7 +6399,7 @@
     },
     {
       "canonical_code": "US.TV.BCOI",
-      "name_zh": "Business Confidence Index",
+      "name_zh": "企业信心指数",
       "name_en": "Business Confidence Index",
       "frequency": "月度",
       "unit": "POINT",
@@ -6418,7 +6418,7 @@
     },
     {
       "canonical_code": "US.TV.BI",
-      "name_zh": "Business Inventories",
+      "name_zh": "企业库存",
       "name_en": "Business Inventories",
       "frequency": "月度",
       "unit": "PCT",
@@ -6437,7 +6437,7 @@
     },
     {
       "canonical_code": "US.TV.BOI",
-      "name_zh": "Nfib Business Optimism Index",
+      "name_zh": "NFIB 企业乐观指数",
       "name_en": "Nfib Business Optimism Index",
       "frequency": "月度",
       "unit": "POINT",
@@ -6456,7 +6456,7 @@
     },
     {
       "canonical_code": "US.TV.BR",
-      "name_zh": "Bankruptcies",
+      "name_zh": "破产数",
       "name_en": "Bankruptcies",
       "frequency": "季度",
       "unit": "CMPNY",
@@ -6477,7 +6477,7 @@
     },
     {
       "canonical_code": "US.TV.BRCRSMYY",
-      "name_zh": "Brc Retail Sales Monitor Yoy",
+      "name_zh": "Brc 零售销售监测同比",
       "name_en": "Brc Retail Sales Monitor Yoy",
       "frequency": "月度",
       "unit": "VALUE",
@@ -6500,7 +6500,7 @@
     },
     {
       "canonical_code": "US.TV.BSILMF",
-      "name_zh": "Business Survey Index Large Manufacturing Firms",
+      "name_zh": "大型制造企业商业调查指数",
       "name_en": "Business Survey Index Large Manufacturing Firms",
       "frequency": "月度",
       "unit": "VALUE",
@@ -6523,7 +6523,7 @@
     },
     {
       "canonical_code": "US.TV.CAP",
-      "name_zh": "Car Production",
+      "name_zh": "汽车产量",
       "name_en": "Car Production",
       "frequency": "月度",
       "unit": "UNIT",
@@ -6542,7 +6542,7 @@
     },
     {
       "canonical_code": "US.TV.CAR",
-      "name_zh": "Car Registrations",
+      "name_zh": "汽车注册量",
       "name_en": "Car Registrations",
       "frequency": "月度",
       "unit": "PSN",
@@ -6561,7 +6561,7 @@
     },
     {
       "canonical_code": "US.TV.CCOS",
-      "name_zh": "Cushing Crude Oil Stocks",
+      "name_zh": "库欣原油库存",
       "name_en": "Cushing Crude Oil Stocks",
       "frequency": "周度",
       "unit": "BLL",
@@ -6583,7 +6583,7 @@
     },
     {
       "canonical_code": "US.TV.CEP",
-      "name_zh": "Cement Production",
+      "name_zh": "水泥生产",
       "name_en": "Cement Production",
       "frequency": "月度",
       "unit": "VALUE",
@@ -6606,7 +6606,7 @@
     },
     {
       "canonical_code": "US.TV.CFNAI",
-      "name_zh": "Chicago Fed National Activity Index",
+      "name_zh": "芝加哥联储全国活动指数",
       "name_en": "Chicago Fed National Activity Index",
       "frequency": "月度",
       "unit": "POINT",
@@ -6625,7 +6625,7 @@
     },
     {
       "canonical_code": "US.TV.CFNAIEMPI",
-      "name_zh": "Cfnai Employment Index",
+      "name_zh": "CFNAI 就业指数",
       "name_en": "Cfnai Employment Index",
       "frequency": "月度",
       "unit": "POINT",
@@ -6644,7 +6644,7 @@
     },
     {
       "canonical_code": "US.TV.CFNAIPCHI",
-      "name_zh": "Cfnai Personal Consumption And Housing Index",
+      "name_zh": "CFNAI 个人消费与住房指数",
       "name_en": "Cfnai Personal Consumption And Housing Index",
       "frequency": "月度",
       "unit": "POINT",
@@ -6663,7 +6663,7 @@
     },
     {
       "canonical_code": "US.TV.CFNAIPI",
-      "name_zh": "Cfnai Production Index",
+      "name_zh": "CFNAI 生产指数",
       "name_en": "Cfnai Production Index",
       "frequency": "月度",
       "unit": "POINT",
@@ -6682,7 +6682,7 @@
     },
     {
       "canonical_code": "US.TV.CFNAISOII",
-      "name_zh": "CFNAISOII",
+      "name_zh": "CFNAISOII指标",
       "name_en": "CFNAISOII",
       "frequency": "月度",
       "unit": "POINT",
@@ -6701,7 +6701,7 @@
     },
     {
       "canonical_code": "US.TV.CI",
-      "name_zh": "Api Crude Imports",
+      "name_zh": "API 原油进口",
       "name_en": "Api Crude Imports",
       "frequency": "周度",
       "unit": "BLL",
@@ -6723,7 +6723,7 @@
     },
     {
       "canonical_code": "US.TV.CIND",
-      "name_zh": "Coincident Index",
+      "name_zh": "同步指数",
       "name_en": "Coincident Index",
       "frequency": "月度",
       "unit": "VALUE",
@@ -6746,7 +6746,7 @@
     },
     {
       "canonical_code": "US.TV.CLI",
-      "name_zh": "Composite Leading Indicator",
+      "name_zh": "综合领先指标",
       "name_en": "Composite Leading Indicator",
       "frequency": "月度",
       "unit": "POINT",
@@ -6765,7 +6765,7 @@
     },
     {
       "canonical_code": "US.TV.CN",
-      "name_zh": "CN",
+      "name_zh": "CN指标",
       "name_en": "CN",
       "frequency": "周度",
       "unit": "BLL",
@@ -6784,7 +6784,7 @@
     },
     {
       "canonical_code": "US.TV.COI",
-      "name_zh": "Crude Oil Imports",
+      "name_zh": "原油进口量",
       "name_en": "Crude Oil Imports",
       "frequency": "周度",
       "unit": "BLL",
@@ -6806,7 +6806,7 @@
     },
     {
       "canonical_code": "US.TV.COR",
-      "name_zh": "Crude Oil Rigs",
+      "name_zh": "原油钻机数",
       "name_en": "Crude Oil Rigs",
       "frequency": "周度",
       "unit": "UNIT",
@@ -6828,7 +6828,7 @@
     },
     {
       "canonical_code": "US.TV.CORPI",
-      "name_zh": "Corruption Index",
+      "name_zh": "腐败指数",
       "name_en": "Corruption Index",
       "frequency": "年度",
       "unit": "POINT",
@@ -6847,7 +6847,7 @@
     },
     {
       "canonical_code": "US.TV.CORR",
-      "name_zh": "Corruption Rank",
+      "name_zh": "腐败排名",
       "name_en": "Corruption Rank",
       "frequency": "年度",
       "unit": "VALUE",
@@ -6866,7 +6866,7 @@
     },
     {
       "canonical_code": "US.TV.COSC",
-      "name_zh": "Crude Oil Stocks Change",
+      "name_zh": "原油库存变化",
       "name_en": "Crude Oil Stocks Change",
       "frequency": "周度",
       "unit": "BLL",
@@ -6888,7 +6888,7 @@
     },
     {
       "canonical_code": "US.TV.COSPRE",
-      "name_zh": "Strategic Petroleum Reserve Crude Oil Stocks",
+      "name_zh": "战略石油储备原油库存",
       "name_en": "Strategic Petroleum Reserve Crude Oil Stocks",
       "frequency": "周度",
       "unit": "BLL",
@@ -6910,7 +6910,7 @@
     },
     {
       "canonical_code": "US.TV.CP",
-      "name_zh": "Copper Production",
+      "name_zh": "铜生产",
       "name_en": "Copper Production",
       "frequency": "月度",
       "unit": "VALUE",
@@ -6933,7 +6933,7 @@
     },
     {
       "canonical_code": "US.TV.CPR",
-      "name_zh": "Corporate Profits",
+      "name_zh": "企业利润",
       "name_en": "Corporate Profits",
       "frequency": "季度",
       "unit": "VALUE",
@@ -6952,7 +6952,7 @@
     },
     {
       "canonical_code": "US.TV.CSC",
-      "name_zh": "Api Crude Oil Stock Change",
+      "name_zh": "API原油库存变化",
       "name_en": "Api Crude Oil Stock Change",
       "frequency": "周度",
       "unit": "BLL",
@@ -6974,7 +6974,7 @@
     },
     {
       "canonical_code": "US.TV.CU",
-      "name_zh": "Capacity Utilization",
+      "name_zh": "产能利用率",
       "name_en": "Capacity Utilization",
       "frequency": "月度",
       "unit": "PCT",
@@ -6993,7 +6993,7 @@
     },
     {
       "canonical_code": "US.TV.DFMEMPI",
-      "name_zh": "Dallas Fed Manufacturing Employment Index",
+      "name_zh": "达拉斯联储制造业就业指数",
       "name_en": "Dallas Fed Manufacturing Employment Index",
       "frequency": "月度",
       "unit": "POINT",
@@ -7012,7 +7012,7 @@
     },
     {
       "canonical_code": "US.TV.DFMI",
-      "name_zh": "Dallas Fed Manufacturing Index",
+      "name_zh": "达拉斯联储联储制造业指数",
       "name_en": "Dallas Fed Manufacturing Index",
       "frequency": "月度",
       "unit": "POINT",
@@ -7031,7 +7031,7 @@
     },
     {
       "canonical_code": "US.TV.DFMNORDI",
-      "name_zh": "Dallas Fed Manufacturing New Orders Index",
+      "name_zh": "达拉斯联储制造业新订单指数",
       "name_en": "Dallas Fed Manufacturing New Orders Index",
       "frequency": "月度",
       "unit": "POINT",
@@ -7050,7 +7050,7 @@
     },
     {
       "canonical_code": "US.TV.DFMPI",
-      "name_zh": "DFMPI",
+      "name_zh": "DFMPI指标",
       "name_en": "DFMPI",
       "frequency": "月度",
       "unit": "POINT",
@@ -7069,7 +7069,7 @@
     },
     {
       "canonical_code": "US.TV.DFMPPI",
-      "name_zh": "Dallas Fed Manufacturing Prices Paid Index",
+      "name_zh": "达拉斯联储制造业支付价格指数",
       "name_en": "Dallas Fed Manufacturing Prices Paid Index",
       "frequency": "月度",
       "unit": "POINT",
@@ -7088,7 +7088,7 @@
     },
     {
       "canonical_code": "US.TV.DFMSI",
-      "name_zh": "Dallas Fed Manufacturing Shipments Index",
+      "name_zh": "达拉斯联储制造业出货指数",
       "name_en": "Dallas Fed Manufacturing Shipments Index",
       "frequency": "月度",
       "unit": "POINT",
@@ -7107,7 +7107,7 @@
     },
     {
       "canonical_code": "US.TV.DFP",
-      "name_zh": "Distillate Fuel Production",
+      "name_zh": "馏分油燃料生产",
       "name_en": "Distillate Fuel Production",
       "frequency": "周度",
       "unit": "BLL",
@@ -7129,7 +7129,7 @@
     },
     {
       "canonical_code": "US.TV.DFS",
-      "name_zh": "Distillate Stocks",
+      "name_zh": "馏分油库存",
       "name_en": "Distillate Stocks",
       "frequency": "周度",
       "unit": "BLL",
@@ -7151,7 +7151,7 @@
     },
     {
       "canonical_code": "US.TV.DFSI",
-      "name_zh": "Dallas Fed Services Index",
+      "name_zh": "达拉斯联储联储服务指数",
       "name_en": "Dallas Fed Services Index",
       "frequency": "月度",
       "unit": "POINT",
@@ -7170,7 +7170,7 @@
     },
     {
       "canonical_code": "US.TV.DFSRI",
-      "name_zh": "Dallas Fed Services Revenues Index",
+      "name_zh": "达拉斯联储服务业收入指数",
       "name_en": "Dallas Fed Services Revenues Index",
       "frequency": "月度",
       "unit": "POINT",
@@ -7189,7 +7189,7 @@
     },
     {
       "canonical_code": "US.TV.DG",
-      "name_zh": "Deposit Growth",
+      "name_zh": "存款增长",
       "name_en": "Deposit Growth",
       "frequency": "月度",
       "unit": "VALUE",
@@ -7212,7 +7212,7 @@
     },
     {
       "canonical_code": "US.TV.DGO",
-      "name_zh": "Durable Goods Orders",
+      "name_zh": "耐用品订单",
       "name_en": "Durable Goods Orders",
       "frequency": "月度",
       "unit": "PCT",
@@ -7231,7 +7231,7 @@
     },
     {
       "canonical_code": "US.TV.DGOED",
-      "name_zh": "Durable Goods Orders Excluding Defense",
+      "name_zh": "耐用品订单不含国防",
       "name_en": "Durable Goods Orders Excluding Defense",
       "frequency": "月度",
       "unit": "PCT",
@@ -7250,7 +7250,7 @@
     },
     {
       "canonical_code": "US.TV.DGOET",
-      "name_zh": "Durable Goods Orders Excluding Transportation",
+      "name_zh": "耐用品订单不含运输",
       "name_en": "Durable Goods Orders Excluding Transportation",
       "frequency": "月度",
       "unit": "PCT",
@@ -7269,7 +7269,7 @@
     },
     {
       "canonical_code": "US.TV.DS",
-      "name_zh": "Api Distillate Stocks",
+      "name_zh": "API 馏分油库存",
       "name_en": "Api Distillate Stocks",
       "frequency": "周度",
       "unit": "BLL",
@@ -7291,7 +7291,7 @@
     },
     {
       "canonical_code": "US.TV.ECR",
-      "name_zh": "Electric Car Registrations",
+      "name_zh": "电动汽车注册量",
       "name_en": "Electric Car Registrations",
       "frequency": "月度",
       "unit": "VALUE",
@@ -7314,7 +7314,7 @@
     },
     {
       "canonical_code": "US.TV.EDBR",
-      "name_zh": "Ease Of Doing Business Ranking",
+      "name_zh": "营商便利度排名",
       "name_en": "Ease Of Doing Business Ranking",
       "frequency": "年度",
       "unit": "POINT",
@@ -7333,7 +7333,7 @@
     },
     {
       "canonical_code": "US.TV.ELP",
-      "name_zh": "Electricity Production",
+      "name_zh": "发电量",
       "name_en": "Electricity Production",
       "frequency": "月度",
       "unit": "VALUE",
@@ -7356,7 +7356,7 @@
     },
     {
       "canonical_code": "US.TV.ELPC",
-      "name_zh": "Electricity Price",
+      "name_zh": "电价",
       "name_en": "Electricity Price",
       "frequency": "月度",
       "unit": "VALUE",
@@ -7379,7 +7379,7 @@
     },
     {
       "canonical_code": "US.TV.ESI",
-      "name_zh": "Zew Economic Sentiment Index",
+      "name_zh": "ZEW 经济景气信心指数",
       "name_en": "Zew Economic Sentiment Index",
       "frequency": "月度",
       "unit": "VALUE",
@@ -7402,7 +7402,7 @@
     },
     {
       "canonical_code": "US.TV.EWS",
-      "name_zh": "Economy Watchers Survey",
+      "name_zh": "经济观察家调查",
       "name_en": "Economy Watchers Survey",
       "frequency": "月度",
       "unit": "VALUE",
@@ -7425,7 +7425,7 @@
     },
     {
       "canonical_code": "US.TV.EWSO",
-      "name_zh": "Economy Watchers Survey Outlook",
+      "name_zh": "经济观察家调查展望",
       "name_en": "Economy Watchers Survey Outlook",
       "frequency": "月度",
       "unit": "VALUE",
@@ -7448,7 +7448,7 @@
     },
     {
       "canonical_code": "US.TV.FO",
-      "name_zh": "Factory Orders",
+      "name_zh": "工厂订单",
       "name_en": "Factory Orders",
       "frequency": "月度",
       "unit": "PCT",
@@ -7467,7 +7467,7 @@
     },
     {
       "canonical_code": "US.TV.FOET",
-      "name_zh": "Factory Orders Excluding Transportation",
+      "name_zh": "工厂订单不含运输",
       "name_en": "Factory Orders Excluding Transportation",
       "frequency": "月度",
       "unit": "PCT",
@@ -7486,7 +7486,7 @@
     },
     {
       "canonical_code": "US.TV.GP",
-      "name_zh": "Gold Production",
+      "name_zh": "黄金产量",
       "name_en": "Gold Production",
       "frequency": "月度",
       "unit": "VALUE",
@@ -7509,7 +7509,7 @@
     },
     {
       "canonical_code": "US.TV.GPRO",
-      "name_zh": "Gasoline Production",
+      "name_zh": "汽油产量",
       "name_en": "Gasoline Production",
       "frequency": "周度",
       "unit": "BLL",
@@ -7531,7 +7531,7 @@
     },
     {
       "canonical_code": "US.TV.GS",
-      "name_zh": "Api Gasoline Stocks",
+      "name_zh": "API 汽油库存",
       "name_en": "Api Gasoline Stocks",
       "frequency": "周度",
       "unit": "BLL",
@@ -7553,7 +7553,7 @@
     },
     {
       "canonical_code": "US.TV.GSC",
-      "name_zh": "Grain Stocks Corn",
+      "name_zh": "谷物库存玉米",
       "name_en": "Grain Stocks Corn",
       "frequency": "季度",
       "unit": "BUA",
@@ -7575,7 +7575,7 @@
     },
     {
       "canonical_code": "US.TV.GSCH",
-      "name_zh": "Gasoline Stocks Change",
+      "name_zh": "汽油库存变化",
       "name_en": "Gasoline Stocks Change",
       "frequency": "周度",
       "unit": "BLL",
@@ -7597,7 +7597,7 @@
     },
     {
       "canonical_code": "US.TV.GSS",
-      "name_zh": "Grain Stocks Soy",
+      "name_zh": "谷物库存大豆",
       "name_en": "Grain Stocks Soy",
       "frequency": "季度",
       "unit": "BUA",
@@ -7619,7 +7619,7 @@
     },
     {
       "canonical_code": "US.TV.GSW",
-      "name_zh": "Grain Stocks Wheat",
+      "name_zh": "谷物库存小麦",
       "name_en": "Grain Stocks Wheat",
       "frequency": "季度",
       "unit": "BUA",
@@ -7641,7 +7641,7 @@
     },
     {
       "canonical_code": "US.TV.HOS",
-      "name_zh": "Heating Oil Stocks",
+      "name_zh": "取暖油库存",
       "name_en": "Heating Oil Stocks",
       "frequency": "周度",
       "unit": "BLL",
@@ -7663,7 +7663,7 @@
     },
     {
       "canonical_code": "US.TV.IC",
-      "name_zh": "Changes In Inventories",
+      "name_zh": "库存变化",
       "name_en": "Changes In Inventories",
       "frequency": "季度",
       "unit": "VALUE",
@@ -7682,7 +7682,7 @@
     },
     {
       "canonical_code": "US.TV.IFOCC",
-      "name_zh": "Ifo Assessment Of The Business Situation",
+      "name_zh": "IFO企业状况评估",
       "name_en": "Ifo Assessment Of The Business Situation",
       "frequency": "月度",
       "unit": "VALUE",
@@ -7705,7 +7705,7 @@
     },
     {
       "canonical_code": "US.TV.IFOE",
-      "name_zh": "Ifo Business Developments Expectations",
+      "name_zh": "IFO 企业发展预期",
       "name_en": "Ifo Business Developments Expectations",
       "frequency": "月度",
       "unit": "VALUE",
@@ -7728,7 +7728,7 @@
     },
     {
       "canonical_code": "US.TV.II",
-      "name_zh": "Industry Index",
+      "name_zh": "行业指数",
       "name_en": "Industry Index",
       "frequency": "月度",
       "unit": "VALUE",
@@ -7751,7 +7751,7 @@
     },
     {
       "canonical_code": "US.TV.IIBS",
-      "name_zh": "Industry Index Business Services",
+      "name_zh": "行业指数企业服务",
       "name_en": "Industry Index Business Services",
       "frequency": "月度",
       "unit": "VALUE",
@@ -7774,7 +7774,7 @@
     },
     {
       "canonical_code": "US.TV.IIC",
-      "name_zh": "Industry Index Construction",
+      "name_zh": "行业指数建筑业",
       "name_en": "Industry Index Construction",
       "frequency": "月度",
       "unit": "VALUE",
@@ -7797,7 +7797,7 @@
     },
     {
       "canonical_code": "US.TV.IIM",
-      "name_zh": "Industry Index Manufacturing",
+      "name_zh": "行业指数制造业",
       "name_en": "Industry Index Manufacturing",
       "frequency": "月度",
       "unit": "VALUE",
@@ -7820,7 +7820,7 @@
     },
     {
       "canonical_code": "US.TV.IPMM",
-      "name_zh": "Industrial Production Mom",
+      "name_zh": "工业生产环比",
       "name_en": "Industrial Production Mom",
       "frequency": "月度",
       "unit": "PCT",
@@ -7839,7 +7839,7 @@
     },
     {
       "canonical_code": "US.TV.IPYY",
-      "name_zh": "Industrial Production Yoy",
+      "name_zh": "工业生产同比",
       "name_en": "Industrial Production Yoy",
       "frequency": "月度",
       "unit": "PCT",
@@ -7858,7 +7858,7 @@
     },
     {
       "canonical_code": "US.TV.IS",
-      "name_zh": "Industrial Sentiment",
+      "name_zh": "工业景气信心",
       "name_en": "Industrial Sentiment",
       "frequency": "月度",
       "unit": "VALUE",
@@ -7881,7 +7881,7 @@
     },
     {
       "canonical_code": "US.TV.ISMMBO",
-      "name_zh": "Ism Manufacturing Backlog Of Orders",
+      "name_zh": "ISM 制造业积压订单订单",
       "name_en": "Ism Manufacturing Backlog Of Orders",
       "frequency": "月度",
       "unit": "POINT",
@@ -7900,7 +7900,7 @@
     },
     {
       "canonical_code": "US.TV.ISMMI",
-      "name_zh": "Ism Manufacturing Inventories",
+      "name_zh": "ISM 制造业库存",
       "name_en": "Ism Manufacturing Inventories",
       "frequency": "月度",
       "unit": "POINT",
@@ -7919,7 +7919,7 @@
     },
     {
       "canonical_code": "US.TV.ISMMP",
-      "name_zh": "Ism Manufacturing Production",
+      "name_zh": "ISM 制造业生产",
       "name_en": "Ism Manufacturing Production",
       "frequency": "月度",
       "unit": "POINT",
@@ -7938,7 +7938,7 @@
     },
     {
       "canonical_code": "US.TV.ISMMSD",
-      "name_zh": "Ism Manufacturing Supplier Deliveries",
+      "name_zh": "ISM 制造业供应商交付",
       "name_en": "Ism Manufacturing Supplier Deliveries",
       "frequency": "月度",
       "unit": "POINT",
@@ -7957,7 +7957,7 @@
     },
     {
       "canonical_code": "US.TV.KFCOMPI",
-      "name_zh": "Kansas Fed Composite Index",
+      "name_zh": "堪萨斯联储综合指数",
       "name_en": "Kansas Fed Composite Index",
       "frequency": "月度",
       "unit": "POINT",
@@ -7976,7 +7976,7 @@
     },
     {
       "canonical_code": "US.TV.KFEMPI",
-      "name_zh": "Kansas Fed Employment Index",
+      "name_zh": "堪萨斯联储就业指数",
       "name_en": "Kansas Fed Employment Index",
       "frequency": "月度",
       "unit": "POINT",
@@ -7995,7 +7995,7 @@
     },
     {
       "canonical_code": "US.TV.KFMI",
-      "name_zh": "Kansas Fed Manufacturing Index",
+      "name_zh": "堪萨斯联储制造业指数",
       "name_en": "Kansas Fed Manufacturing Index",
       "frequency": "月度",
       "unit": "POINT",
@@ -8014,7 +8014,7 @@
     },
     {
       "canonical_code": "US.TV.KFNORDI",
-      "name_zh": "KFNORDI",
+      "name_zh": "KFNORDI指标",
       "name_en": "KFNORDI",
       "frequency": "月度",
       "unit": "POINT",
@@ -8033,7 +8033,7 @@
     },
     {
       "canonical_code": "US.TV.KFPPI",
-      "name_zh": "Kansas Fed Prices Paid Index",
+      "name_zh": "堪萨斯联储支付价格指数",
       "name_en": "Kansas Fed Prices Paid Index",
       "frequency": "月度",
       "unit": "POINT",
@@ -8052,7 +8052,7 @@
     },
     {
       "canonical_code": "US.TV.KFSI",
-      "name_zh": "Kansas Fed Shipments Index",
+      "name_zh": "堪萨斯联储出货指数",
       "name_en": "Kansas Fed Shipments Index",
       "frequency": "月度",
       "unit": "POINT",
@@ -8071,7 +8071,7 @@
     },
     {
       "canonical_code": "US.TV.LEI",
-      "name_zh": "Leading Economic Index",
+      "name_zh": "领先经济指数",
       "name_en": "Leading Economic Index",
       "frequency": "月度",
       "unit": "POINT",
@@ -8090,7 +8090,7 @@
     },
     {
       "canonical_code": "US.TV.LMICI",
-      "name_zh": "Lmi Inventory Costs",
+      "name_zh": "LMI 库存成本",
       "name_en": "Lmi Inventory Costs",
       "frequency": "月度",
       "unit": "POINT",
@@ -8109,7 +8109,7 @@
     },
     {
       "canonical_code": "US.TV.LMIF",
-      "name_zh": "Lmi Logistics Managers Index Future",
+      "name_zh": "LMI 物流经理指数：未来",
       "name_en": "Lmi Logistics Managers Index Future",
       "frequency": "月度",
       "unit": "POINT",
@@ -8128,7 +8128,7 @@
     },
     {
       "canonical_code": "US.TV.LMITP",
-      "name_zh": "Lmi Transportation Prices",
+      "name_zh": "LMI 运输价格",
       "name_en": "Lmi Transportation Prices",
       "frequency": "月度",
       "unit": "POINT",
@@ -8147,7 +8147,7 @@
     },
     {
       "canonical_code": "US.TV.LMIWP",
-      "name_zh": "Lmi Warehouse Prices",
+      "name_zh": "LMI 仓储价格",
       "name_en": "Lmi Warehouse Prices",
       "frequency": "月度",
       "unit": "POINT",
@@ -8166,7 +8166,7 @@
     },
     {
       "canonical_code": "US.TV.MBKS",
-      "name_zh": "Motorbike Sales",
+      "name_zh": "摩托车销售",
       "name_en": "Motorbike Sales",
       "frequency": "月度",
       "unit": "VALUE",
@@ -8189,7 +8189,7 @@
     },
     {
       "canonical_code": "US.TV.MEMP",
-      "name_zh": "Ism Manufacturing Employment",
+      "name_zh": "ISM 制造业就业",
       "name_en": "Ism Manufacturing Employment",
       "frequency": "月度",
       "unit": "POINT",
@@ -8208,7 +8208,7 @@
     },
     {
       "canonical_code": "US.TV.MIP",
-      "name_zh": "Mining Production Yoy",
+      "name_zh": "采矿业生产同比",
       "name_en": "Mining Production Yoy",
       "frequency": "月度",
       "unit": "PCT",
@@ -8227,7 +8227,7 @@
     },
     {
       "canonical_code": "US.TV.MNO",
-      "name_zh": "Ism Manufacturing New Orders",
+      "name_zh": "ISM 制造业新订单",
       "name_en": "Ism Manufacturing New Orders",
       "frequency": "月度",
       "unit": "POINT",
@@ -8246,7 +8246,7 @@
     },
     {
       "canonical_code": "US.TV.MO",
-      "name_zh": "Machinery Orders",
+      "name_zh": "机械订单",
       "name_en": "Machinery Orders",
       "frequency": "月度",
       "unit": "VALUE",
@@ -8269,7 +8269,7 @@
     },
     {
       "canonical_code": "US.TV.MPR",
-      "name_zh": "Ism Manufacturing Prices",
+      "name_zh": "ISM 制造业价格",
       "name_en": "Ism Manufacturing Prices",
       "frequency": "月度",
       "unit": "POINT",
@@ -8288,7 +8288,7 @@
     },
     {
       "canonical_code": "US.TV.MPRMM",
-      "name_zh": "Manufacturing Production Mom",
+      "name_zh": "制造业生产环比",
       "name_en": "Manufacturing Production Mom",
       "frequency": "月度",
       "unit": "PCT",
@@ -8307,7 +8307,7 @@
     },
     {
       "canonical_code": "US.TV.MPRYY",
-      "name_zh": "Manufacturing Production Yoy",
+      "name_zh": "制造业生产同比",
       "name_en": "Manufacturing Production Yoy",
       "frequency": "月度",
       "unit": "PCT",
@@ -8326,7 +8326,7 @@
     },
     {
       "canonical_code": "US.TV.MS",
-      "name_zh": "Manufacturing Sales",
+      "name_zh": "制造业销售",
       "name_en": "Manufacturing Sales",
       "frequency": "月度",
       "unit": "VALUE",
@@ -8349,7 +8349,7 @@
     },
     {
       "canonical_code": "US.TV.MTO",
-      "name_zh": "Machine Tool Orders",
+      "name_zh": "机床工具订单",
       "name_en": "Machine Tool Orders",
       "frequency": "月度",
       "unit": "VALUE",
@@ -8372,7 +8372,7 @@
     },
     {
       "canonical_code": "US.TV.NDCGOEA",
-      "name_zh": "Orders For Non Defense Capital Goods Excluding Aircraft",
+      "name_zh": "订单 For 非国防资本商品不含飞机",
       "name_en": "Orders For Non Defense Capital Goods Excluding Aircraft",
       "frequency": "月度",
       "unit": "PCT",
@@ -8391,7 +8391,7 @@
     },
     {
       "canonical_code": "US.TV.NGSC",
-      "name_zh": "NGSC",
+      "name_zh": "NGSC指标",
       "name_en": "NGSC",
       "frequency": "周度",
       "unit": "FTQ",
@@ -8410,7 +8410,7 @@
     },
     {
       "canonical_code": "US.TV.NMBA",
-      "name_zh": "Ism Non Manufacturing Business Activity",
+      "name_zh": "ISM 非制造业企业活动",
       "name_en": "Ism Non Manufacturing Business Activity",
       "frequency": "月度",
       "unit": "POINT",
@@ -8429,7 +8429,7 @@
     },
     {
       "canonical_code": "US.TV.NMEMP",
-      "name_zh": "Ism Non Manufacturing Employment",
+      "name_zh": "ISM 非制造业就业",
       "name_en": "Ism Non Manufacturing Employment",
       "frequency": "月度",
       "unit": "POINT",
@@ -8448,7 +8448,7 @@
     },
     {
       "canonical_code": "US.TV.NMNO",
-      "name_zh": "Ism Non Manufacturing New Orders",
+      "name_zh": "ISM 非制造业新订单",
       "name_en": "Ism Non Manufacturing New Orders",
       "frequency": "月度",
       "unit": "POINT",
@@ -8467,7 +8467,7 @@
     },
     {
       "canonical_code": "US.TV.NMPR",
-      "name_zh": "NMPR",
+      "name_zh": "NMPR指标",
       "name_en": "NMPR",
       "frequency": "月度",
       "unit": "POINT",
@@ -8486,7 +8486,7 @@
     },
     {
       "canonical_code": "US.TV.NO",
-      "name_zh": "New Orders",
+      "name_zh": "新订单",
       "name_en": "New Orders",
       "frequency": "月度",
       "unit": "VALUE",
@@ -8505,7 +8505,7 @@
     },
     {
       "canonical_code": "US.TV.NPCRYY",
-      "name_zh": "New Passenger Car Registrations Yoy",
+      "name_zh": "新乘用车注册量同比",
       "name_en": "New Passenger Car Registrations Yoy",
       "frequency": "月度",
       "unit": "VALUE",
@@ -8528,7 +8528,7 @@
     },
     {
       "canonical_code": "US.TV.NYCBCI",
-      "name_zh": "Ism New York Current Business Conditions Index",
+      "name_zh": "ISM 纽约当前商业状况指数",
       "name_en": "Ism New York Current Business Conditions Index",
       "frequency": "月度",
       "unit": "PCT",
@@ -8547,7 +8547,7 @@
     },
     {
       "canonical_code": "US.TV.NYESEMPI",
-      "name_zh": "Ny Empire State Employment Index",
+      "name_zh": "纽约联储帝国州就业指数",
       "name_en": "Ny Empire State Employment Index",
       "frequency": "月度",
       "unit": "POINT",
@@ -8566,7 +8566,7 @@
     },
     {
       "canonical_code": "US.TV.NYESMI",
-      "name_zh": "Ny Empire State Manufacturing Index",
+      "name_zh": "纽约联储帝国州制造业指数",
       "name_en": "Ny Empire State Manufacturing Index",
       "frequency": "月度",
       "unit": "POINT",
@@ -8585,7 +8585,7 @@
     },
     {
       "canonical_code": "US.TV.NYESNORDI",
-      "name_zh": "Ny Empire State New Orders Index",
+      "name_zh": "纽约联储帝国州新订单指数",
       "name_en": "Ny Empire State New Orders Index",
       "frequency": "月度",
       "unit": "POINT",
@@ -8604,7 +8604,7 @@
     },
     {
       "canonical_code": "US.TV.NYESPPI",
-      "name_zh": "Ny Empire State Prices Paid Index",
+      "name_zh": "纽约联储帝国州支付价格指数",
       "name_en": "Ny Empire State Prices Paid Index",
       "frequency": "月度",
       "unit": "POINT",
@@ -8623,7 +8623,7 @@
     },
     {
       "canonical_code": "US.TV.NYESSI",
-      "name_zh": "Ny Empire State Shipments Index",
+      "name_zh": "纽约联储帝国州出货指数",
       "name_en": "Ny Empire State Shipments Index",
       "frequency": "月度",
       "unit": "POINT",
@@ -8642,7 +8642,7 @@
     },
     {
       "canonical_code": "US.TV.PFMI",
-      "name_zh": "Philadelphia Fed Manufacturing Index",
+      "name_zh": "费城联储制造业指数",
       "name_en": "Philadelphia Fed Manufacturing Index",
       "frequency": "月度",
       "unit": "POINT",
@@ -8661,7 +8661,7 @@
     },
     {
       "canonical_code": "US.TV.PHFBCOND",
-      "name_zh": "Philly Fed Business Conditions",
+      "name_zh": "费城联储联储企业状况",
       "name_en": "Philly Fed Business Conditions",
       "frequency": "月度",
       "unit": "POINT",
@@ -8680,7 +8680,7 @@
     },
     {
       "canonical_code": "US.TV.PHFCAPEX",
-      "name_zh": "Philly Fed Capex Index",
+      "name_zh": "费城联储资本支出指数",
       "name_en": "Philly Fed Capex Index",
       "frequency": "月度",
       "unit": "POINT",
@@ -8699,7 +8699,7 @@
     },
     {
       "canonical_code": "US.TV.PHFEMP",
-      "name_zh": "Philly Fed Employment",
+      "name_zh": "费城联储联储就业",
       "name_en": "Philly Fed Employment",
       "frequency": "月度",
       "unit": "POINT",
@@ -8718,7 +8718,7 @@
     },
     {
       "canonical_code": "US.TV.PHFNORD",
-      "name_zh": "Philly Fed New Orders",
+      "name_zh": "费城联储联储新订单",
       "name_en": "Philly Fed New Orders",
       "frequency": "月度",
       "unit": "POINT",
@@ -8737,7 +8737,7 @@
     },
     {
       "canonical_code": "US.TV.PHFPP",
-      "name_zh": "Philly Fed Prices Paid",
+      "name_zh": "费城联储联储价格支付",
       "name_en": "Philly Fed Prices Paid",
       "frequency": "月度",
       "unit": "POINT",
@@ -8756,7 +8756,7 @@
     },
     {
       "canonical_code": "US.TV.PIN",
-      "name_zh": "Private Investment",
+      "name_zh": "私人投资",
       "name_en": "Private Investment",
       "frequency": "月度",
       "unit": "VALUE",
@@ -8779,7 +8779,7 @@
     },
     {
       "canonical_code": "US.TV.PMCE",
-      "name_zh": "Plant Machinery Capital Expenditure",
+      "name_zh": "厂房机械资本支出",
       "name_en": "Plant Machinery Capital Expenditure",
       "frequency": "月度",
       "unit": "VALUE",
@@ -8802,7 +8802,7 @@
     },
     {
       "canonical_code": "US.TV.PRI",
-      "name_zh": "Api Product Imports",
+      "name_zh": "API 产品进口",
       "name_en": "Api Product Imports",
       "frequency": "周度",
       "unit": "BLL",
@@ -8821,7 +8821,7 @@
     },
     {
       "canonical_code": "US.TV.RCR",
-      "name_zh": "Refinery Crude Runs",
+      "name_zh": "炼厂原油加工量",
       "name_en": "Refinery Crude Runs",
       "frequency": "周度",
       "unit": "BLL",
@@ -8843,7 +8843,7 @@
     },
     {
       "canonical_code": "US.TV.RFMI",
-      "name_zh": "Richmond Fed Manufacturing Index",
+      "name_zh": "里士满联储联储制造业指数",
       "name_en": "Richmond Fed Manufacturing Index",
       "frequency": "月度",
       "unit": "POINT",
@@ -8862,7 +8862,7 @@
     },
     {
       "canonical_code": "US.TV.RFMSI",
-      "name_zh": "Richmond Fed Manufacturing Shipments Index",
+      "name_zh": "里士满联储制造业出货指数",
       "name_en": "Richmond Fed Manufacturing Shipments Index",
       "frequency": "月度",
       "unit": "POINT",
@@ -8881,7 +8881,7 @@
     },
     {
       "canonical_code": "US.TV.RFSI",
-      "name_zh": "Richmond Fed Services Index",
+      "name_zh": "里士满联储联储服务指数",
       "name_en": "Richmond Fed Services Index",
       "frequency": "月度",
       "unit": "POINT",
@@ -8900,7 +8900,7 @@
     },
     {
       "canonical_code": "US.TV.RIEA",
-      "name_zh": "Retail Inventories Excluding Autos",
+      "name_zh": "零售库存不含汽车",
       "name_en": "Retail Inventories Excluding Autos",
       "frequency": "月度",
       "unit": "PCT",
@@ -8919,7 +8919,7 @@
     },
     {
       "canonical_code": "US.TV.RTI",
-      "name_zh": "Reuters Tankan Index",
+      "name_zh": "路透短观指数",
       "name_en": "Reuters Tankan Index",
       "frequency": "月度",
       "unit": "VALUE",
@@ -8942,7 +8942,7 @@
     },
     {
       "canonical_code": "US.TV.SBSI",
-      "name_zh": "Small Business Sentiment Index",
+      "name_zh": "小企业信心指数",
       "name_en": "Small Business Sentiment Index",
       "frequency": "月度",
       "unit": "POINT",
@@ -8961,7 +8961,7 @@
     },
     {
       "canonical_code": "US.TV.SCPI",
-      "name_zh": "Supply Chain Pressure Index",
+      "name_zh": "供应链压力指数",
       "name_en": "Supply Chain Pressure Index",
       "frequency": "月度",
       "unit": "VALUE",
@@ -8984,7 +8984,7 @@
     },
     {
       "canonical_code": "US.TV.SP",
-      "name_zh": "Steel Production",
+      "name_zh": "钢铁生产",
       "name_en": "Steel Production",
       "frequency": "月度",
       "unit": "TNE",
@@ -9003,7 +9003,7 @@
     },
     {
       "canonical_code": "US.TV.SS",
-      "name_zh": "Services Sentiment",
+      "name_zh": "服务景气信心",
       "name_en": "Services Sentiment",
       "frequency": "月度",
       "unit": "VALUE",
@@ -9026,7 +9026,7 @@
     },
     {
       "canonical_code": "US.TV.TII",
-      "name_zh": "Tertiary Industry Index",
+      "name_zh": "第三产业行业指数",
       "name_en": "Tertiary Industry Index",
       "frequency": "月度",
       "unit": "VALUE",
@@ -9049,7 +9049,7 @@
     },
     {
       "canonical_code": "US.TV.TLAICAP",
-      "name_zh": "TLAICAP",
+      "name_zh": "TLAICAP指标",
       "name_en": "TLAICAP",
       "frequency": "月度",
       "unit": "VALUE",
@@ -9072,7 +9072,7 @@
     },
     {
       "canonical_code": "US.TV.TLMO",
-      "name_zh": "Tankan Large Manufacturing Outlook",
+      "name_zh": "短观大型制造业展望",
       "name_en": "Tankan Large Manufacturing Outlook",
       "frequency": "月度",
       "unit": "VALUE",
@@ -9095,7 +9095,7 @@
     },
     {
       "canonical_code": "US.TV.TNMO",
-      "name_zh": "Tankan Non Manufacturing Outlook",
+      "name_zh": "短观非制造业展望",
       "name_en": "Tankan Non Manufacturing Outlook",
       "frequency": "月度",
       "unit": "VALUE",
@@ -9118,7 +9118,7 @@
     },
     {
       "canonical_code": "US.TV.TRG",
-      "name_zh": "Total Rigs",
+      "name_zh": "总计钻机",
       "name_en": "Total Rigs",
       "frequency": "周度",
       "unit": "UNIT",
@@ -9137,7 +9137,7 @@
     },
     {
       "canonical_code": "US.TV.TVS",
-      "name_zh": "Total Vehicle Sales",
+      "name_zh": "总计车辆销售",
       "name_en": "Total Vehicle Sales",
       "frequency": "月度",
       "unit": "PSN",
@@ -9156,7 +9156,7 @@
     },
     {
       "canonical_code": "US.TV.WI",
-      "name_zh": "Wholesale Inventories",
+      "name_zh": "批发库存",
       "name_en": "Wholesale Inventories",
       "frequency": "月度",
       "unit": "PCT",
@@ -9175,7 +9175,7 @@
     },
     {
       "canonical_code": "US.TV.WS",
-      "name_zh": "Wholesale Sales",
+      "name_zh": "批发销售",
       "name_en": "Wholesale Sales",
       "frequency": "月度",
       "unit": "VALUE",
@@ -9198,7 +9198,7 @@
     },
     {
       "canonical_code": "US.TV.ZCC",
-      "name_zh": "Zew Current Conditions",
+      "name_zh": "ZEW 当前状况",
       "name_en": "Zew Current Conditions",
       "frequency": "月度",
       "unit": "VALUE",
@@ -9221,7 +9221,7 @@
     },
     {
       "canonical_code": "US.TV.ANZRMCC",
-      "name_zh": "Anz Roy Morgan Consumer Confidence Index",
+      "name_zh": "澳新银行-罗伊·摩根消费者信心指数",
       "name_en": "Anz Roy Morgan Consumer Confidence Index",
       "frequency": "月度",
       "unit": "VALUE",
@@ -9246,7 +9246,7 @@
     },
     {
       "canonical_code": "US.TV.BLR",
-      "name_zh": "Bank Lending Rate",
+      "name_zh": "银行贷款利率",
       "name_en": "Bank Lending Rate",
       "frequency": "月度",
       "unit": "PCT",
@@ -9267,7 +9267,7 @@
     },
     {
       "canonical_code": "US.TV.CCA",
-      "name_zh": "Credit Card Accounts",
+      "name_zh": "信用卡账户数",
       "name_en": "Credit Card Accounts",
       "frequency": "季度",
       "unit": "PSN",
@@ -9288,7 +9288,7 @@
     },
     {
       "canonical_code": "US.TV.CCI",
-      "name_zh": "Consumer Confidence Index",
+      "name_zh": "消费者信心指数",
       "name_en": "Consumer Confidence Index",
       "frequency": "月度",
       "unit": "POINT",
@@ -9309,7 +9309,7 @@
     },
     {
       "canonical_code": "US.TV.CCMM",
-      "name_zh": "Consumer Confidence Mom",
+      "name_zh": "消费者信心环比",
       "name_en": "Consumer Confidence Mom",
       "frequency": "月度",
       "unit": "VALUE",
@@ -9334,7 +9334,7 @@
     },
     {
       "canonical_code": "US.TV.CCPT",
-      "name_zh": "Consumer Confidence Price Trends",
+      "name_zh": "消费者信心价格趋势",
       "name_en": "Consumer Confidence Price Trends",
       "frequency": "月度",
       "unit": "VALUE",
@@ -9359,7 +9359,7 @@
     },
     {
       "canonical_code": "US.TV.CCR",
-      "name_zh": "Consumer Credit",
+      "name_zh": "消费信贷",
       "name_en": "Consumer Credit",
       "frequency": "月度",
       "unit": "VALUE",
@@ -9380,7 +9380,7 @@
     },
     {
       "canonical_code": "US.TV.CCS",
-      "name_zh": "Credit Card Spending",
+      "name_zh": "信用卡消费",
       "name_en": "Credit Card Spending",
       "frequency": "月度",
       "unit": "VALUE",
@@ -9405,7 +9405,7 @@
     },
     {
       "canonical_code": "US.TV.CS",
-      "name_zh": "Consumer Spending",
+      "name_zh": "居民消费支出",
       "name_en": "Consumer Spending",
       "frequency": "季度",
       "unit": "VALUE",
@@ -9426,7 +9426,7 @@
     },
     {
       "canonical_code": "US.TV.CSS",
-      "name_zh": "Chain Store Sales",
+      "name_zh": "链式门店销售",
       "name_en": "Chain Store Sales",
       "frequency": "月度",
       "unit": "VALUE",
@@ -9447,7 +9447,7 @@
     },
     {
       "canonical_code": "US.TV.DPI",
-      "name_zh": "Disposable Personal Income",
+      "name_zh": "个人可支配收入",
       "name_en": "Disposable Personal Income",
       "frequency": "月度",
       "unit": "VALUE",
@@ -9466,7 +9466,7 @@
     },
     {
       "canonical_code": "US.TV.DT",
-      "name_zh": "Cbi Distributive Trades",
+      "name_zh": "CBI 分销贸易",
       "name_en": "Cbi Distributive Trades",
       "frequency": "月度",
       "unit": "VALUE",
@@ -9491,7 +9491,7 @@
     },
     {
       "canonical_code": "US.TV.EOI",
-      "name_zh": "Economic Optimism Index",
+      "name_zh": "经济乐观指数",
       "name_en": "Economic Optimism Index",
       "frequency": "月度",
       "unit": "POINT",
@@ -9512,7 +9512,7 @@
     },
     {
       "canonical_code": "US.TV.GASP",
-      "name_zh": "Gasoline Prices",
+      "name_zh": "汽油价格",
       "name_en": "Gasoline Prices",
       "frequency": "月度",
       "unit": "VALUE",
@@ -9533,7 +9533,7 @@
     },
     {
       "canonical_code": "US.TV.HC",
-      "name_zh": "Housing Credit",
+      "name_zh": "住房信贷",
       "name_en": "Housing Credit",
       "frequency": "月度",
       "unit": "VALUE",
@@ -9558,7 +9558,7 @@
     },
     {
       "canonical_code": "US.TV.HDG",
-      "name_zh": "Households Debt To Gdp",
+      "name_zh": "家庭债务占GDP",
       "name_en": "Households Debt To Gdp",
       "frequency": "季度",
       "unit": "PCTGDP",
@@ -9579,7 +9579,7 @@
     },
     {
       "canonical_code": "US.TV.HDI",
-      "name_zh": "Households Debt To Income",
+      "name_zh": "家庭债务收入比",
       "name_en": "Households Debt To Income",
       "frequency": "月度",
       "unit": "VALUE",
@@ -9604,7 +9604,7 @@
     },
     {
       "canonical_code": "US.TV.HSP",
-      "name_zh": "Household Spending",
+      "name_zh": "家庭支出",
       "name_en": "Household Spending",
       "frequency": "月度",
       "unit": "VALUE",
@@ -9629,7 +9629,7 @@
     },
     {
       "canonical_code": "US.TV.HSPMM",
-      "name_zh": "Household Spending Mom",
+      "name_zh": "家庭支出环比",
       "name_en": "Household Spending Mom",
       "frequency": "月度",
       "unit": "VALUE",
@@ -9654,7 +9654,7 @@
     },
     {
       "canonical_code": "US.TV.MCE",
-      "name_zh": "Michigan Consumer Expectations",
+      "name_zh": "密歇根大学居民消费预期",
       "name_en": "Michigan Consumer Expectations",
       "frequency": "月度",
       "unit": "POINT",
@@ -9675,7 +9675,7 @@
     },
     {
       "canonical_code": "US.TV.MCEC",
-      "name_zh": "Michigan Current Economic Conditions",
+      "name_zh": "密歇根大学当前经济状况",
       "name_en": "Michigan Current Economic Conditions",
       "frequency": "月度",
       "unit": "POINT",
@@ -9696,7 +9696,7 @@
     },
     {
       "canonical_code": "US.TV.NLIMM",
-      "name_zh": "Net Lending To Individuals Mom",
+      "name_zh": "Net 贷款至个人环比",
       "name_en": "Net Lending To Individuals Mom",
       "frequency": "月度",
       "unit": "VALUE",
@@ -9721,7 +9721,7 @@
     },
     {
       "canonical_code": "US.TV.PI",
-      "name_zh": "Personal Income",
+      "name_zh": "个人收入",
       "name_en": "Personal Income",
       "frequency": "月度",
       "unit": "PCT",
@@ -9740,7 +9740,7 @@
     },
     {
       "canonical_code": "US.TV.PS",
-      "name_zh": "Personal Savings",
+      "name_zh": "个人储蓄",
       "name_en": "Personal Savings",
       "frequency": "月度",
       "unit": "PCT",
@@ -9761,7 +9761,7 @@
     },
     {
       "canonical_code": "US.TV.PSC",
-      "name_zh": "Private Sector Credit",
+      "name_zh": "私人部门信贷",
       "name_en": "Private Sector Credit",
       "frequency": "月度",
       "unit": "VALUE",
@@ -9782,7 +9782,7 @@
     },
     {
       "canonical_code": "US.TV.PSP",
-      "name_zh": "Personal Spending",
+      "name_zh": "个人支出",
       "name_en": "Personal Spending",
       "frequency": "月度",
       "unit": "PCT",
@@ -9803,7 +9803,7 @@
     },
     {
       "canonical_code": "US.TV.RI",
-      "name_zh": "Redbook Index",
+      "name_zh": "红皮书指数",
       "name_en": "Redbook Index",
       "frequency": "周度",
       "unit": "PCT",
@@ -9824,7 +9824,7 @@
     },
     {
       "canonical_code": "US.TV.RSCG",
-      "name_zh": "Retail Sales Control Group",
+      "name_zh": "零售销售控制组",
       "name_en": "Retail Sales Control Group",
       "frequency": "月度",
       "unit": "PCT",
@@ -9845,7 +9845,7 @@
     },
     {
       "canonical_code": "US.TV.RSEA",
-      "name_zh": "Retail Sales Excluding Autos",
+      "name_zh": "零售销售不含汽车",
       "name_en": "Retail Sales Excluding Autos",
       "frequency": "月度",
       "unit": "PCT",
@@ -9866,7 +9866,7 @@
     },
     {
       "canonical_code": "US.TV.RSEF",
-      "name_zh": "Retail Sales Excluding Fuel",
+      "name_zh": "零售销售不含燃料",
       "name_en": "Retail Sales Excluding Fuel",
       "frequency": "月度",
       "unit": "VALUE",
@@ -9891,7 +9891,7 @@
     },
     {
       "canonical_code": "US.TV.RSEGAMM",
-      "name_zh": "Retail Sales Ex Gas And Autos Mom",
+      "name_zh": "剔除汽油和汽车的零售销售环比",
       "name_en": "Retail Sales Ex Gas And Autos Mom",
       "frequency": "月度",
       "unit": "PCT",
@@ -9912,7 +9912,7 @@
     },
     {
       "canonical_code": "US.TV.RSMM",
-      "name_zh": "Retail Sales Mom",
+      "name_zh": "零售销售环比",
       "name_en": "Retail Sales Mom",
       "frequency": "月度",
       "unit": "PCT",
@@ -9933,7 +9933,7 @@
     },
     {
       "canonical_code": "US.TV.RSYY",
-      "name_zh": "Retail Sales Yoy",
+      "name_zh": "零售销售同比",
       "name_en": "Retail Sales Yoy",
       "frequency": "月度",
       "unit": "PCT",
@@ -9954,7 +9954,7 @@
     },
     {
       "canonical_code": "US.TV.UCPMM",
-      "name_zh": "Used Car Prices Mom",
+      "name_zh": "二手车价格环比",
       "name_en": "Used Car Prices Mom",
       "frequency": "月度",
       "unit": "PCT",
@@ -9975,7 +9975,7 @@
     },
     {
       "canonical_code": "US.TV.UCPYY",
-      "name_zh": "Used Car Prices Yoy",
+      "name_zh": "二手车价格同比",
       "name_en": "Used Car Prices Yoy",
       "frequency": "月度",
       "unit": "PCT",
@@ -9996,7 +9996,7 @@
     },
     {
       "canonical_code": "US.TV.15YMR",
-      "name_zh": "15 Year Mortgage Rate",
+      "name_zh": "15 年抵押贷款利率",
       "name_en": "15 Year Mortgage Rate",
       "frequency": "周度",
       "unit": "PCT",
@@ -10017,7 +10017,7 @@
     },
     {
       "canonical_code": "US.TV.30YMR",
-      "name_zh": "30 Year Mortgage Rate",
+      "name_zh": "30 年抵押贷款利率",
       "name_en": "30 Year Mortgage Rate",
       "frequency": "周度",
       "unit": "PCT",
@@ -10038,7 +10038,7 @@
     },
     {
       "canonical_code": "US.TV.AHP",
-      "name_zh": "Average House Prices",
+      "name_zh": "平均房价",
       "name_en": "Average House Prices",
       "frequency": "月度",
       "unit": "VALUE",
@@ -10059,7 +10059,7 @@
     },
     {
       "canonical_code": "US.TV.AMS",
-      "name_zh": "Average Mortgage Size",
+      "name_zh": "平均抵押贷款规模",
       "name_en": "Average Mortgage Size",
       "frequency": "月度",
       "unit": "VALUE",
@@ -10080,7 +10080,7 @@
     },
     {
       "canonical_code": "US.TV.AP",
-      "name_zh": "Apartment Permits",
+      "name_zh": "公寓许可",
       "name_en": "Apartment Permits",
       "frequency": "月度",
       "unit": "VALUE",
@@ -10105,7 +10105,7 @@
     },
     {
       "canonical_code": "US.TV.BCE",
-      "name_zh": "Building Capital Expenditure",
+      "name_zh": "建筑资本支出",
       "name_en": "Building Capital Expenditure",
       "frequency": "月度",
       "unit": "VALUE",
@@ -10130,7 +10130,7 @@
     },
     {
       "canonical_code": "US.TV.BP",
-      "name_zh": "Building Permits",
+      "name_zh": "建筑许可",
       "name_en": "Building Permits",
       "frequency": "月度",
       "unit": "PSN",
@@ -10151,7 +10151,7 @@
     },
     {
       "canonical_code": "US.TV.BPMM",
-      "name_zh": "Building Permits Mom",
+      "name_zh": "建筑许可环比",
       "name_en": "Building Permits Mom",
       "frequency": "月度",
       "unit": "PCT",
@@ -10172,7 +10172,7 @@
     },
     {
       "canonical_code": "US.TV.BPYY",
-      "name_zh": "Building Permits Yoy",
+      "name_zh": "建筑许可同比",
       "name_en": "Building Permits Yoy",
       "frequency": "月度",
       "unit": "VALUE",
@@ -10197,7 +10197,7 @@
     },
     {
       "canonical_code": "US.TV.CONSTS",
-      "name_zh": "Construction Spending",
+      "name_zh": "建筑支出",
       "name_en": "Construction Spending",
       "frequency": "月度",
       "unit": "PCT",
@@ -10218,7 +10218,7 @@
     },
     {
       "canonical_code": "US.TV.CORD",
-      "name_zh": "Construction Orders Yoy",
+      "name_zh": "建筑业订单同比",
       "name_en": "Construction Orders Yoy",
       "frequency": "月度",
       "unit": "VALUE",
@@ -10243,7 +10243,7 @@
     },
     {
       "canonical_code": "US.TV.COUT",
-      "name_zh": "Construction Output Yoy",
+      "name_zh": "建筑业产出同比",
       "name_en": "Construction Output Yoy",
       "frequency": "月度",
       "unit": "VALUE",
@@ -10268,7 +10268,7 @@
     },
     {
       "canonical_code": "US.TV.CSHPI",
-      "name_zh": "Case Shiller Home Price Index",
+      "name_zh": "标普CoreLogic凯斯-席勒房价指数",
       "name_en": "Case Shiller Home Price Index",
       "frequency": "月度",
       "unit": "POINT",
@@ -10289,7 +10289,7 @@
     },
     {
       "canonical_code": "US.TV.CSHPIMM",
-      "name_zh": "Case Shiller Home Price Index Mom",
+      "name_zh": "标普CoreLogic凯斯-席勒房价指数环比",
       "name_en": "Case Shiller Home Price Index Mom",
       "frequency": "月度",
       "unit": "PCT",
@@ -10310,7 +10310,7 @@
     },
     {
       "canonical_code": "US.TV.CSHPIYY",
-      "name_zh": "Case Shiller Home Price Index Yoy",
+      "name_zh": "标普CoreLogic凯斯-席勒房价指数同比",
       "name_en": "Case Shiller Home Price Index Yoy",
       "frequency": "月度",
       "unit": "PCT",
@@ -10331,7 +10331,7 @@
     },
     {
       "canonical_code": "US.TV.EHS",
-      "name_zh": "Existing Home Sales",
+      "name_zh": "成屋销售",
       "name_en": "Existing Home Sales",
       "frequency": "月度",
       "unit": "PSN",
@@ -10352,7 +10352,7 @@
     },
     {
       "canonical_code": "US.TV.EHSMM",
-      "name_zh": "EHSMM",
+      "name_zh": "EHSMM指标",
       "name_en": "EHSMM",
       "frequency": "月度",
       "unit": "PCT",
@@ -10373,7 +10373,7 @@
     },
     {
       "canonical_code": "US.TV.HMI",
-      "name_zh": "Nahb Housing Market Index",
+      "name_zh": "NAHB住房市场指数",
       "name_en": "Nahb Housing Market Index",
       "frequency": "月度",
       "unit": "POINT",
@@ -10394,7 +10394,7 @@
     },
     {
       "canonical_code": "US.TV.HOR",
-      "name_zh": "Home Ownership Rate",
+      "name_zh": "住房拥有率",
       "name_en": "Home Ownership Rate",
       "frequency": "季度",
       "unit": "PCT",
@@ -10415,7 +10415,7 @@
     },
     {
       "canonical_code": "US.TV.HP",
-      "name_zh": "Houses Permits",
+      "name_zh": "住宅许可",
       "name_en": "Houses Permits",
       "frequency": "月度",
       "unit": "VALUE",
@@ -10440,7 +10440,7 @@
     },
     {
       "canonical_code": "US.TV.HPI",
-      "name_zh": "House Price Index",
+      "name_zh": "房价指数",
       "name_en": "House Price Index",
       "frequency": "月度",
       "unit": "POINT",
@@ -10461,7 +10461,7 @@
     },
     {
       "canonical_code": "US.TV.HPIMM",
-      "name_zh": "House Price Index Mom",
+      "name_zh": "房价指数环比",
       "name_en": "House Price Index Mom",
       "frequency": "月度",
       "unit": "PCT",
@@ -10482,7 +10482,7 @@
     },
     {
       "canonical_code": "US.TV.HPIYY",
-      "name_zh": "House Price Index Yoy",
+      "name_zh": "房价指数同比",
       "name_en": "House Price Index Yoy",
       "frequency": "月度",
       "unit": "PCT",
@@ -10503,7 +10503,7 @@
     },
     {
       "canonical_code": "US.TV.HS",
-      "name_zh": "Home Loans",
+      "name_zh": "住房贷款",
       "name_en": "Home Loans",
       "frequency": "月度",
       "unit": "VALUE",
@@ -10528,7 +10528,7 @@
     },
     {
       "canonical_code": "US.TV.HSL",
-      "name_zh": "Home Sales",
+      "name_zh": "房屋销售",
       "name_en": "Home Sales",
       "frequency": "月度",
       "unit": "VALUE",
@@ -10553,7 +10553,7 @@
     },
     {
       "canonical_code": "US.TV.HSMF",
-      "name_zh": "Housing Starts Multi Family",
+      "name_zh": "多户住宅开工",
       "name_en": "Housing Starts Multi Family",
       "frequency": "月度",
       "unit": "UNIT",
@@ -10574,7 +10574,7 @@
     },
     {
       "canonical_code": "US.TV.HSSF",
-      "name_zh": "Housing Starts Single Family",
+      "name_zh": "单户住宅开工",
       "name_en": "Housing Starts Single Family",
       "frequency": "月度",
       "unit": "UNIT",
@@ -10595,7 +10595,7 @@
     },
     {
       "canonical_code": "US.TV.HST",
-      "name_zh": "Housing Starts",
+      "name_zh": "住宅开工",
       "name_en": "Housing Starts",
       "frequency": "月度",
       "unit": "UNIT",
@@ -10616,7 +10616,7 @@
     },
     {
       "canonical_code": "US.TV.HSTMM",
-      "name_zh": "Housing Starts Mom",
+      "name_zh": "住宅开工环比",
       "name_en": "Housing Starts Mom",
       "frequency": "月度",
       "unit": "PCT",
@@ -10637,7 +10637,7 @@
     },
     {
       "canonical_code": "US.TV.HSYY",
-      "name_zh": "New Home Sales Yoy",
+      "name_zh": "新房屋销售同比",
       "name_en": "New Home Sales Yoy",
       "frequency": "月度",
       "unit": "VALUE",
@@ -10662,7 +10662,7 @@
     },
     {
       "canonical_code": "US.TV.ILH",
-      "name_zh": "Investment Lending For Homes",
+      "name_zh": "住房投资贷款",
       "name_en": "Investment Lending For Homes",
       "frequency": "月度",
       "unit": "VALUE",
@@ -10687,7 +10687,7 @@
     },
     {
       "canonical_code": "US.TV.MA",
-      "name_zh": "Mortgage Approvals",
+      "name_zh": "抵押贷款批准量",
       "name_en": "Mortgage Approvals",
       "frequency": "月度",
       "unit": "VALUE",
@@ -10712,7 +10712,7 @@
     },
     {
       "canonical_code": "US.TV.MAPL",
-      "name_zh": "Mortgage Applications",
+      "name_zh": "抵押贷款申请",
       "name_en": "Mortgage Applications",
       "frequency": "周度",
       "unit": "PCT",
@@ -10733,7 +10733,7 @@
     },
     {
       "canonical_code": "US.TV.MMI",
-      "name_zh": "Mba Mortgage Market Index",
+      "name_zh": "MBA 抵押贷款市场指数",
       "name_en": "Mba Mortgage Market Index",
       "frequency": "周度",
       "unit": "POINT",
@@ -10754,7 +10754,7 @@
     },
     {
       "canonical_code": "US.TV.MOR",
-      "name_zh": "Mortgage Originations",
+      "name_zh": "抵押贷款发放量",
       "name_en": "Mortgage Originations",
       "frequency": "季度",
       "unit": "VALUE",
@@ -10775,7 +10775,7 @@
     },
     {
       "canonical_code": "US.TV.MR",
-      "name_zh": "Mortgage Rate",
+      "name_zh": "抵押贷款利率",
       "name_en": "Mortgage Rate",
       "frequency": "周度",
       "unit": "PCT",
@@ -10796,7 +10796,7 @@
     },
     {
       "canonical_code": "US.TV.MRI",
-      "name_zh": "Mba Mortgage Refinance Index",
+      "name_zh": "MBA 抵押贷款再融资指数",
       "name_en": "Mba Mortgage Refinance Index",
       "frequency": "周度",
       "unit": "POINT",
@@ -10817,7 +10817,7 @@
     },
     {
       "canonical_code": "US.TV.NHP",
-      "name_zh": "National Home Price Index",
+      "name_zh": "全国房价指数",
       "name_en": "National Home Price Index",
       "frequency": "月度",
       "unit": "POINT",
@@ -10838,7 +10838,7 @@
     },
     {
       "canonical_code": "US.TV.NHPI",
-      "name_zh": "Nationwide House Price Index",
+      "name_zh": "Nationwide房价指数",
       "name_en": "Nationwide House Price Index",
       "frequency": "月度",
       "unit": "VALUE",
@@ -10863,7 +10863,7 @@
     },
     {
       "canonical_code": "US.TV.NHPMM",
-      "name_zh": "Nationwide Housing Prices Mom",
+      "name_zh": "Nationwide 住房价格环比",
       "name_en": "Nationwide Housing Prices Mom",
       "frequency": "月度",
       "unit": "VALUE",
@@ -10888,7 +10888,7 @@
     },
     {
       "canonical_code": "US.TV.NHPYY",
-      "name_zh": "Nationwide Housing Prices Yoy",
+      "name_zh": "Nationwide 住房价格同比",
       "name_en": "Nationwide Housing Prices Yoy",
       "frequency": "月度",
       "unit": "VALUE",
@@ -10913,7 +10913,7 @@
     },
     {
       "canonical_code": "US.TV.NHS",
-      "name_zh": "New Residential Sales",
+      "name_zh": "新建住宅销售",
       "name_en": "New Residential Sales",
       "frequency": "月度",
       "unit": "UNIT",
@@ -10934,7 +10934,7 @@
     },
     {
       "canonical_code": "US.TV.NHSMM",
-      "name_zh": "New Residential Sales Mom",
+      "name_zh": "新建住宅销售环比",
       "name_en": "New Residential Sales Mom",
       "frequency": "月度",
       "unit": "PCT",
@@ -10955,7 +10955,7 @@
     },
     {
       "canonical_code": "US.TV.PHA",
-      "name_zh": "Private House Approvals",
+      "name_zh": "私人住宅批准量",
       "name_en": "Private House Approvals",
       "frequency": "月度",
       "unit": "VALUE",
@@ -10980,7 +10980,7 @@
     },
     {
       "canonical_code": "US.TV.PHSIMM",
-      "name_zh": "PHSIMM",
+      "name_zh": "PHSIMM指标",
       "name_en": "PHSIMM",
       "frequency": "月度",
       "unit": "PCT",
@@ -11001,7 +11001,7 @@
     },
     {
       "canonical_code": "US.TV.PHSIYY",
-      "name_zh": "Pending Home Sales Index Yoy",
+      "name_zh": "成屋签约销售指数同比",
       "name_en": "Pending Home Sales Index Yoy",
       "frequency": "月度",
       "unit": "PCT",
@@ -11022,7 +11022,7 @@
     },
     {
       "canonical_code": "US.TV.PIND",
-      "name_zh": "Mba Purchase Index",
+      "name_zh": "MBA购房指数",
       "name_en": "Mba Purchase Index",
       "frequency": "周度",
       "unit": "POINT",
@@ -11043,7 +11043,7 @@
     },
     {
       "canonical_code": "US.TV.PRIN",
-      "name_zh": "Property Investment",
+      "name_zh": "房地产投资",
       "name_en": "Property Investment",
       "frequency": "月度",
       "unit": "VALUE",
@@ -11068,7 +11068,7 @@
     },
     {
       "canonical_code": "US.TV.PRP",
-      "name_zh": "Private Rental Prices",
+      "name_zh": "私人租赁价格",
       "name_en": "Private Rental Prices",
       "frequency": "月度",
       "unit": "VALUE",
@@ -11093,7 +11093,7 @@
     },
     {
       "canonical_code": "US.TV.PRR",
-      "name_zh": "Price To Rent Ratio",
+      "name_zh": "房价租金比",
       "name_en": "Price To Rent Ratio",
       "frequency": "季度",
       "unit": "RATIO",
@@ -11114,7 +11114,7 @@
     },
     {
       "canonical_code": "US.TV.RICSHPB",
-      "name_zh": "Rics House Price Balance",
+      "name_zh": "RICS房价差额",
       "name_en": "Rics House Price Balance",
       "frequency": "月度",
       "unit": "VALUE",
@@ -11139,7 +11139,7 @@
     },
     {
       "canonical_code": "US.TV.RPP",
-      "name_zh": "Residential Property Prices",
+      "name_zh": "住宅房地产价格",
       "name_en": "Residential Property Prices",
       "frequency": "季度",
       "unit": "PCT",
@@ -11160,7 +11160,7 @@
     },
     {
       "canonical_code": "US.TV.SFHP",
-      "name_zh": "Single Family Home Prices",
+      "name_zh": "单户家庭住房价格",
       "name_en": "Single Family Home Prices",
       "frequency": "月度",
       "unit": "VALUE",
@@ -11181,7 +11181,7 @@
     },
     {
       "canonical_code": "US.TV.THSI",
-      "name_zh": "Total Housing Index",
+      "name_zh": "总计住房指数",
       "name_en": "Total Housing Index",
       "frequency": "月度",
       "unit": "UNIT",
@@ -11202,7 +11202,7 @@
     },
     {
       "canonical_code": "US.TV.CTR",
-      "name_zh": "Corporate Tax Rate",
+      "name_zh": "企业所得税率",
       "name_en": "Corporate Tax Rate",
       "frequency": "年度",
       "unit": "PCT",
@@ -11223,7 +11223,7 @@
     },
     {
       "canonical_code": "US.TV.PITR",
-      "name_zh": "Personal Income Tax Rate",
+      "name_zh": "个人收入税率",
       "name_en": "Personal Income Tax Rate",
       "frequency": "年度",
       "unit": "PCT",
@@ -11244,7 +11244,7 @@
     },
     {
       "canonical_code": "US.TV.SSR",
-      "name_zh": "Social Security Rate",
+      "name_zh": "社会保障缴费率",
       "name_en": "Social Security Rate",
       "frequency": "年度",
       "unit": "PCT",
@@ -11265,7 +11265,7 @@
     },
     {
       "canonical_code": "US.TV.SSRC",
-      "name_zh": "Social Security Rate For Companies",
+      "name_zh": "企业社会保障缴费率",
       "name_en": "Social Security Rate For Companies",
       "frequency": "年度",
       "unit": "PCT",
@@ -11286,7 +11286,7 @@
     },
     {
       "canonical_code": "US.TV.SSRE",
-      "name_zh": "Social Security Rate For Employees",
+      "name_zh": "雇员社会保障缴费率",
       "name_en": "Social Security Rate For Employees",
       "frequency": "年度",
       "unit": "PCT",
@@ -11307,7 +11307,7 @@
     },
     {
       "canonical_code": "US.TV.STR",
-      "name_zh": "Sales Tax Rate",
+      "name_zh": "销售税率",
       "name_en": "Sales Tax Rate",
       "frequency": "年度",
       "unit": "PCT",
@@ -11328,7 +11328,7 @@
     },
     {
       "canonical_code": "US.TV.WTR",
-      "name_zh": "Withholding Tax Rate",
+      "name_zh": "预扣税率",
       "name_en": "Withholding Tax Rate",
       "frequency": "年度",
       "unit": "PCT",
@@ -11349,7 +11349,7 @@
     },
     {
       "canonical_code": "US.TV.NGSCP",
-      "name_zh": "Natural Gas Stocks Capacity",
+      "name_zh": "天然气库存容量",
       "name_en": "Natural Gas Stocks Capacity",
       "frequency": "月度",
       "unit": "VALUE",
@@ -11372,7 +11372,7 @@
     },
     {
       "canonical_code": "US.TV.NGSI",
-      "name_zh": "Natural Gas Stocks Inventory",
+      "name_zh": "天然气库存量",
       "name_en": "Natural Gas Stocks Inventory",
       "frequency": "月度",
       "unit": "VALUE",
@@ -11395,7 +11395,7 @@
     },
     {
       "canonical_code": "US.TV.NGSIJ",
-      "name_zh": "Natural Gas Stocks Injection",
+      "name_zh": "天然气库存投放",
       "name_en": "Natural Gas Stocks Injection",
       "frequency": "月度",
       "unit": "VALUE",
@@ -11418,7 +11418,7 @@
     },
     {
       "canonical_code": "US.TV.NGSWD",
-      "name_zh": "Natural Gas Stocks Withdrawal",
+      "name_zh": "天然气库存提取量",
       "name_en": "Natural Gas Stocks Withdrawal",
       "frequency": "月度",
       "unit": "VALUE",
@@ -11441,7 +11441,7 @@
     },
     {
       "canonical_code": "US.TV.CO2E",
-      "name_zh": "Co2 Emissions",
+      "name_zh": "二氧化碳排放量",
       "name_en": "Co2 Emissions",
       "frequency": "年度",
       "unit": "TNE",
@@ -11460,7 +11460,7 @@
     },
     {
       "canonical_code": "US.TV.PRCP",
-      "name_zh": "Precipitation",
+      "name_zh": "降水量",
       "name_en": "Precipitation",
       "frequency": "年度",
       "unit": "MMTR",
@@ -11479,7 +11479,7 @@
     },
     {
       "canonical_code": "US.TV.TEMP",
-      "name_zh": "Temperature",
+      "name_zh": "气温",
       "name_en": "Temperature",
       "frequency": "年度",
       "unit": "DEGC",

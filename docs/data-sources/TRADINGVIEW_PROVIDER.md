@@ -20,6 +20,12 @@ TradingView 的 13 个原始栏目只保留为 `source_categories` 来源标签�
 
 每个指标在 `primary_topic` 中只有一个主归属，`cross_tags` 只表达跨域研究关系，不创建重复叶节点。分类由版本化的确定性规则生成并固化进 Registry；运行时不调用 AI 做模糊生产映射。
 
+## 名称显示
+
+`name_en` 保留 TradingView/Provider 原始英文名称，`name_zh` 是 MacroLens 的中文显示名称。中文名称由版本化的 `tradingview_names.py` 词典和确定性规则生成，专业缩写（GDP、CPI、PCE、ISM、CFNAI 等）保留，不能确认含义的纯缩写显示为“缩写 + 指标”。
+
+535 项 TradingView 指标均必须有中文 `name_zh`；翻译不会修改 `provider_series_id`、`name_en`、观测值或 Raw Series 身份。
+
 ## 连接协议
 
 ```text
