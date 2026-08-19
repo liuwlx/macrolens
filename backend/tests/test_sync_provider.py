@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+from datetime import date
 from types import SimpleNamespace
 from uuid import UUID, uuid4
 
@@ -88,6 +89,59 @@ def test_tradingview_stale_latest_value_is_a_warning_without_weakening_other_gat
         source_series_id=42,
     )
 
-    assert ingestion_issue_severity("TRADINGVIEW_WEB", stale, set()) == "warning"
-    assert ingestion_issue_severity("TRADINGVIEW_WEB", conflict, set()) == "blocking"
-    assert ingestion_issue_severity("FRED_API", stale, set()) == "blocking"
+    assert ingestion_issue_severity(
+        "TRADINGVIEW_WEB", stale, set(), mode="incremental"
+    ) == "warning"
+    assert ingestion_issue_severity(
+        "TRADINGVIEW_WEB", conflict, set(), mode="incremental"
+    ) == "blocking"
+    assert (
+        ingestion_issue_severity("FRED_API", stale, set(), mode="incremental")
+        == "blocking"
+    )
+
+
+@pytest.mark.parametrize(
+    (
+        "provider_code",
+        "mode",
+        "provider_series_id",
+        "period_start",
+        "missing_period_count",
+        "expected",
+    ),
+    [
+        ("TRADINGVIEW_WEB", "backfill", "ECONOMICS:USUR", date(2025, 10, 1), 1, "warning"),
+        ("TRADINGVIEW_WEB", "incremental", "ECONOMICS:USUR", date(2025, 10, 1), 1, "blocking"),
+        ("TRADINGVIEW_WEB", "backfill", "ECONOMICS:USUR", date(2025, 9, 1), 1, "blocking"),
+        ("TRADINGVIEW_WEB", "backfill", "ECONOMICS:OTHER", date(2025, 10, 1), 1, "blocking"),
+        ("FRED_API", "backfill", "ECONOMICS:USUR", date(2025, 10, 1), 1, "blocking"),
+        ("TRADINGVIEW_WEB", "backfill", "ECONOMICS:USUR", date(2025, 10, 1), 2, "blocking"),
+    ],
+    ids=[
+        "known-backfill-gap",
+        "incremental",
+        "unknown-date",
+        "unknown-symbol",
+        "other-provider",
+        "additional-gap",
+    ],
+)
+def test_history_gap_severity_is_narrowly_scoped(
+    provider_code: str,
+    mode: str,
+    provider_series_id: str,
+    period_start: date,
+    missing_period_count: int,
+    expected: str,
+) -> None:
+    issue = CompletenessIssue(
+        code="history_gap",
+        message="TradingView omitted monthly history.",
+        source_series_id=42,
+        provider_series_id=provider_series_id,
+        period_start=period_start,
+        missing_period_count=missing_period_count,
+    )
+
+    assert ingestion_issue_severity(provider_code, issue, set(), mode=mode) == expected

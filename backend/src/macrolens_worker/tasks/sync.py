@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import hashlib
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from pathlib import PurePosixPath
 from typing import Any, Literal, cast
 from uuid import UUID
@@ -58,6 +58,10 @@ ADAPTERS: dict[str, type[ProviderAdapter]] = {
     EIAAdapter.code: EIAAdapter,
     FederalReserveBoardAdapter.code: FederalReserveBoardAdapter,
     TradingViewAdapter.code: TradingViewAdapter,
+}
+
+KNOWN_TRADINGVIEW_HISTORY_GAPS: dict[str, frozenset[date]] = {
+    "ECONOMICS:USUR": frozenset({date(2025, 10, 1)}),
 }
 
 
@@ -322,17 +326,27 @@ def ingestion_issue_severity(
     provider_code: str,
     issue: CompletenessIssue,
     missing_source_ids: set[int],
+    *,
+    mode: str,
 ) -> Literal["warning", "blocking"]:
     if provider_code != TradingViewAdapter.code:
         return "blocking"
     if issue.code == "stale_latest_period":
+        return "warning"
+    if (
+        mode == "backfill"
+        and issue.code == "history_gap"
+        and issue.missing_period_count == 1
+        and issue.provider_series_id is not None
+        and issue.period_start
+        in KNOWN_TRADINGVIEW_HISTORY_GAPS.get(issue.provider_series_id, frozenset())
+    ):
         return "warning"
     if issue.source_series_id in missing_source_ids and issue.code in {
         "mapped_series_missing",
         "mapped_series_all_null",
         "missing_observation_value",
         "minimum_history",
-        "history_gap",
     }:
         return "warning"
     return "blocking"
@@ -477,7 +491,15 @@ async def sync_provider(
     ]
     blocking_issues = []
     for issue in issues:
-        if ingestion_issue_severity(provider_code, issue, missing_source_ids) == "warning":
+        if (
+            ingestion_issue_severity(
+                provider_code,
+                issue,
+                missing_source_ids,
+                mode=mode,
+            )
+            == "warning"
+        ):
             session.add(
                 QualityResult(
                     run_id=run.id,
