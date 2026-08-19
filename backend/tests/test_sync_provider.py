@@ -7,7 +7,8 @@ from uuid import UUID, uuid4
 import pytest
 
 from macrolens_api.models import IngestionRun
-from macrolens_worker.tasks.sync import sync_provider
+from macrolens_worker.tasks.ingestion_quality import CompletenessIssue
+from macrolens_worker.tasks.sync import ingestion_issue_severity, sync_provider
 
 
 class _StopBeforeFetch(Exception):
@@ -73,3 +74,20 @@ def test_large_sync_scope_produces_bounded_collision_resistant_business_key() ->
     assert first != second
     assert first.endswith(str(job_id))
     assert second.endswith(str(job_id))
+
+
+def test_tradingview_stale_latest_value_is_a_warning_without_weakening_other_gates() -> None:
+    stale = CompletenessIssue(
+        code="stale_latest_period",
+        message="The provider's latest available period is historical.",
+        source_series_id=42,
+    )
+    conflict = CompletenessIssue(
+        code="conflicting_duplicate",
+        message="Two values disagree.",
+        source_series_id=42,
+    )
+
+    assert ingestion_issue_severity("TRADINGVIEW_WEB", stale, set()) == "warning"
+    assert ingestion_issue_severity("TRADINGVIEW_WEB", conflict, set()) == "blocking"
+    assert ingestion_issue_severity("FRED_API", stale, set()) == "blocking"

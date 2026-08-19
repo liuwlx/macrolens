@@ -42,7 +42,10 @@ from macrolens_worker.providers.base import (
     ProviderAdapter,
     ProviderFetchResult,
 )
-from macrolens_worker.tasks.ingestion_quality import validate_ingestion_completeness
+from macrolens_worker.tasks.ingestion_quality import (
+    CompletenessIssue,
+    validate_ingestion_completeness,
+)
 
 ADAPTERS: dict[str, type[ProviderAdapter]] = {
     FREDAdapter.code: FREDAdapter,
@@ -315,6 +318,26 @@ async def _quarantine(
     await session.commit()
 
 
+def ingestion_issue_severity(
+    provider_code: str,
+    issue: CompletenessIssue,
+    missing_source_ids: set[int],
+) -> Literal["warning", "blocking"]:
+    if provider_code != TradingViewAdapter.code:
+        return "blocking"
+    if issue.code == "stale_latest_period":
+        return "warning"
+    if issue.source_series_id in missing_source_ids and issue.code in {
+        "mapped_series_missing",
+        "mapped_series_all_null",
+        "missing_observation_value",
+        "minimum_history",
+        "history_gap",
+    }:
+        return "warning"
+    return "blocking"
+
+
 async def sync_provider(
     session: AsyncSession,
     *,
@@ -446,20 +469,7 @@ async def sync_provider(
     ]
     blocking_issues = []
     for issue in issues:
-        missing_symbol_issue = (
-            provider_code == TradingViewAdapter.code
-            and issue.source_series_id in missing_source_ids
-            and issue.code
-            in {
-                "mapped_series_missing",
-                "mapped_series_all_null",
-                "missing_observation_value",
-                "minimum_history",
-                "history_gap",
-                "stale_latest_period",
-            }
-        )
-        if missing_symbol_issue:
+        if ingestion_issue_severity(provider_code, issue, missing_source_ids) == "warning":
             session.add(
                 QualityResult(
                     run_id=run.id,
