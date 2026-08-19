@@ -8,6 +8,7 @@ from types import SimpleNamespace
 import pytest
 
 from macrolens_worker.providers import tradingview
+from macrolens_worker.providers.base import ProviderDataError
 from macrolens_worker.providers.tradingview import (
     FrameDecoder,
     TradingViewAdapter,
@@ -197,5 +198,31 @@ def test_fetch_records_no_such_symbol_for_registry_classification(monkeypatch) -
         assert results == []
         assert adapter.symbol_errors == {symbol: "no_such_symbol"}
         assert any("quote_fast_symbols" in message for message in socket.sent)
+
+    asyncio.run(run())
+
+
+def test_fetch_normalizes_tls_connection_reset(monkeypatch) -> None:
+    async def run() -> None:
+        def failed_connect(*_args: object, **_kwargs: object) -> object:
+            raise ConnectionResetError()
+
+        monkeypatch.setattr(tradingview, "connect", failed_connect)
+        adapter = TradingViewAdapter(client=None)  # type: ignore[arg-type]
+
+        with pytest.raises(
+            ProviderDataError,
+            match="TradingView WebSocket TLS connection failed.*outbound proxy",
+        ):
+            await adapter.fetch(
+                SimpleNamespace(code="TRADINGVIEW_WEB"),  # type: ignore[arg-type]
+                [
+                    (
+                        SimpleNamespace(id=9, provider_series_id="ECONOMICS:USUR"),
+                        SimpleNamespace(id=3, code="TRADINGVIEW_ECONOMICS"),
+                    )
+                ],
+                mode="latest",
+            )
 
     asyncio.run(run())

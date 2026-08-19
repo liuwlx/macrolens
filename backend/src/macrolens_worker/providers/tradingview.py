@@ -3,6 +3,8 @@ from __future__ import annotations
 import asyncio
 import json
 import re
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from datetime import UTC, date, datetime
 from typing import Any
 from uuid import uuid4
@@ -10,7 +12,7 @@ from uuid import uuid4
 from websockets.asyncio.client import connect
 from websockets.typing import Origin
 
-from macrolens_api.config import get_settings
+from macrolens_api.config import Settings, get_settings
 from macrolens_api.models import Dataset, Provider, SourceSeries
 from macrolens_worker.providers.base import (
     NormalizedObservation,
@@ -130,6 +132,30 @@ def _symbol_from_source(source: SourceSeries) -> str:
     return symbol
 
 
+@asynccontextmanager
+async def _connect_tradingview(
+    endpoint: str,
+    settings: Settings,
+) -> AsyncIterator[Any]:
+    """Open TradingView WebSocket and make outbound network failures actionable."""
+
+    try:
+        async with connect(
+            endpoint,
+            origin=Origin(settings.tradingview_origin),
+            user_agent_header=settings.tradingview_user_agent,
+            open_timeout=settings.tradingview_connect_timeout_seconds,
+            ping_interval=settings.tradingview_ping_interval_seconds,
+            ping_timeout=settings.tradingview_ping_timeout_seconds,
+        ) as websocket:
+            yield websocket
+    except (ConnectionError, TimeoutError) as exc:
+        raise ProviderDataError(
+            "TradingView WebSocket TLS connection failed: the remote server or outbound "
+            "proxy reset the connection; check the worker's outbound proxy or firewall."
+        ) from exc
+
+
 class TradingViewAdapter(ProviderAdapter):
     code = "TRADINGVIEW_WEB"
     symbol_errors: dict[str, str]
@@ -162,14 +188,7 @@ class TradingViewAdapter(ProviderAdapter):
             "&auth=sessionid"
         )
 
-        async with connect(
-            endpoint,
-            origin=Origin(settings.tradingview_origin),
-            user_agent_header=settings.tradingview_user_agent,
-            open_timeout=settings.tradingview_connect_timeout_seconds,
-            ping_interval=settings.tradingview_ping_interval_seconds,
-            ping_timeout=settings.tradingview_ping_timeout_seconds,
-        ) as websocket:
+        async with _connect_tradingview(endpoint, settings) as websocket:
             commands = [
                 {"m": "set_data_quality", "p": ["low"]},
                 {"m": "set_auth_token", "p": ["unauthorized_user_token"]},
