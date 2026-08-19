@@ -457,6 +457,7 @@ def test_treasury_null_fields_are_not_observations() -> None:
 def test_completeness_gate_blocks_missing_gap_and_stale_data() -> None:
     source = _source(
         8,
+        external_id="ECONOMICS:GAP_TEST",
         frequency="monthly",
         locator={
             "min_observations": 3,
@@ -489,6 +490,11 @@ def test_completeness_gate_blocks_missing_gap_and_stale_data() -> None:
     )
     codes = {issue.code for issue in issues}
     assert {"minimum_history", "history_gap", "stale_latest_period"} <= codes
+    history_gap = next(issue for issue in issues if issue.code == "history_gap")
+    assert history_gap.source_frequency == "monthly"
+    assert history_gap.missing_period_count == 1
+    assert history_gap.period_start == date(2026, 2, 1)
+    assert history_gap.provider_series_id == "ECONOMICS:GAP_TEST"
     assert metrics["coverage_ratio"] == 1.0
 
 

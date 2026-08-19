@@ -17,6 +17,7 @@ class CompletenessIssue:
     period_start: date | None = None
     provider_series_id: str | None = None
     missing_period_count: int | None = None
+    source_frequency: str | None = None
 
 
 DEFAULT_STALENESS_DAYS = {
@@ -238,13 +239,15 @@ def validate_ingestion_completeness(
                     CompletenessIssue(
                         code="history_gap",
                         message=(
-                            f"Source {source_id} has {len(missing)} missing {frequency} "
-                            f"periods; allowed {allowed}."
+                            f"Source {source_id} (provider_series_id="
+                            f"{source.provider_series_id}) has {len(missing)} missing "
+                            f"{frequency} periods; allowed {allowed}."
                         ),
                         source_series_id=source_id,
                         period_start=missing[0] if missing else None,
                         provider_series_id=source.provider_series_id,
                         missing_period_count=len(missing),
+                        source_frequency=frequency,
                     )
                 )
         if not bool(source.source_locator.get("skip_freshness_check", False)):
