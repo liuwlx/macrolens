@@ -38,6 +38,7 @@ describe("browserDataCapabilityState", () => {
     "pending_license",
     "not_ingested",
     "not_available_as_of",
+    "not_available_for_geography",
   ] as const)("treats %s as catalog-only", (availability) => {
     expect(browserDataCapabilityState(item(availability), true)).toBe("catalog_only");
   });

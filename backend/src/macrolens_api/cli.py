@@ -339,15 +339,24 @@ async def _seed_tradingview_registry(
             "allow_missing_observations": False,
             "route": item.get("route"),
             "categories": item.get("categories") or [],
+            "availability_evidence": item.get("availability_evidence"),
         }
         source_series.mapping_type = "direct"
-        ready = item.get("mapping_status") == "READY"
-        source_series.mapping_status = "verified" if ready else "needs_review"
+        registry_status = item.get("mapping_status")
+        ready = registry_status == "READY"
+        unavailable_us = registry_status == "UNAVAILABLE_US"
+        source_series.mapping_status = (
+            "verified" if ready else "disabled" if unavailable_us else "needs_review"
+        )
         source_series.is_primary = ready
         source_series.source_frequency = frequency
         source_series.source_unit = unit
         source_series.source_title = str(item["name_en"])
-        source_series.notes = "TradingView V1 manual sync mapping"
+        source_series.notes = (
+            "TradingView has no U.S. symbol for this global indicator route"
+            if unavailable_us
+            else "TradingView V1 manual sync mapping"
+        )
         source_series.verified_by = "tradingview-registry" if ready else None
         source_series.verified_at = now if ready else None
         source_series.verification_job_id = None

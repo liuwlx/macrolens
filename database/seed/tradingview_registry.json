@@ -1,10 +1,11 @@
 {
   "tree_code": "macro-default",
   "extension_prefix": "tv-",
-  "generated_at": "2026-08-19T04:48:53.125684+00:00",
+  "generated_at": "2026-08-19T07:52:00.918794+00:00",
   "source_indicator_route_count": 532,
   "indicator_count": 535,
   "valid_indicator_count": 340,
+  "unavailable_us_indicator_count": 195,
   "indicators": [
     {
       "canonical_code": "US.TV.EAI",
@@ -18,7 +19,11 @@
       "categories": [
         "gdp"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.FYGDPG",
@@ -102,7 +107,11 @@
       "categories": [
         "gdp"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.GDPGA",
@@ -116,7 +125,11 @@
       "categories": [
         "gdp"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.GDPMAN",
@@ -312,7 +325,11 @@
       "categories": [
         "gdp"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.MGDPYY",
@@ -326,7 +343,11 @@
       "categories": [
         "gdp"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.RCNSMSPND",
@@ -368,7 +389,11 @@
       "categories": [
         "lbr"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.HOURLY.EARNINGS.MOM",
@@ -410,7 +435,11 @@
       "categories": [
         "lbr"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.WEEKLY.HOURS",
@@ -438,7 +467,11 @@
       "categories": [
         "lbr"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.CONTINUING.CLAIMS",
@@ -550,7 +583,11 @@
       "categories": [
         "lbr"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.EMCI",
@@ -676,7 +713,11 @@
       "categories": [
         "lbr"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.INITIAL.CLAIMS",
@@ -704,7 +745,11 @@
       "categories": [
         "lbr"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.JA",
@@ -718,7 +763,11 @@
       "categories": [
         "lbr"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.JAR",
@@ -732,7 +781,11 @@
       "categories": [
         "lbr"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.CHALLENGER.CUTS",
@@ -844,7 +897,11 @@
       "categories": [
         "lbr"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.LC",
@@ -998,7 +1055,11 @@
       "categories": [
         "lbr"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.OPYY",
@@ -1012,7 +1073,11 @@
       "categories": [
         "lbr"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.POPULATION",
@@ -1110,7 +1175,11 @@
       "categories": [
         "lbr"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.REIB",
@@ -1124,7 +1193,11 @@
       "categories": [
         "lbr"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.RJR",
@@ -1138,7 +1211,11 @@
       "categories": [
         "lbr"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.U6UR",
@@ -1166,7 +1243,11 @@
       "categories": [
         "lbr"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.ULCQQ",
@@ -1306,7 +1387,11 @@
       "categories": [
         "prce"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.BCI",
@@ -1320,7 +1405,11 @@
       "categories": [
         "prce"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.BRANDCPIYY",
@@ -1334,7 +1423,11 @@
       "categories": [
         "prce"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.BWUCPIYY",
@@ -1348,7 +1441,11 @@
       "categories": [
         "prce"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.CCP",
@@ -1418,7 +1515,11 @@
       "categories": [
         "prce"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.CPCEPI",
@@ -1488,7 +1589,11 @@
       "categories": [
         "prce"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.CPFIRMM",
@@ -1502,7 +1607,11 @@
       "categories": [
         "prce"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.CPFIRYY",
@@ -1516,7 +1625,11 @@
       "categories": [
         "prce"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.CPI",
@@ -1656,7 +1769,11 @@
       "categories": [
         "prce"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.CRLPI",
@@ -1670,7 +1787,11 @@
       "categories": [
         "prce"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.DRPI",
@@ -1684,7 +1805,11 @@
       "categories": [
         "prce"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.EI",
@@ -1768,7 +1893,11 @@
       "categories": [
         "prce"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.GDPCPI",
@@ -1782,7 +1911,11 @@
       "categories": [
         "prce"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.GDPD",
@@ -1810,7 +1943,11 @@
       "categories": [
         "prce"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.HESSCPIYY",
@@ -1824,7 +1961,11 @@
       "categories": [
         "prce"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.HICP",
@@ -1838,7 +1979,11 @@
       "categories": [
         "prce"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.HIRMM",
@@ -1852,7 +1997,11 @@
       "categories": [
         "prce"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.HIRYY",
@@ -1866,7 +2015,11 @@
       "categories": [
         "prce"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.IE",
@@ -1894,7 +2047,11 @@
       "categories": [
         "prce"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.IPCFMM",
@@ -1908,7 +2065,11 @@
       "categories": [
         "prce"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.IPRI",
@@ -1992,7 +2153,11 @@
       "categories": [
         "prce"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.MCIRYY",
@@ -2006,7 +2171,11 @@
       "categories": [
         "prce"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.MCPI",
@@ -2020,7 +2189,11 @@
       "categories": [
         "prce"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.MIE1Y",
@@ -2062,7 +2235,11 @@
       "categories": [
         "prce"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.MIRMM",
@@ -2076,7 +2253,11 @@
       "categories": [
         "prce"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.MIRYY",
@@ -2090,7 +2271,11 @@
       "categories": [
         "prce"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.MPI",
@@ -2104,7 +2289,11 @@
       "categories": [
         "prce"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.NRWCPIYY",
@@ -2118,7 +2307,11 @@
       "categories": [
         "prce"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.OPI",
@@ -2132,7 +2325,11 @@
       "categories": [
         "prce"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.PCEPI",
@@ -2258,7 +2455,11 @@
       "categories": [
         "prce"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.PPIIN",
@@ -2272,7 +2473,11 @@
       "categories": [
         "prce"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.PPIINYY",
@@ -2286,7 +2491,11 @@
       "categories": [
         "prce"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.PPIMM",
@@ -2342,7 +2551,11 @@
       "categories": [
         "prce"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.SAXCPIYY",
@@ -2356,7 +2569,11 @@
       "categories": [
         "prce"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.SI",
@@ -2384,7 +2601,11 @@
       "categories": [
         "prce"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.SPI",
@@ -2398,7 +2619,11 @@
       "categories": [
         "prce"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.TCCPI",
@@ -2412,7 +2637,11 @@
       "categories": [
         "prce"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.TCPI",
@@ -2426,7 +2655,11 @@
       "categories": [
         "prce"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.TCPIEFA",
@@ -2440,7 +2673,11 @@
       "categories": [
         "prce"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.TMCPIQQ",
@@ -2454,7 +2691,11 @@
       "categories": [
         "prce"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.WMEDCPIQQ",
@@ -2468,7 +2709,11 @@
       "categories": [
         "prce"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.WMEDCPIYY",
@@ -2482,7 +2727,11 @@
       "categories": [
         "prce"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.WPI",
@@ -2496,7 +2745,11 @@
       "categories": [
         "prce"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.WPIFLYY",
@@ -2510,7 +2763,11 @@
       "categories": [
         "prce"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.WPIFYY",
@@ -2524,7 +2781,11 @@
       "categories": [
         "prce"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.WPIMANYY",
@@ -2538,7 +2799,11 @@
       "categories": [
         "prce"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.WPIMM",
@@ -2552,7 +2817,11 @@
       "categories": [
         "prce"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.WPIYY",
@@ -2566,7 +2835,11 @@
       "categories": [
         "prce"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.HB",
@@ -2608,7 +2881,11 @@
       "categories": [
         "hlth"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.MD",
@@ -2650,7 +2927,11 @@
       "categories": [
         "mny"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.BBS",
@@ -2692,7 +2973,11 @@
       "categories": [
         "mny"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.DIR",
@@ -2706,7 +2991,11 @@
       "categories": [
         "mny"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.EFFR",
@@ -2734,7 +3023,11 @@
       "categories": [
         "mny"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.ESTR",
@@ -2748,7 +3041,11 @@
       "categories": [
         "mny"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.FAI",
@@ -2762,7 +3059,11 @@
       "categories": [
         "mny"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.FBI",
@@ -2818,7 +3119,11 @@
       "categories": [
         "mny"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.IFS",
@@ -2832,7 +3137,11 @@
       "categories": [
         "mny"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.INBR",
@@ -2874,7 +3183,11 @@
       "categories": [
         "mny"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.LB",
@@ -2888,7 +3201,11 @@
       "categories": [
         "mny"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.LG",
@@ -2902,7 +3219,11 @@
       "categories": [
         "mny"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.LIVMLF",
@@ -2916,7 +3237,11 @@
       "categories": [
         "mny"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.LIVRR",
@@ -2930,7 +3255,11 @@
       "categories": [
         "mny"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.LPR5Y",
@@ -2944,7 +3273,11 @@
       "categories": [
         "mny"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.LPS",
@@ -2972,7 +3305,11 @@
       "categories": [
         "mny"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.LTRFO",
@@ -2986,7 +3323,11 @@
       "categories": [
         "mny"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.M0",
@@ -3042,7 +3383,11 @@
       "categories": [
         "mny"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.M4",
@@ -3056,7 +3401,11 @@
       "categories": [
         "mny"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.OIAR",
@@ -3070,7 +3419,11 @@
       "categories": [
         "mny"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.PDG",
@@ -3112,7 +3465,11 @@
       "categories": [
         "mny"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.RFO",
@@ -3126,7 +3483,11 @@
       "categories": [
         "mny"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.RR",
@@ -3154,7 +3515,11 @@
       "categories": [
         "mny"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.SECOFR",
@@ -3182,7 +3547,11 @@
       "categories": [
         "mny"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.AE",
@@ -3196,7 +3565,11 @@
       "categories": [
         "trd"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.BALANCE.TRADE",
@@ -3266,7 +3639,11 @@
       "categories": [
         "trd"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.COP",
@@ -3322,7 +3699,11 @@
       "categories": [
         "trd"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.ECE",
@@ -3336,7 +3717,11 @@
       "categories": [
         "trd"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.ED",
@@ -3364,7 +3749,11 @@
       "categories": [
         "trd"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.EXP",
@@ -3392,7 +3781,11 @@
       "categories": [
         "trd"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.FDI",
@@ -3420,7 +3813,11 @@
       "categories": [
         "trd"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.FTCA",
@@ -3434,7 +3831,11 @@
       "categories": [
         "trd"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.FTH",
@@ -3448,7 +3849,11 @@
       "categories": [
         "trd"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.FTR",
@@ -3462,7 +3867,11 @@
       "categories": [
         "trd"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.FTW",
@@ -3476,7 +3885,11 @@
       "categories": [
         "trd"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.GDTPI",
@@ -3490,7 +3903,11 @@
       "categories": [
         "trd"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.GRES",
@@ -3546,7 +3963,11 @@
       "categories": [
         "trd"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.NEGTB",
@@ -3560,7 +3981,11 @@
       "categories": [
         "trd"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.NGI",
@@ -3574,7 +3999,11 @@
       "categories": [
         "trd"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.NGIR",
@@ -3588,7 +4017,11 @@
       "categories": [
         "trd"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.NODXMM",
@@ -3602,7 +4035,11 @@
       "categories": [
         "trd"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.NODXYY",
@@ -3616,7 +4053,11 @@
       "categories": [
         "trd"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.NOE",
@@ -3630,7 +4071,11 @@
       "categories": [
         "trd"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.OE",
@@ -3658,7 +4103,11 @@
       "categories": [
         "trd"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.TA",
@@ -3854,7 +4303,11 @@
       "categories": [
         "gov"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.GDPADQQ",
@@ -3868,7 +4321,11 @@
       "categories": [
         "gov"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.GDPADYY",
@@ -3882,7 +4339,11 @@
       "categories": [
         "gov"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.GDPGNOS",
@@ -3896,7 +4357,11 @@
       "categories": [
         "gov"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.GDPGOS",
@@ -3910,7 +4375,11 @@
       "categories": [
         "gov"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.GR",
@@ -3966,7 +4435,11 @@
       "categories": [
         "gov"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.ME",
@@ -3994,7 +4467,11 @@
       "categories": [
         "gov"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.NWFAGDP",
@@ -4008,7 +4485,11 @@
       "categories": [
         "gov"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.NWFLA",
@@ -4022,7 +4503,11 @@
       "categories": [
         "gov"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.PSNB",
@@ -4036,7 +4521,11 @@
       "categories": [
         "gov"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.PSNDGDP",
@@ -4050,7 +4539,11 @@
       "categories": [
         "gov"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.TAXR",
@@ -4064,7 +4557,11 @@
       "categories": [
         "gov"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.TCB",
@@ -4078,7 +4575,11 @@
       "categories": [
         "gov"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.ACR",
@@ -4120,7 +4621,11 @@
       "categories": [
         "bsnss"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.BCOI",
@@ -4190,7 +4695,11 @@
       "categories": [
         "bsnss"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.BSILMF",
@@ -4204,7 +4713,11 @@
       "categories": [
         "bsnss"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.CAP",
@@ -4260,7 +4773,11 @@
       "categories": [
         "bsnss"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.CFNAI",
@@ -4358,7 +4875,11 @@
       "categories": [
         "bsnss"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.CLI",
@@ -4484,7 +5005,11 @@
       "categories": [
         "bsnss"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.CPR",
@@ -4680,7 +5205,11 @@
       "categories": [
         "bsnss"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.DGO",
@@ -4750,7 +5279,11 @@
       "categories": [
         "bsnss"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.EDBR",
@@ -4778,7 +5311,11 @@
       "categories": [
         "bsnss"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.ELPC",
@@ -4792,7 +5329,11 @@
       "categories": [
         "bsnss"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.ESI",
@@ -4806,7 +5347,11 @@
       "categories": [
         "bsnss"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.EWS",
@@ -4820,7 +5365,11 @@
       "categories": [
         "bsnss"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.EWSO",
@@ -4834,7 +5383,11 @@
       "categories": [
         "bsnss"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.FO",
@@ -4876,7 +5429,11 @@
       "categories": [
         "bsnss"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.GPRO",
@@ -5002,7 +5559,11 @@
       "categories": [
         "bsnss"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.IFOE",
@@ -5016,7 +5577,11 @@
       "categories": [
         "bsnss"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.II",
@@ -5030,7 +5595,11 @@
       "categories": [
         "bsnss"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.IIBS",
@@ -5044,7 +5613,11 @@
       "categories": [
         "bsnss"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.IIC",
@@ -5058,7 +5631,11 @@
       "categories": [
         "bsnss"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.IIM",
@@ -5072,7 +5649,11 @@
       "categories": [
         "bsnss"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.IPMM",
@@ -5114,7 +5695,11 @@
       "categories": [
         "bsnss"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.ISMMBO",
@@ -5338,7 +5923,11 @@
       "categories": [
         "bsnss"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.MEMP",
@@ -5394,7 +5983,11 @@
       "categories": [
         "bsnss"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.MPR",
@@ -5450,7 +6043,11 @@
       "categories": [
         "bsnss"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.MTO",
@@ -5464,7 +6061,11 @@
       "categories": [
         "bsnss"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.NDCGOEA",
@@ -5576,7 +6177,11 @@
       "categories": [
         "bsnss"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.NYCBCI",
@@ -5758,7 +6363,11 @@
       "categories": [
         "bsnss"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.PMCE",
@@ -5772,7 +6381,11 @@
       "categories": [
         "bsnss"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.PRI",
@@ -5870,7 +6483,11 @@
       "categories": [
         "bsnss"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.SBSI",
@@ -5898,7 +6515,11 @@
       "categories": [
         "bsnss"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.SP",
@@ -5926,7 +6547,11 @@
       "categories": [
         "bsnss"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.TII",
@@ -5940,7 +6565,11 @@
       "categories": [
         "bsnss"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.TLAICAP",
@@ -5954,7 +6583,11 @@
       "categories": [
         "bsnss"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.TLMO",
@@ -5968,7 +6601,11 @@
       "categories": [
         "bsnss"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.TNMO",
@@ -5982,7 +6619,11 @@
       "categories": [
         "bsnss"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.TRG",
@@ -6038,7 +6679,11 @@
       "categories": [
         "bsnss"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.ZCC",
@@ -6052,7 +6697,11 @@
       "categories": [
         "bsnss"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.ANZRMCC",
@@ -6066,7 +6715,11 @@
       "categories": [
         "cnsm"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.BLR",
@@ -6122,7 +6775,11 @@
       "categories": [
         "cnsm"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.CCPT",
@@ -6136,7 +6793,11 @@
       "categories": [
         "cnsm"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.CCR",
@@ -6164,7 +6825,11 @@
       "categories": [
         "cnsm"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.CS",
@@ -6220,7 +6885,11 @@
       "categories": [
         "cnsm"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.EOI",
@@ -6262,7 +6931,11 @@
       "categories": [
         "cnsm"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.HDG",
@@ -6290,7 +6963,11 @@
       "categories": [
         "cnsm"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.HSP",
@@ -6304,7 +6981,11 @@
       "categories": [
         "cnsm"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.HSPMM",
@@ -6318,7 +6999,11 @@
       "categories": [
         "cnsm"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.MCE",
@@ -6360,7 +7045,11 @@
       "categories": [
         "cnsm"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.PI",
@@ -6472,7 +7161,11 @@
       "categories": [
         "cnsm"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.RSEGAMM",
@@ -6612,7 +7305,11 @@
       "categories": [
         "hse"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.BCE",
@@ -6626,7 +7323,11 @@
       "categories": [
         "hse"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.BP",
@@ -6668,7 +7369,11 @@
       "categories": [
         "hse"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.CONSTS",
@@ -6696,7 +7401,11 @@
       "categories": [
         "hse"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.COUT",
@@ -6710,7 +7419,11 @@
       "categories": [
         "hse"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.CSHPI",
@@ -6822,7 +7535,11 @@
       "categories": [
         "hse"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.HPI",
@@ -6878,7 +7595,11 @@
       "categories": [
         "hse"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.HSL",
@@ -6892,7 +7613,11 @@
       "categories": [
         "hse"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.HSMF",
@@ -6962,7 +7687,11 @@
       "categories": [
         "hse"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.ILH",
@@ -6976,7 +7705,11 @@
       "categories": [
         "hse"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.MA",
@@ -6990,7 +7723,11 @@
       "categories": [
         "hse"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.MAPL",
@@ -7088,7 +7825,11 @@
       "categories": [
         "hse"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.NHPMM",
@@ -7102,7 +7843,11 @@
       "categories": [
         "hse"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.NHPYY",
@@ -7116,7 +7861,11 @@
       "categories": [
         "hse"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.NHS",
@@ -7158,7 +7907,11 @@
       "categories": [
         "hse"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.PHSIMM",
@@ -7214,7 +7967,11 @@
       "categories": [
         "hse"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.PRP",
@@ -7228,7 +7985,11 @@
       "categories": [
         "hse"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.PRR",
@@ -7256,7 +8017,11 @@
       "categories": [
         "hse"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.RPP",
@@ -7410,7 +8175,11 @@
       "categories": [
         "enrg"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.NGSI",
@@ -7424,7 +8193,11 @@
       "categories": [
         "enrg"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.NGSIJ",
@@ -7438,7 +8211,11 @@
       "categories": [
         "enrg"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.NGSWD",
@@ -7452,7 +8229,11 @@
       "categories": [
         "enrg"
       ],
-      "mapping_status": "CANDIDATE"
+      "mapping_status": "UNAVAILABLE_US",
+      "availability_evidence": {
+        "code": "no_such_symbol",
+        "geography": "US"
+      }
     },
     {
       "canonical_code": "US.TV.CO2E",

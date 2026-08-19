@@ -74,6 +74,28 @@ def _candidate(
     return candidate
 
 
+def test_disabled_no_such_symbol_is_geographically_unavailable() -> None:
+    candidate = _candidate()
+    source_id, binding = next(iter(candidate.sources.items()))
+    candidate.sources.clear()
+    binding.source.mapping_status = "disabled"
+    binding.source.source_locator = {
+        "availability_evidence": {"code": "no_such_symbol", "geography": "US"}
+    }
+    candidate.catalog_sources[source_id] = binding
+
+    assert data_browser._catalog_availability(  # noqa: SLF001
+        candidate,
+        [],
+        None,
+        "not_ingested",
+    ) == "not_available_for_geography"
+    assert data_browser._source_reason(candidate) == (  # noqa: SLF001
+        "source_not_available_for_geography",
+        "TradingView 当前没有该指标的美国序列。",
+    )
+
+
 def test_ai_run_create_accepts_a_frozen_data_as_of() -> None:
     cutoff = datetime(2026, 8, 1, tzinfo=UTC)
     payload = AIRunCreate(

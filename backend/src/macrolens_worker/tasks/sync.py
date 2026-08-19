@@ -460,10 +460,18 @@ async def sync_provider(
         observation.source_series_id for observation, _raw_id in staged
     }
     missing_source_ids = resolved_ids - observed_source_ids
+    tradingview_symbol_errors = (
+        adapter.symbol_errors if isinstance(adapter, TradingViewAdapter) else {}
+    )
+    source_by_id = {source.id: source for source, _dataset in mapping_pairs}
     symbol_errors: list[dict[str, Any]] = [
         {
             "source_series_id": source_id,
-            "error": "TradingView returned no valid latest observation",
+            "provider_series_id": source_by_id[source_id].provider_series_id,
+            "error": tradingview_symbol_errors.get(
+                str(source_by_id[source_id].provider_series_id),
+                "TradingView returned no valid latest observation",
+            ),
         }
         for source_id in sorted(missing_source_ids)
     ]
