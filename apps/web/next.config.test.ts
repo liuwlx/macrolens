@@ -49,6 +49,12 @@ describe("Next.js API proxy", () => {
   it("preserves the existing security headers", async () => {
     await expect(nextConfig.headers?.()).resolves.toEqual([
       {
+        source: "/data",
+        headers: [
+          { key: "Cache-Control", value: "no-store, max-age=0, must-revalidate" },
+        ],
+      },
+      {
         source: "/(.*)",
         headers: [
           { key: "X-Content-Type-Options", value: "nosniff" },
