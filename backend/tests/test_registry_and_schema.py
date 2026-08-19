@@ -25,11 +25,11 @@ def test_tradingview_registry_contains_v1_symbols() -> None:
         (ROOT / "database/seed/tradingview_registry.json").read_text(encoding="utf-8")
     )
     indicators = payload["indicators"]
-    assert len(indicators) == 23
-    assert len({item["canonical_code"] for item in indicators}) == 23
-    assert len({item["provider_series_id"] for item in indicators}) == 23
+    assert len(indicators) == 535
+    assert len({item["canonical_code"] for item in indicators}) == 535
+    assert len({item["provider_series_id"] for item in indicators}) == 535
     assert all(item["provider_series_id"].startswith("ECONOMICS:US") for item in indicators)
-    assert all(item["mapping_status"] == "READY" for item in indicators)
+    assert sum(item["mapping_status"] == "READY" for item in indicators) >= 300
 
 
 def test_all_tables_compile_for_postgresql() -> None:

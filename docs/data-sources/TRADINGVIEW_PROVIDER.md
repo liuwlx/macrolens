@@ -4,7 +4,7 @@
 
 V1通过页面“数据同步”按钮手动触发 TradingView 最新值同步。Worker 使用轻量 WebSocket 客户端，不运行浏览器进程，不保存原始采集包。
 
-首批注册 23 个美国经济 Symbol，具体清单见 `database/seed/tradingview_registry.json`。
+目录注册 535 个美国候选 Symbol，其中当前探测到340项有有效最新值。完整清单和状态见 `database/seed/tradingview_registry.json`。
 
 ## 连接协议
 

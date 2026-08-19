@@ -204,14 +204,24 @@ class TradingViewAdapter(ProviderAdapter):
                 asyncio.get_running_loop().time()
                 + settings.tradingview_receive_timeout_seconds
             )
+            received_response = False
             while len(completed) < len(symbols):
                 remaining = deadline - asyncio.get_running_loop().time()
                 if remaining <= 0:
                     break
+                receive_timeout = min(
+                    remaining,
+                    settings.tradingview_idle_timeout_seconds
+                    if received_response
+                    else remaining,
+                )
                 try:
-                    incoming = await asyncio.wait_for(websocket.recv(), timeout=remaining)
+                    incoming = await asyncio.wait_for(
+                        websocket.recv(), timeout=receive_timeout
+                    )
                 except TimeoutError:
                     break
+                received_response = True
                 for payload in decoder.feed(incoming):
                     method = payload.get("m")
                     params = payload.get("p")
@@ -262,7 +272,11 @@ class TradingViewAdapter(ProviderAdapter):
                 period_end=period_end(period, frequency),
                 value=value,
                 vintage_at=captured_at,
-                quality_flags=["tradingview_qsd"],
+                quality_flags=[
+                    "tradingview_qsd",
+                    f"tradingview_frequency:{frequency_code or 'M'}",
+                    f"tradingview_unit:{values.get('value_unit_id') or 'VALUE'}",
+                ],
             )
             bucket = grouped.setdefault(dataset.id, (dataset, []))
             bucket[1].append(observation)
