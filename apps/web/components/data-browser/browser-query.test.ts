@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { defaultBrowserState, parseBrowserState, patchBrowserState, serializeBrowserState } from "./browser-query";
+import { defaultBrowserState, parseBrowserState, patchBrowserState, selectTaxonomyNode, serializeBrowserState } from "./browser-query";
 
 describe("data browser URL state", () => {
   it("round-trips shareable filters and analysis state", () => {
@@ -18,5 +18,10 @@ describe("data browser URL state", () => {
   it("sanitizes unsupported values", () => {
     const state = parseBrowserState(new URLSearchParams("page=-2&sort=invalid&order=sideways&tab=unknown"));
     expect(state).toMatchObject({ page: 1, sort: "taxonomy", order: "asc", tab: "trend" });
+  });
+
+  it("clears the previous metric selection when a taxonomy node is clicked", () => {
+    const next = selectTaxonomyNode({ ...defaultBrowserState, q: "US.TV.DIR", series: "old-series", page: 4 }, "housing-supply");
+    expect(next).toMatchObject({ node: "housing-supply", q: "", series: "", page: 1 });
   });
 });
