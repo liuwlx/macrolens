@@ -5,7 +5,9 @@ import json
 import re
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from dataclasses import dataclass
 from datetime import UTC, date, datetime
+from decimal import Decimal
 from typing import Any
 from uuid import uuid4
 
@@ -125,6 +127,133 @@ def _frequency_label(value: object) -> str:
     return _FREQUENCY_MAP.get(str(value or "").upper(), "monthly")
 
 
+def parse_chart_period(timestamp: object, frequency: str) -> date:
+    if not isinstance(timestamp, (int, float)):
+        raise ProviderDataError(f"TradingView chart timestamp is invalid: {timestamp!r}")
+    seconds = float(timestamp)
+    if seconds > 100_000_000_000:
+        seconds /= 1000
+    value = datetime.fromtimestamp(seconds, UTC).date()
+    normalized = frequency.lower()
+    if normalized == "monthly":
+        return value.replace(day=1)
+    if normalized == "quarterly":
+        return value.replace(month=((value.month - 1) // 3) * 3 + 1, day=1)
+    if normalized in {"semiannual", "semi-annual"}:
+        return value.replace(month=1 if value.month <= 6 else 7, day=1)
+    if normalized == "annual":
+        return value.replace(month=1, day=1)
+    return value
+
+
+@dataclass(frozen=True, slots=True)
+class ChartHistoryPoint:
+    period_start: date
+    value: Decimal
+    timestamp: float
+
+
+@dataclass(frozen=True, slots=True)
+class ChartHistoryResult:
+    points: tuple[ChartHistoryPoint, ...]
+    metadata: dict[str, Any]
+    available_data_range_begin_date: date | None
+    completed: bool
+
+
+class ChartHistoryDecoder:
+    """Decode economic chart-session updates without treating them as OHLC bars."""
+
+    def __init__(self, *, frequency: str) -> None:
+        self.frequency = frequency
+        self._frame_decoder = FrameDecoder()
+        self._metadata: dict[str, Any] = {}
+        self._points: dict[date, ChartHistoryPoint] = {}
+        self._completed = False
+        self._error: str | None = None
+
+    def feed(self, data: str | bytes) -> list[dict[str, Any]]:
+        return self._frame_decoder.feed(data)
+
+    def consume(self, message: dict[str, Any]) -> None:
+        method = message.get("m")
+        params = message.get("p")
+        if method == "symbol_resolved" and isinstance(params, list) and len(params) >= 2:
+            metadata = params[1]
+            if isinstance(metadata, dict):
+                self._metadata.update(metadata)
+            return
+        if method == "series_error":
+            self._error = str(params[1] if isinstance(params, list) and len(params) > 1 else params)
+            return
+        if method == "series_completed":
+            self._completed = True
+            return
+        if method != "timescale_update" or not isinstance(params, list) or len(params) < 2:
+            return
+        payload = params[1]
+        if not isinstance(payload, dict):
+            return
+        for series_payload in payload.values():
+            if not isinstance(series_payload, dict):
+                continue
+            rows = series_payload.get("s") or series_payload.get("st")
+            if not isinstance(rows, list):
+                continue
+            for row in rows:
+                if not isinstance(row, dict):
+                    continue
+                values = row.get("v")
+                if not isinstance(values, list) or len(values) < 2:
+                    continue
+                timestamp = values[0]
+                period_start = parse_chart_period(timestamp, self.frequency)
+                value = parse_decimal(values[1])
+                if value is None:
+                    continue
+                point = ChartHistoryPoint(period_start, value, float(timestamp))
+                previous = self._points.get(period_start)
+                if previous is not None and previous.value != point.value:
+                    raise ProviderDataError(
+                        "TradingView chart returned conflicting values for "
+                        f"period={period_start}."
+                    )
+                self._points[period_start] = point
+
+    def finish(self) -> ChartHistoryResult:
+        if self._error:
+            raise ProviderDataError(f"TradingView chart series failed: {self._error}")
+        if not self._completed:
+            raise ProviderDataError("TradingView chart history did not receive series_completed")
+        if not self._points:
+            raise ProviderDataError("TradingView chart history returned no observations")
+        begin_raw = self._metadata.get("available_data_range_begin_date")
+        begin = None
+        if isinstance(begin_raw, (int, float)):
+            begin = datetime.fromtimestamp(float(begin_raw), UTC).date()
+        return ChartHistoryResult(
+            points=tuple(self._points[key] for key in sorted(self._points)),
+            metadata=dict(self._metadata),
+            available_data_range_begin_date=begin,
+            completed=True,
+        )
+
+    @property
+    def completed(self) -> bool:
+        return self._completed
+
+    @property
+    def oldest_period(self) -> date | None:
+        return min(self._points) if self._points else None
+
+    @property
+    def error(self) -> str | None:
+        return self._error
+
+    def prepare_for_more_data(self) -> None:
+        self._completed = False
+
+
 def _symbol_from_source(source: SourceSeries) -> str:
     symbol = str(source.provider_series_id or "").strip()
     if not symbol.startswith("ECONOMICS:"):
@@ -167,10 +296,13 @@ class TradingViewAdapter(ProviderAdapter):
         *,
         mode: str,
     ) -> list[ProviderFetchResult]:
-        if mode not in {"latest", "incremental"}:
-            raise ProviderDataError(f"TradingView V1 only supports latest sync, got {mode!r}")
+        if mode not in {"latest", "incremental", "backfill"}:
+            raise ProviderDataError(f"TradingView V1 does not support sync mode {mode!r}")
         if not mappings:
             return []
+
+        if mode == "backfill":
+            return await self._fetch_history(provider, mappings)
 
         self.symbol_errors = {}
         settings = get_settings()
@@ -327,4 +459,162 @@ class TradingViewAdapter(ProviderAdapter):
                 persist_raw=False,
             )
             for dataset, observations in grouped.values()
+        ]
+
+    async def _fetch_history(
+        self,
+        provider: Provider,
+        mappings: list[tuple[SourceSeries, Dataset]],
+    ) -> list[ProviderFetchResult]:
+        if len(mappings) != 1:
+            raise ProviderDataError("TradingView history sync accepts exactly one Series")
+        source, dataset = mappings[0]
+        settings = get_settings()
+        symbol = _symbol_from_source(source)
+        frequency = source.source_frequency or "monthly"
+        resolution = {
+            "daily": "1D",
+            "weekly": "1W",
+            "monthly": "1M",
+            "quarterly": "3M",
+            "annual": "12M",
+        }.get(frequency.lower())
+        if resolution is None:
+            raise ProviderDataError(f"TradingView history has unsupported frequency {frequency!r}")
+
+        chart_session = f"cs_{uuid4().hex}"
+        symbol_session = f"sds_sym_{uuid4().hex}"
+        series_id = "sds_1"
+        turnaround = "s1"
+        decoder = ChartHistoryDecoder(frequency=frequency)
+        endpoint = (
+            f"{settings.tradingview_ws_url}?from=markets%2Fworld-economy%2Fcountries%2F"
+            f"united-states%2F&date={datetime.now(UTC).replace(microsecond=0).isoformat()}"
+            "&auth=sessionid"
+        )
+        symbol_payload = json.dumps(
+            {"symbol": symbol, "adjustment": "splits", "session": "regular"},
+            separators=(",", ":"),
+        )
+        initial_bars = 5000
+        max_requests = 10
+        request_count = 0
+        last_oldest: date | None = None
+
+        async with _connect_tradingview(endpoint, settings) as websocket:
+            commands: list[dict[str, Any]] = [
+                {"m": "set_data_quality", "p": ["low"]},
+                {"m": "set_auth_token", "p": ["unauthorized_user_token"]},
+                {"m": "set_locale", "p": ["zh-Hans", "CN"]},
+                {"m": "chart_create_session", "p": [chart_session, ""]},
+                {"m": "switch_timezone", "p": [chart_session, "Etc/UTC"]},
+                {"m": "resolve_symbol", "p": [chart_session, symbol_session, symbol_payload]},
+                {
+                    "m": "create_series",
+                    "p": [
+                        chart_session,
+                        series_id,
+                        turnaround,
+                        symbol_session,
+                        resolution,
+                        initial_bars,
+                        "",
+                    ],
+                },
+            ]
+            for command in commands:
+                await websocket.send(encode_frame(command))
+
+            while True:
+                try:
+                    incoming = await asyncio.wait_for(
+                        websocket.recv(),
+                        timeout=settings.tradingview_receive_timeout_seconds,
+                    )
+                except TimeoutError as exc:
+                    raise ProviderDataError(
+                        "TradingView chart history timed out before series_completed"
+                    ) from exc
+                for payload in decoder.feed(incoming):
+                    if payload.get("m") == "heartbeat":
+                        await websocket.send(_encode_control_frame("heartbeat"))
+                    else:
+                        decoder.consume(payload)
+                if decoder.error:
+                    raise ProviderDataError(
+                        f"TradingView chart series failed: {decoder.error}"
+                    )
+                if not decoder.completed:
+                    continue
+
+                metadata_begin = decoder.finish().available_data_range_begin_date
+                oldest = decoder.oldest_period
+                if (
+                    metadata_begin is None
+                    or oldest is None
+                    or oldest <= metadata_begin
+                    or request_count >= max_requests
+                    or oldest == last_oldest
+                ):
+                    break
+                last_oldest = oldest
+                request_count += 1
+                decoder.prepare_for_more_data()
+                await websocket.send(
+                    encode_frame(
+                        {
+                            "m": "request_more_data",
+                            "p": [chart_session, series_id, initial_bars],
+                        }
+                    )
+                )
+
+            result = decoder.finish()
+            await websocket.send(
+                encode_frame({"m": "remove_series", "p": [chart_session, series_id]})
+            )
+            await websocket.send(encode_frame({"m": "chart_delete_session", "p": [chart_session]}))
+
+        captured_at = datetime.now(UTC)
+        observations = [
+            NormalizedObservation(
+                source_series_id=source.id,
+                period_start=point.period_start,
+                period_end=period_end(point.period_start, frequency),
+                value=point.value,
+                vintage_at=captured_at,
+                quality_flags=[
+                    "tradingview_chart",
+                    f"tradingview_frequency:{frequency}",
+                    f"tradingview_resolution:{resolution}",
+                ],
+            )
+            for point in result.points
+        ]
+        if result.available_data_range_begin_date and (
+            observations[0].period_start > result.available_data_range_begin_date
+        ):
+            raise ProviderDataError(
+                "TradingView chart history did not reach available_data_range_begin_date"
+            )
+        return [
+            ProviderFetchResult(
+                provider=provider,
+                dataset=dataset,
+                request_url=endpoint.split("?", 1)[0],
+                request_parameters={
+                    "mode": "backfill",
+                    "symbol": symbol,
+                    "resolution": resolution,
+                    "history_start": observations[0].period_start.isoformat(),
+                    "history_end": observations[-1].period_start.isoformat(),
+                    "observation_count": len(observations),
+                    "request_more_data_count": request_count,
+                },
+                content_type="application/json",
+                raw_bytes=b"",
+                observations=observations,
+                captured_at=captured_at,
+                persist_raw=False,
+            )
         ]

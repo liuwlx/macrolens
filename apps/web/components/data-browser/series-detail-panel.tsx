@@ -1,6 +1,6 @@
 "use client";
 
-import { Bot, CalendarClock, Download, GitCompareArrows, History, Star } from "lucide-react";
+import { Bot, CalendarClock, Download, GitCompareArrows, History, RefreshCw, Star } from "lucide-react";
 
 import type { AICapabilitiesResponse, SeriesAnalyticsResponse, SeriesBrowserItem, SeriesDetail } from "@/lib/types";
 
@@ -18,12 +18,16 @@ type Props = {
   readOnlyReason?: string;
   onFavorite(): void;
   onHistory(): void;
+  canSyncHistory: boolean;
+  onSyncHistory(): void;
+  historySyncPending: boolean;
+  historySyncMessage?: string;
   onCompare(): void;
   onExport(): void;
   onAI(): void;
 };
 
-export function SeriesDetailPanel({ item, detail, analytics, ai, isLoading, isFavorite, favoritePending, readOnlyReason, onFavorite, onHistory, onCompare, onExport, onAI }: Props) {
+export function SeriesDetailPanel({ item, detail, analytics, ai, isLoading, isFavorite, favoritePending, readOnlyReason, onFavorite, onHistory, canSyncHistory, onSyncHistory, historySyncPending, historySyncMessage, onCompare, onExport, onAI }: Props) {
   const series = detail ?? item?.series;
   if (isLoading && !series) return <aside className="data-browser-card data-browser-detail-card"><div className="p-4 space-y-3"><div className="skeleton h-5" /><div className="skeleton h-16" /><div className="skeleton h-48" /></div></aside>;
   if (!series || !item) return <aside className="data-browser-card data-browser-detail-card"><div className="data-browser-inline-state"><strong>选择一个指标</strong><span>从指标树或明细表选择后查看详细信息。</span></div></aside>;
@@ -50,10 +54,12 @@ export function SeriesDetailPanel({ item, detail, analytics, ai, isLoading, isFa
       <div className="data-browser-tags"><span className="badge">{series.theme}</span><span className="badge">{series.frequency}</span><span className="badge">{series.provider?.code ?? "官方来源"}</span></div>
       <div className="data-browser-detail-actions">
         <button type="button" className="btn btn-primary" onClick={onHistory} disabled={catalogOnly} title={unavailableReason}><History size={15} />查看历史数据</button>
+        {canSyncHistory && <button type="button" className="btn" onClick={onSyncHistory} disabled={historySyncPending} title="从 TradingView chart session 回补该指标的完整历史"><RefreshCw size={15} className={historySyncPending ? "animate-spin" : ""} />{historySyncPending ? "同步历史中…" : "同步历史数据"}</button>}
         <button type="button" className="btn" onClick={onCompare} disabled={catalogOnly} title={unavailableReason}><GitCompareArrows size={15} />加入对比</button>
         <button type="button" className="btn" onClick={onExport} disabled={!downloadAllowed} title={downloadAllowed ? "导出当前范围" : unavailableReason ?? analytics?.capabilities.download.reason ?? "当前许可不允许下载"}><Download size={15} />导出数据</button>
         <button type="button" className="btn" onClick={onAI} disabled={Boolean(readOnlyReason) || !aiAllowed} title={readOnlyReason ?? unavailableReason ?? (aiAllowed ? "在 AI 页面附加该指标" : ai?.reason ?? analytics?.capabilities.ai.reason ?? "AI 上下文不可用")}><Bot size={15} />加入 AI 上下文</button>
       </div>
+      {historySyncMessage && <div className="data-browser-sync-status" role="status">{historySyncMessage}</div>}
       {nextRelease && <div className="data-browser-next-release"><CalendarClock size={16} /><span><strong>{nextRelease.title_zh}</strong><small>{nextRelease.role} · {nextRelease.status}</small></span></div>}
     </div>
   </aside>;

@@ -80,14 +80,18 @@ Registry 生成时只有 `no_such_symbol` 才会成为 `UNAVAILABLE_US`；超时
 
 ```http
 POST /api/v1/admin/providers/TRADINGVIEW_WEB/sync
+POST /api/v1/admin/providers/TRADINGVIEW_WEB/series/{series_id}/history
 GET  /api/v1/admin/jobs/{job_id}
 ```
 
 只有管理员可以发起同步。重复点击时，若已有 queued/running 的 TradingView 同步 Job，API 返回已有 Job。
 
+`/series/{series_id}/history` 只针对当前已审核的 TradingView 主 Series，使用 chart session 回补完整可用历史。它发送 `chart_create_session`、`resolve_symbol`、`create_series` 和 `request_more_data`，读取 `timescale_update`，直到 `series_completed` 且达到 `available_data_range_begin_date`。历史点写入现有 observation vintage/latest 链路，不保存原始 WebSocket 帧。
+
 ## 错误策略
 
 - 连接失败：整个 Job 失败，不发布不完整结果；
+- 历史连接成功但未收到 `series_completed`、历史范围未达到 Provider 起点或发现重复冲突：整个历史发布批次隔离，不发布部分结果；
 - 单个 Symbol 没有有效值：记录 Symbol 错误，其余成功项继续发布；
 - 期间无法解析：该 Symbol 失败；
 - 单个观测写入冲突：该发布批次进入隔离状态；

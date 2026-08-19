@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import type { SeriesBrowserItem } from "@/lib/types";
@@ -28,12 +28,30 @@ const item: SeriesBrowserItem = {
 
 describe("SeriesDetailPanel catalog-only interactions", () => {
   it("shows readiness and fails closed for data-dependent actions", () => {
-    render(<SeriesDetailPanel item={item} isLoading={false} isFavorite={false} favoritePending={false} onFavorite={vi.fn()} onHistory={vi.fn()} onCompare={vi.fn()} onExport={vi.fn()} onAI={vi.fn()} />);
+    render(<SeriesDetailPanel item={item} isLoading={false} isFavorite={false} favoritePending={false} onFavorite={vi.fn()} onHistory={vi.fn()} canSyncHistory={false} onSyncHistory={vi.fn()} historySyncPending={false} onCompare={vi.fn()} onExport={vi.fn()} onAI={vi.fn()} />);
 
     expect(screen.getByText("待映射")).toBeVisible();
     expect(screen.getByRole("button", { name: "查看历史数据" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "加入对比" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "导出数据" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "加入 AI 上下文" })).toBeDisabled();
+  });
+
+  it("offers history sync for an available TradingView series", () => {
+    const sync = vi.fn();
+    const tradingViewItem: SeriesBrowserItem = {
+      ...item,
+      availability: "available",
+      series: {
+        ...item.series,
+        canonical_code: "US.TV.UNEMPLOYMENT.RATE",
+        name_zh: "失业率",
+        provider: { code: "TRADINGVIEW_WEB", name: "TradingView", license_class: "internal" },
+      },
+    };
+    render(<SeriesDetailPanel item={tradingViewItem} isLoading={false} isFavorite={false} favoritePending={false} onFavorite={vi.fn()} onHistory={vi.fn()} canSyncHistory onSyncHistory={sync} historySyncPending={false} onCompare={vi.fn()} onExport={vi.fn()} onAI={vi.fn()} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "同步历史数据" }));
+    expect(sync).toHaveBeenCalledOnce();
   });
 });
