@@ -357,12 +357,13 @@ async def sync_provider(
             "Scoped sync contains an unknown, inactive, non-primary, or unverified mapping"
         )
 
-    scope_key = ",".join(str(item) for item in sorted(resolved_ids))
+    scope_payload = ",".join(str(item) for item in sorted(resolved_ids))
+    scope_key = hashlib.sha256(scope_payload.encode("ascii")).hexdigest()
 
     run = IngestionRun(
         provider_id=provider.id,
         run_type="backfill" if mode in {"backfill", "vintage_backfill"} else "incremental",
-        business_key=f"{provider_code}:{mode}:{scope_key}:{job_id}",
+        business_key=f"{provider_code}:{mode}:scope-sha256:{scope_key}:{job_id}",
         scheduled_at=datetime.now(UTC),
         started_at=datetime.now(UTC),
         status="running",
