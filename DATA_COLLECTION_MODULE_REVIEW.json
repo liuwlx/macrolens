@@ -244,7 +244,8 @@
       "module": "TradingView WebSocket Adapter",
       "code": "TRADINGVIEW_WEB",
       "implementation": "backend/src/macrolens_worker/providers/tradingview.py",
-      "enabled_series": 23,
+      "catalog_series": 535,
+      "enabled_series": 340,
       "collection_modes": [
         "latest"
       ],

@@ -337,16 +337,19 @@ async def _seed_tradingview_registry(
             "symbol": symbol,
             "frequency_code": str(item["frequency"]),
             "allow_missing_observations": False,
+            "route": item.get("route"),
+            "categories": item.get("categories") or [],
         }
         source_series.mapping_type = "direct"
-        source_series.mapping_status = "verified"
-        source_series.is_primary = True
+        ready = item.get("mapping_status") == "READY"
+        source_series.mapping_status = "verified" if ready else "needs_review"
+        source_series.is_primary = ready
         source_series.source_frequency = frequency
         source_series.source_unit = unit
         source_series.source_title = str(item["name_en"])
         source_series.notes = "TradingView V1 manual sync mapping"
-        source_series.verified_by = "tradingview-registry"
-        source_series.verified_at = now
+        source_series.verified_by = "tradingview-registry" if ready else None
+        source_series.verified_at = now if ready else None
         source_series.verification_job_id = None
         source_series.verification_fingerprint = None
         await session.flush()

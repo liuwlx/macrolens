@@ -69,6 +69,7 @@ class Settings(BaseSettings):
     )
     tradingview_connect_timeout_seconds: float = 15.0
     tradingview_receive_timeout_seconds: float = 30.0
+    tradingview_idle_timeout_seconds: float = 2.0
     tradingview_ping_interval_seconds: float = 20.0
     tradingview_ping_timeout_seconds: float = 20.0
 
