@@ -3043,6 +3043,40 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/admin/providers/{provider_code}/sync:
+    post:
+      tags:
+      - Admin
+      summary: Sync Provider Manually
+      operationId: sync_provider_manually_api_v1_admin_providers__provider_code__sync_post
+      parameters:
+      - name: provider_code
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Provider Code
+      - name: macrolens_access
+        in: cookie
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Macrolens Access
+      responses:
+        '202':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobPublic'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /api/v1/admin/jobs:
     post:
       tags:
@@ -3118,40 +3152,6 @@ paths:
                 items:
                   $ref: '#/components/schemas/JobPublic'
                 title: Response List Jobs Api V1 Admin Jobs Get
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-  /api/v1/admin/providers/{provider_code}/sync:
-    post:
-      tags:
-      - Admin
-      summary: Sync Provider Manually
-      operationId: sync_provider_manually_api_v1_admin_providers__provider_code__sync_post
-      parameters:
-      - name: provider_code
-        in: path
-        required: true
-        schema:
-          type: string
-          title: Provider Code
-      - name: macrolens_access
-        in: cookie
-        required: false
-        schema:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Macrolens Access
-      responses:
-        '202':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/JobPublic'
         '422':
           description: Validation Error
           content:

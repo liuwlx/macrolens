@@ -31,7 +31,9 @@ def main() -> int:
     rendered = normalized(schema)
     target = ROOT / "macrolens_openapi.yaml"
     if args.check:
-        if not target.exists() or normalized(yaml.safe_load(target.read_text())) != rendered:
+        if not target.exists() or normalized(
+            yaml.safe_load(target.read_text(encoding="utf-8"))
+        ) != rendered:
             print("macrolens_openapi.yaml is out of date", file=sys.stderr)
             return 1
         print(f"OpenAPI is current: {len(schema.get('paths', {}))} paths")
