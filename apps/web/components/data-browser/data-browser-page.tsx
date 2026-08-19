@@ -8,6 +8,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/components/auth-provider";
 import { apiDownload, apiFetch, ApiError, queryString } from "@/lib/api";
 import type { AICapabilitiesResponse, Favorite, JobPublic, SeriesAnalyticsResponse, SeriesBrowserItem, SeriesBrowserResponse, SeriesDetail, TaxonomyBrowserSeries } from "@/lib/types";
+import { formatTradingViewSyncError } from "@/lib/sync-errors";
 
 import { AnalysisPanel } from "./analysis-panel";
 import { browserDataCapabilityState } from "./browser-availability";
@@ -144,7 +145,7 @@ export function DataBrowserPage() {
       ]);
     } catch (error) {
       setSyncState("error");
-      setSyncMessage(error instanceof Error ? error.message : "TradingView同步失败");
+      setSyncMessage(formatTradingViewSyncError(error));
     }
   }
   const closeDrawer = useCallback(() => setDrawer(null), []);
