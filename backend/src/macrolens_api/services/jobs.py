@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Any
 from uuid import uuid4
@@ -9,6 +10,15 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..models import Job
+
+
+@dataclass(frozen=True, slots=True)
+class JobReservation:
+    job_type: str
+    payload: dict[str, Any]
+    idempotency_key: str
+    priority: int = 0
+    max_attempts: int = 5
 
 
 async def enqueue_job(
@@ -72,3 +82,47 @@ async def reserve_job(
     if job is None:
         raise RuntimeError("Durable job disappeared after insertion")
     return job, created_id is not None
+
+
+async def reserve_jobs(
+    session: AsyncSession,
+    reservations: list[JobReservation],
+) -> list[Job]:
+    """Atomically reserve many jobs without committing the caller's transaction."""
+    if not reservations:
+        return []
+    idempotency_keys = [item.idempotency_key for item in reservations]
+    if len(idempotency_keys) != len(set(idempotency_keys)):
+        raise ValueError("Batch job idempotency keys must be unique")
+
+    run_after = datetime.now(UTC)
+    statement = (
+        insert(Job)
+        .values(
+            [
+                {
+                    "id": uuid4(),
+                    "job_type": item.job_type,
+                    "payload": item.payload,
+                    "idempotency_key": item.idempotency_key,
+                    "priority": item.priority,
+                    "max_attempts": item.max_attempts,
+                    "run_after": run_after,
+                }
+                for item in reservations
+            ]
+        )
+        .on_conflict_do_nothing(index_elements=[Job.idempotency_key])
+    )
+    await session.execute(statement)
+    jobs = list(
+        (
+            await session.scalars(
+                select(Job).where(Job.idempotency_key.in_(idempotency_keys))
+            )
+        ).all()
+    )
+    jobs_by_key = {job.idempotency_key: job for job in jobs}
+    if len(jobs_by_key) != len(idempotency_keys):
+        raise RuntimeError("Failed to create or resolve every idempotent batch job")
+    return [jobs_by_key[key] for key in idempotency_keys]

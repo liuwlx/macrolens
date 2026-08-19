@@ -34,11 +34,16 @@ class _RunCaptureSession:
     def __init__(self, source_ids: list[int]) -> None:
         self.source_ids = source_ids
         self.added: list[object] = []
+        self.executed_sql: list[str] = []
 
     async def scalar(self, _statement: object) -> SimpleNamespace:
         return SimpleNamespace(id=1)
 
-    async def execute(self, _statement: object) -> _MappingRows:
+    async def execute(self, statement: object) -> object:
+        sql = str(statement)
+        self.executed_sql.append(sql)
+        if "pg_advisory_xact_lock" in sql:
+            return SimpleNamespace()
         return _MappingRows(self.source_ids)
 
     def add(self, value: object) -> None:
@@ -75,6 +80,38 @@ def test_large_sync_scope_produces_bounded_collision_resistant_business_key() ->
     assert first != second
     assert first.endswith(str(job_id))
     assert second.endswith(str(job_id))
+
+
+def test_tradingview_backfill_acquires_provider_transaction_lock() -> None:
+    session = _RunCaptureSession([42])
+
+    with pytest.raises(_StopBeforeFetch):
+        asyncio.run(
+            sync_provider(  # type: ignore[arg-type]
+                session,
+                provider_code="TRADINGVIEW_WEB",
+                mode="backfill",
+                job_id=uuid4(),
+                source_series_ids=[42],
+            )
+        )
+
+    assert any("pg_advisory_xact_lock" in sql for sql in session.executed_sql)
+
+    latest_session = _RunCaptureSession([42])
+    with pytest.raises(_StopBeforeFetch):
+        asyncio.run(
+            sync_provider(  # type: ignore[arg-type]
+                latest_session,
+                provider_code="TRADINGVIEW_WEB",
+                mode="latest",
+                job_id=uuid4(),
+                source_series_ids=[42],
+            )
+        )
+    assert not any(
+        "pg_advisory_xact_lock" in sql for sql in latest_session.executed_sql
+    )
 
 
 def test_tradingview_stale_latest_value_is_a_warning_without_weakening_other_gates() -> None:
