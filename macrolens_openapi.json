@@ -3,7 +3,7 @@
   "info": {
     "title": "MacroLens API",
     "description": "宏观数据、发布日历、FOMC、文档检索和 AI 研究平台 API。",
-    "version": "1.0.1"
+    "version": "1.0.2"
   },
   "paths": {
     "/api/v1/health": {
@@ -297,6 +297,175 @@
         }
       }
     },
+    "/api/v1/taxonomies/{tree_code}/children": {
+      "get": {
+        "tags": [
+          "Catalog"
+        ],
+        "summary": "Taxonomy Children",
+        "operationId": "taxonomy_children_api_v1_taxonomies__tree_code__children_get",
+        "parameters": [
+          {
+            "name": "tree_code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 80,
+              "title": "Tree Code"
+            }
+          },
+          {
+            "name": "parent_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Parent Id"
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 200
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          },
+          {
+            "name": "scope",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^(children|all)$",
+              "default": "children",
+              "title": "Scope"
+            }
+          },
+          {
+            "name": "provider",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Provider"
+            }
+          },
+          {
+            "name": "theme",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Theme"
+            }
+          },
+          {
+            "name": "frequency",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Frequency"
+            }
+          },
+          {
+            "name": "unit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Unit"
+            }
+          },
+          {
+            "name": "seasonal_adjustment",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Seasonal Adjustment"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaxonomyChildrenResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/taxonomies/{tree_code}": {
       "get": {
         "tags": [
@@ -334,6 +503,762 @@
                   "type": "object",
                   "additionalProperties": true,
                   "title": "Response Taxonomy Api V1 Taxonomies  Tree Code  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/series/browser": {
+      "get": {
+        "tags": [
+          "Series"
+        ],
+        "summary": "Browse Series",
+        "operationId": "browse_series_api_v1_series_browser_get",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 200
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          },
+          {
+            "name": "node_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Node Id"
+            }
+          },
+          {
+            "name": "tree_code",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 80,
+              "default": "macro-default",
+              "title": "Tree Code"
+            }
+          },
+          {
+            "name": "provider",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Provider"
+            }
+          },
+          {
+            "name": "theme",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Theme"
+            }
+          },
+          {
+            "name": "frequency",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Frequency"
+            }
+          },
+          {
+            "name": "unit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Unit"
+            }
+          },
+          {
+            "name": "seasonal_adjustment",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Seasonal Adjustment"
+            }
+          },
+          {
+            "name": "published_from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Published From"
+            }
+          },
+          {
+            "name": "published_to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Published To"
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^(taxonomy|name|current_period|current|change|period_change|yoy)$",
+              "default": "taxonomy",
+              "title": "Sort"
+            }
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^(asc|desc)$",
+              "default": "asc",
+              "title": "Order"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 20,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 1000000,
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          },
+          {
+            "name": "data_as_of",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Data As Of"
+            }
+          },
+          {
+            "name": "macrolens_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Macrolens Access"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SeriesBrowserResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/series/browser/export": {
+      "get": {
+        "tags": [
+          "Series"
+        ],
+        "summary": "Export Series Browser",
+        "operationId": "export_series_browser_api_v1_series_browser_export_get",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 200
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          },
+          {
+            "name": "node_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Node Id"
+            }
+          },
+          {
+            "name": "tree_code",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 80,
+              "default": "macro-default",
+              "title": "Tree Code"
+            }
+          },
+          {
+            "name": "provider",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Provider"
+            }
+          },
+          {
+            "name": "theme",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Theme"
+            }
+          },
+          {
+            "name": "frequency",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Frequency"
+            }
+          },
+          {
+            "name": "unit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Unit"
+            }
+          },
+          {
+            "name": "seasonal_adjustment",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Seasonal Adjustment"
+            }
+          },
+          {
+            "name": "published_from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Published From"
+            }
+          },
+          {
+            "name": "published_to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Published To"
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^(taxonomy|name|current_period|current|change|period_change|yoy)$",
+              "default": "taxonomy",
+              "title": "Sort"
+            }
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^(asc|desc)$",
+              "default": "asc",
+              "title": "Order"
+            }
+          },
+          {
+            "name": "data_as_of",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Data As Of"
+            }
+          },
+          {
+            "name": "macrolens_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Macrolens Access"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/series/{series_id}/export": {
+      "get": {
+        "tags": [
+          "Series"
+        ],
+        "summary": "Export Series",
+        "operationId": "export_series_api_v1_series__series_id__export_get",
+        "parameters": [
+          {
+            "name": "series_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Series Id"
+            }
+          },
+          {
+            "name": "start",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Start"
+            }
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "End"
+            }
+          },
+          {
+            "name": "transform",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^(level|difference|mom|qoq|yoy|annualized_3m|annualized_6m|rebased_100|zscore)$",
+              "default": "level",
+              "title": "Transform"
+            }
+          },
+          {
+            "name": "data_as_of",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Data As Of"
+            }
+          },
+          {
+            "name": "macrolens_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Macrolens Access"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/series/{series_id}/analytics": {
+      "get": {
+        "tags": [
+          "Series"
+        ],
+        "summary": "Get Series Analytics",
+        "operationId": "get_series_analytics_api_v1_series__series_id__analytics_get",
+        "parameters": [
+          {
+            "name": "series_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Series Id"
+            }
+          },
+          {
+            "name": "start",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Start"
+            }
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "End"
+            }
+          },
+          {
+            "name": "transform",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^(level|difference|mom|qoq|yoy|annualized_3m|annualized_6m|rebased_100|zscore)$",
+              "default": "level",
+              "title": "Transform"
+            }
+          },
+          {
+            "name": "data_as_of",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Data As Of"
+            }
+          },
+          {
+            "name": "macrolens_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Macrolens Access"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SeriesAnalyticsResponse"
                 }
               }
             }
@@ -607,13 +1532,36 @@
             }
           },
           {
-            "name": "vintage",
+            "name": "data_as_of",
             "in": "query",
             "required": false,
             "schema": {
-              "type": "string",
-              "default": "latest",
-              "title": "Vintage"
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Data As Of"
+            }
+          },
+          {
+            "name": "macrolens_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Macrolens Access"
             }
           }
         ],
@@ -691,6 +1639,39 @@
                 }
               ],
               "title": "End"
+            }
+          },
+          {
+            "name": "data_as_of",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Data As Of"
+            }
+          },
+          {
+            "name": "macrolens_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Macrolens Access"
             }
           }
         ],
@@ -1526,6 +2507,82 @@
         }
       }
     },
+    "/api/v1/ai/capabilities": {
+      "get": {
+        "tags": [
+          "AI"
+        ],
+        "summary": "Get Ai Capability",
+        "operationId": "get_ai_capability_api_v1_ai_capabilities_get",
+        "parameters": [
+          {
+            "name": "series_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Series Id"
+            }
+          },
+          {
+            "name": "data_as_of",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Data As Of"
+            }
+          },
+          {
+            "name": "macrolens_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Macrolens Access"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AICapabilityResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/ai/runs": {
       "post": {
         "tags": [
@@ -1534,6 +2591,17 @@
         "summary": "Create Ai Run",
         "operationId": "create_ai_run_api_v1_ai_runs_post",
         "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 4,
+              "maxLength": 300,
+              "title": "Idempotency-Key"
+            }
+          },
           {
             "name": "macrolens_access",
             "in": "cookie",
@@ -4074,6 +5142,268 @@
         }
       }
     },
+    "/api/v1/admin/providers/{provider_code}/sync": {
+      "post": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Sync Provider Manually",
+        "operationId": "sync_provider_manually_api_v1_admin_providers__provider_code__sync_post",
+        "parameters": [
+          {
+            "name": "provider_code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Provider Code"
+            }
+          },
+          {
+            "name": "macrolens_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Macrolens Access"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobPublic"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/providers/{provider_code}/history": {
+      "post": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Create Provider History Batch",
+        "operationId": "create_provider_history_batch_api_v1_admin_providers__provider_code__history_post",
+        "parameters": [
+          {
+            "name": "provider_code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Provider Code"
+            }
+          },
+          {
+            "name": "macrolens_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Macrolens Access"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HistoryBatchCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HistoryBatchPublic"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/providers/{provider_code}/history/{batch_id}": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Get Provider History Batch",
+        "operationId": "get_provider_history_batch_api_v1_admin_providers__provider_code__history__batch_id__get",
+        "parameters": [
+          {
+            "name": "provider_code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Provider Code"
+            }
+          },
+          {
+            "name": "batch_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Batch Id"
+            }
+          },
+          {
+            "name": "macrolens_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Macrolens Access"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HistoryBatchPublic"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/providers/{provider_code}/series/{series_id}/history": {
+      "post": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Sync Series History Manually",
+        "operationId": "sync_series_history_manually_api_v1_admin_providers__provider_code__series__series_id__history_post",
+        "parameters": [
+          {
+            "name": "provider_code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Provider Code"
+            }
+          },
+          {
+            "name": "series_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Series Id"
+            }
+          },
+          {
+            "name": "macrolens_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Macrolens Access"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobPublic"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/admin/jobs": {
       "post": {
         "tags": [
@@ -4195,6 +5525,65 @@
                     "$ref": "#/components/schemas/JobPublic"
                   },
                   "title": "Response List Jobs Api V1 Admin Jobs Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/jobs/{job_id}": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Get Job",
+        "operationId": "get_job_api_v1_admin_jobs__job_id__get",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Job Id"
+            }
+          },
+          {
+            "name": "macrolens_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Macrolens Access"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobPublic"
                 }
               }
             }
@@ -4542,6 +5931,134 @@
                   "type": "object",
                   "additionalProperties": true,
                   "title": "Response Update Source Mapping Api V1 Admin Source Mappings  Source Mapping Id  Patch"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/source-mappings/{source_mapping_id}/probe": {
+      "post": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Create Mapping Probe",
+        "operationId": "create_mapping_probe_api_v1_admin_source_mappings__source_mapping_id__probe_post",
+        "parameters": [
+          {
+            "name": "source_mapping_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Source Mapping Id"
+            }
+          },
+          {
+            "name": "macrolens_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Macrolens Access"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobPublic"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/source-mappings/{source_mapping_id}/approve": {
+      "post": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Approve Source Mapping",
+        "operationId": "approve_source_mapping_api_v1_admin_source_mappings__source_mapping_id__approve_post",
+        "parameters": [
+          {
+            "name": "source_mapping_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Source Mapping Id"
+            }
+          },
+          {
+            "name": "macrolens_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Macrolens Access"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SourceMappingApproval"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Approve Source Mapping Api V1 Admin Source Mappings  Source Mapping Id  Approve Post"
                 }
               }
             }
@@ -4935,6 +6452,52 @@
   },
   "components": {
     "schemas": {
+      "AICapabilityResponse": {
+        "properties": {
+          "series_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Series Id"
+          },
+          "configured": {
+            "type": "boolean",
+            "title": "Configured"
+          },
+          "allowed": {
+            "type": "boolean",
+            "title": "Allowed"
+          },
+          "reason_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason Code"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          }
+        },
+        "type": "object",
+        "required": [
+          "series_id",
+          "configured",
+          "allowed"
+        ],
+        "title": "AICapabilityResponse"
+      },
       "AICitationPublic": {
         "properties": {
           "id": {
@@ -5080,6 +6643,18 @@
               }
             ],
             "title": "Project Id"
+          },
+          "data_as_of": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Data As Of"
           },
           "contexts": {
             "items": {
@@ -5644,6 +7219,294 @@
         ],
         "title": "AuthResponse"
       },
+      "BrowserFacetValue": {
+        "properties": {
+          "value": {
+            "type": "string",
+            "title": "Value"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "value",
+          "label",
+          "count"
+        ],
+        "title": "BrowserFacetValue"
+      },
+      "BrowserFacets": {
+        "properties": {
+          "provider": {
+            "items": {
+              "$ref": "#/components/schemas/BrowserFacetValue"
+            },
+            "type": "array",
+            "title": "Provider"
+          },
+          "theme": {
+            "items": {
+              "$ref": "#/components/schemas/BrowserFacetValue"
+            },
+            "type": "array",
+            "title": "Theme"
+          },
+          "frequency": {
+            "items": {
+              "$ref": "#/components/schemas/BrowserFacetValue"
+            },
+            "type": "array",
+            "title": "Frequency"
+          },
+          "unit": {
+            "items": {
+              "$ref": "#/components/schemas/BrowserFacetValue"
+            },
+            "type": "array",
+            "title": "Unit"
+          },
+          "seasonal_adjustment": {
+            "items": {
+              "$ref": "#/components/schemas/BrowserFacetValue"
+            },
+            "type": "array",
+            "title": "Seasonal Adjustment"
+          }
+        },
+        "type": "object",
+        "title": "BrowserFacets"
+      },
+      "BrowserMetric": {
+        "properties": {
+          "value": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          },
+          "unit": {
+            "type": "string",
+            "title": "Unit"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "available",
+              "unavailable"
+            ],
+            "title": "Status"
+          },
+          "basis": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Basis"
+          },
+          "reason_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason Code"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          }
+        },
+        "type": "object",
+        "required": [
+          "value",
+          "unit",
+          "status"
+        ],
+        "title": "BrowserMetric"
+      },
+      "BrowserObservation": {
+        "properties": {
+          "period_start": {
+            "type": "string",
+            "format": "date",
+            "title": "Period Start"
+          },
+          "period_end": {
+            "type": "string",
+            "format": "date",
+            "title": "Period End"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          },
+          "published_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Published At"
+          },
+          "vintage_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Vintage At"
+          },
+          "source_series_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Series Id"
+          },
+          "run_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Run Id"
+          },
+          "publication_batch_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Publication Batch Id"
+          },
+          "raw_object_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Raw Object Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "period_start",
+          "period_end",
+          "value",
+          "vintage_at"
+        ],
+        "title": "BrowserObservation"
+      },
+      "BrowserPagination": {
+        "properties": {
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit"
+          },
+          "offset": {
+            "type": "integer",
+            "title": "Offset"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total",
+          "limit",
+          "offset"
+        ],
+        "title": "BrowserPagination"
+      },
+      "CapabilityStatus": {
+        "properties": {
+          "allowed": {
+            "type": "boolean",
+            "title": "Allowed"
+          },
+          "reason_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason Code"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          }
+        },
+        "type": "object",
+        "required": [
+          "allowed"
+        ],
+        "title": "CapabilityStatus"
+      },
       "CompareRequest": {
         "properties": {
           "series": {
@@ -5817,6 +7680,166 @@
         ],
         "title": "CompareSeriesSpec"
       },
+      "ContributionComponent": {
+        "properties": {
+          "series_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Series Id"
+          },
+          "name_zh": {
+            "type": "string",
+            "title": "Name Zh"
+          },
+          "value": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Value"
+          },
+          "unit": {
+            "type": "string",
+            "title": "Unit"
+          },
+          "grouped": {
+            "type": "boolean",
+            "title": "Grouped",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "series_id",
+          "name_zh",
+          "value",
+          "unit"
+        ],
+        "title": "ContributionComponent"
+      },
+      "ContributionPeriod": {
+        "properties": {
+          "period_start": {
+            "type": "string",
+            "format": "date",
+            "title": "Period Start"
+          },
+          "target_value": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Target Value"
+          },
+          "contribution_total": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Contribution Total"
+          },
+          "difference": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Difference"
+          },
+          "components": {
+            "items": {
+              "$ref": "#/components/schemas/ContributionComponent"
+            },
+            "type": "array",
+            "title": "Components"
+          }
+        },
+        "type": "object",
+        "required": [
+          "period_start",
+          "target_value",
+          "contribution_total",
+          "difference",
+          "components"
+        ],
+        "title": "ContributionPeriod"
+      },
+      "ContributionResult": {
+        "properties": {
+          "available": {
+            "type": "boolean",
+            "title": "Available"
+          },
+          "reason_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason Code"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "target_unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Unit"
+          },
+          "periods": {
+            "items": {
+              "$ref": "#/components/schemas/ContributionPeriod"
+            },
+            "type": "array",
+            "title": "Periods"
+          },
+          "components": {
+            "items": {
+              "$ref": "#/components/schemas/ContributionComponent"
+            },
+            "type": "array",
+            "title": "Components"
+          },
+          "reconciliation": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+                },
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "boolean"
+                }
+              ]
+            },
+            "type": "object",
+            "title": "Reconciliation"
+          }
+        },
+        "type": "object",
+        "required": [
+          "available"
+        ],
+        "title": "ContributionResult"
+      },
       "CorrelationCell": {
         "properties": {
           "left_series_id": {
@@ -5853,6 +7876,13 @@
           "observations"
         ],
         "title": "CorrelationCell"
+      },
+      "DataMode": {
+        "type": "string",
+        "enum": [
+          "live",
+          "demo"
+        ]
       },
       "DocumentChunkPublic": {
         "properties": {
@@ -6677,6 +8707,141 @@
         ],
         "title": "HealthResponse"
       },
+      "HistoryBatchCreate": {
+        "properties": {
+          "idempotency_key": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 8,
+            "title": "Idempotency Key"
+          },
+          "limit": {
+            "type": "integer",
+            "maximum": 500.0,
+            "minimum": 1.0,
+            "title": "Limit",
+            "default": 500
+          }
+        },
+        "type": "object",
+        "required": [
+          "idempotency_key"
+        ],
+        "title": "HistoryBatchCreate"
+      },
+      "HistoryBatchFailure": {
+        "properties": {
+          "job_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Job Id"
+          },
+          "source_series_id": {
+            "type": "integer",
+            "title": "Source Series Id"
+          },
+          "error": {
+            "type": "string",
+            "title": "Error"
+          }
+        },
+        "type": "object",
+        "required": [
+          "job_id",
+          "source_series_id",
+          "error"
+        ],
+        "title": "HistoryBatchFailure"
+      },
+      "HistoryBatchPublic": {
+        "properties": {
+          "batch_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Batch Id"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "queued",
+              "running",
+              "succeeded",
+              "partial_failure",
+              "failed",
+              "empty"
+            ],
+            "title": "Status"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "candidate_count": {
+            "type": "integer",
+            "title": "Candidate Count"
+          },
+          "skipped_completed": {
+            "type": "integer",
+            "title": "Skipped Completed"
+          },
+          "queued": {
+            "type": "integer",
+            "title": "Queued"
+          },
+          "running": {
+            "type": "integer",
+            "title": "Running"
+          },
+          "succeeded": {
+            "type": "integer",
+            "title": "Succeeded"
+          },
+          "failed": {
+            "type": "integer",
+            "title": "Failed"
+          },
+          "inserted": {
+            "type": "integer",
+            "title": "Inserted"
+          },
+          "revised": {
+            "type": "integer",
+            "title": "Revised"
+          },
+          "unchanged": {
+            "type": "integer",
+            "title": "Unchanged"
+          },
+          "staged_observation_count": {
+            "type": "integer",
+            "title": "Staged Observation Count"
+          },
+          "failures": {
+            "items": {
+              "$ref": "#/components/schemas/HistoryBatchFailure"
+            },
+            "type": "array",
+            "title": "Failures"
+          }
+        },
+        "type": "object",
+        "required": [
+          "batch_id",
+          "status",
+          "total",
+          "candidate_count",
+          "skipped_completed",
+          "queued",
+          "running",
+          "succeeded",
+          "failed",
+          "inserted",
+          "revised",
+          "unchanged",
+          "staged_observation_count"
+        ],
+        "title": "HistoryBatchPublic"
+      },
       "JobCreate": {
         "properties": {
           "job_type": {
@@ -6956,6 +9121,58 @@
         ],
         "title": "MarketReactionItem"
       },
+      "NextRelease": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "title_zh": {
+            "type": "string",
+            "title": "Title Zh"
+          },
+          "title_en": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title En"
+          },
+          "scheduled_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Scheduled At"
+          },
+          "source_timezone": {
+            "type": "string",
+            "title": "Source Timezone"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "role": {
+            "type": "string",
+            "title": "Role"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title_zh",
+          "title_en",
+          "scheduled_at",
+          "source_timezone",
+          "status",
+          "role"
+        ],
+        "title": "NextRelease"
+      },
       "NoteCreate": {
         "properties": {
           "title": {
@@ -7192,6 +9409,9 @@
                 "type": "null"
               }
             ]
+          },
+          "data_mode": {
+            "$ref": "#/components/schemas/DataMode"
           }
         },
         "type": "object",
@@ -7200,7 +9420,8 @@
           "vintage",
           "transform",
           "frequency",
-          "unit"
+          "unit",
+          "data_mode"
         ],
         "title": "ObservationMeta"
       },
@@ -7259,6 +9480,53 @@
             "type": "string",
             "format": "date-time",
             "title": "Vintage At"
+          },
+          "source_series_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Series Id"
+          },
+          "run_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Run Id"
+          },
+          "publication_batch_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Publication Batch Id"
+          },
+          "raw_object_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Raw Object Id"
           }
         },
         "type": "object",
@@ -8133,6 +10401,54 @@
           "versions": {
             "type": "integer",
             "title": "Versions"
+          },
+          "first_run_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "First Run Id"
+          },
+          "latest_run_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latest Run Id"
+          },
+          "first_raw_object_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "First Raw Object Id"
+          },
+          "latest_raw_object_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latest Raw Object Id"
           }
         },
         "type": "object",
@@ -8160,12 +10476,18 @@
             },
             "type": "array",
             "title": "Items"
+          },
+          "data_as_of": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Data As Of"
           }
         },
         "type": "object",
         "required": [
           "series_id",
-          "items"
+          "items",
+          "data_as_of"
         ],
         "title": "RevisionResponse"
       },
@@ -8324,6 +10646,239 @@
         },
         "type": "object",
         "title": "SavedViewUpdate"
+      },
+      "SeriesAnalyticsResponse": {
+        "properties": {
+          "series": {
+            "$ref": "#/components/schemas/SeriesSummary"
+          },
+          "statistics": {
+            "$ref": "#/components/schemas/SeriesStatistics"
+          },
+          "next_release": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/NextRelease"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "contributions": {
+            "$ref": "#/components/schemas/ContributionResult"
+          },
+          "capabilities": {
+            "$ref": "#/components/schemas/SeriesCapabilities"
+          },
+          "lineage": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LineageInfo"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "data_as_of": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Data As Of"
+          },
+          "data_mode": {
+            "$ref": "#/components/schemas/DataMode"
+          }
+        },
+        "type": "object",
+        "required": [
+          "series",
+          "statistics",
+          "next_release",
+          "contributions",
+          "capabilities",
+          "data_as_of",
+          "data_mode"
+        ],
+        "title": "SeriesAnalyticsResponse"
+      },
+      "SeriesAvailability": {
+        "type": "string",
+        "enum": [
+          "available",
+          "pending_mapping",
+          "pending_credentials",
+          "pending_license",
+          "not_ingested",
+          "not_available_as_of",
+          "not_available_for_geography"
+        ]
+      },
+      "SeriesBrowserItem": {
+        "properties": {
+          "series": {
+            "$ref": "#/components/schemas/SeriesSummary"
+          },
+          "current": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BrowserObservation"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "previous": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BrowserObservation"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "change": {
+            "$ref": "#/components/schemas/BrowserMetric"
+          },
+          "period_change": {
+            "$ref": "#/components/schemas/BrowserMetric"
+          },
+          "yoy": {
+            "$ref": "#/components/schemas/BrowserMetric"
+          },
+          "license": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LicenseInfo"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "display_denied": {
+            "type": "boolean",
+            "title": "Display Denied",
+            "default": false
+          },
+          "source_status": {
+            "type": "string",
+            "enum": [
+              "ready",
+              "missing",
+              "conflict"
+            ],
+            "title": "Source Status",
+            "default": "ready"
+          },
+          "unavailable_reason_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unavailable Reason Code"
+          },
+          "taxonomy_order": {
+            "type": "integer",
+            "title": "Taxonomy Order",
+            "default": 0
+          },
+          "availability": {
+            "$ref": "#/components/schemas/SeriesAvailability"
+          }
+        },
+        "type": "object",
+        "required": [
+          "series",
+          "current",
+          "previous",
+          "change",
+          "period_change",
+          "yoy",
+          "license",
+          "availability"
+        ],
+        "title": "SeriesBrowserItem"
+      },
+      "SeriesBrowserResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/SeriesBrowserItem"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "facets": {
+            "$ref": "#/components/schemas/BrowserFacets"
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/BrowserPagination"
+          },
+          "data_as_of": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Data As Of"
+          },
+          "data_mode": {
+            "$ref": "#/components/schemas/DataMode"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "facets",
+          "pagination",
+          "data_as_of",
+          "data_mode"
+        ],
+        "title": "SeriesBrowserResponse"
+      },
+      "SeriesCapabilities": {
+        "properties": {
+          "display": {
+            "$ref": "#/components/schemas/CapabilityStatus"
+          },
+          "download": {
+            "$ref": "#/components/schemas/CapabilityStatus"
+          },
+          "ai": {
+            "$ref": "#/components/schemas/CapabilityStatus"
+          },
+          "trend": {
+            "$ref": "#/components/schemas/CapabilityStatus"
+          },
+          "history": {
+            "$ref": "#/components/schemas/CapabilityStatus"
+          },
+          "revisions": {
+            "$ref": "#/components/schemas/CapabilityStatus"
+          },
+          "documents": {
+            "$ref": "#/components/schemas/CapabilityStatus"
+          },
+          "contributions": {
+            "$ref": "#/components/schemas/CapabilityStatus"
+          }
+        },
+        "type": "object",
+        "required": [
+          "display",
+          "download",
+          "ai",
+          "trend",
+          "history",
+          "revisions",
+          "documents",
+          "contributions"
+        ],
+        "title": "SeriesCapabilities"
       },
       "SeriesDetail": {
         "properties": {
@@ -8495,6 +11050,97 @@
         ],
         "title": "SeriesDetail"
       },
+      "SeriesStatistics": {
+        "properties": {
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          },
+          "mean": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mean"
+          },
+          "median": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Median"
+          },
+          "min": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min"
+          },
+          "max": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max"
+          },
+          "stddev": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stddev"
+          },
+          "current_percentile": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current Percentile"
+          }
+        },
+        "type": "object",
+        "required": [
+          "count",
+          "mean",
+          "median",
+          "min",
+          "max",
+          "stddev",
+          "current_percentile"
+        ],
+        "title": "SeriesStatistics"
+      },
       "SeriesSummary": {
         "properties": {
           "id": {
@@ -8603,6 +11249,20 @@
         ],
         "title": "SeriesSummary"
       },
+      "SourceMappingApproval": {
+        "properties": {
+          "probe_job_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Probe Job Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "probe_job_id"
+        ],
+        "title": "SourceMappingApproval"
+      },
       "SourceMappingUpdate": {
         "properties": {
           "provider_series_id": {
@@ -8671,6 +11331,120 @@
         },
         "type": "object",
         "title": "SourceMappingUpdate"
+      },
+      "TaxonomyChildNode": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "name_zh": {
+            "type": "string",
+            "title": "Name Zh"
+          },
+          "name_en": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name En"
+          },
+          "node_type": {
+            "type": "string",
+            "title": "Node Type"
+          },
+          "icon_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Icon Key"
+          },
+          "has_children": {
+            "type": "boolean",
+            "title": "Has Children"
+          },
+          "direct_series_count": {
+            "type": "integer",
+            "title": "Direct Series Count"
+          },
+          "descendant_series_count": {
+            "type": "integer",
+            "title": "Descendant Series Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "code",
+          "name_zh",
+          "name_en",
+          "node_type",
+          "icon_key",
+          "has_children",
+          "direct_series_count",
+          "descendant_series_count"
+        ],
+        "title": "TaxonomyChildNode"
+      },
+      "TaxonomyChildrenResponse": {
+        "properties": {
+          "tree_code": {
+            "type": "string",
+            "title": "Tree Code"
+          },
+          "parent_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Id"
+          },
+          "nodes": {
+            "items": {
+              "$ref": "#/components/schemas/TaxonomyChildNode"
+            },
+            "type": "array",
+            "title": "Nodes"
+          },
+          "series": {
+            "items": {
+              "$ref": "#/components/schemas/SeriesSummary"
+            },
+            "type": "array",
+            "title": "Series"
+          },
+          "data_mode": {
+            "$ref": "#/components/schemas/DataMode"
+          }
+        },
+        "type": "object",
+        "required": [
+          "tree_code",
+          "parent_id",
+          "nodes",
+          "series",
+          "data_mode"
+        ],
+        "title": "TaxonomyChildrenResponse"
       },
       "UserPublic": {
         "properties": {

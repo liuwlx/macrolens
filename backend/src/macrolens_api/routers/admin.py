@@ -1,10 +1,12 @@
 from __future__ import annotations
 
-from typing import Any
-from uuid import UUID
+import hashlib
+from datetime import UTC, datetime
+from typing import Any, Literal
+from uuid import UUID, uuid4
 
 from fastapi import APIRouter, Query
-from sqlalchemy import select
+from sqlalchemy import case, func, select
 
 from ..dependencies import AdminUser, SessionDep
 from ..errors import AppError
@@ -30,16 +32,162 @@ from ..schemas import (
     AdminUserCreate,
     AdminUserPublic,
     AdminUserUpdate,
+    HistoryBatchCreate,
+    HistoryBatchFailure,
+    HistoryBatchPublic,
     JobCreate,
     JobPublic,
     SourceMappingApproval,
     SourceMappingUpdate,
 )
 from ..security import hash_password
-from ..services.jobs import enqueue_job
+from ..services.jobs import JobReservation, enqueue_job, reserve_job, reserve_jobs
 from ..services.source_mappings import approve_mapping_from_probe
 
 router = APIRouter(prefix="/admin", tags=["Admin"])
+
+_HISTORY_FREQUENCY_RANK = {
+    "annual": 0,
+    "quarterly": 1,
+    "monthly": 2,
+    "weekly": 3,
+    "daily": 4,
+}
+_HISTORY_BATCH_LOCK_NAMESPACE = int.from_bytes(b"MLHB", "big")
+
+
+def _history_json_text(key: str) -> Any:
+    return Job.payload[key].as_string()
+
+
+def _history_batch_id(job: Job) -> UUID:
+    value = job.payload.get("history_batch_id")
+    if value is None:
+        raise RuntimeError("History batch job is missing history_batch_id")
+    return UUID(str(value))
+
+
+def _history_source_id(job: Job) -> int | None:
+    values = job.payload.get("source_series_ids")
+    if not isinstance(values, list) or len(values) != 1:
+        return None
+    value = values[0]
+    return value if isinstance(value, int) else None
+
+
+def _history_result_count(job: Job, key: str) -> int:
+    value = job.result.get(key)
+    return value if isinstance(value, int) and not isinstance(value, bool) else 0
+
+
+def _history_job_error(job: Job) -> str | None:
+    if job.status == "failed":
+        return job.last_error or "History backfill job failed without an error message"
+    if _history_result_count(job, "failed_count") <= 0 and job.result.get("status") not in {
+        "partial_success",
+        "partial_failure",
+    }:
+        return None
+    symbol_errors = job.result.get("symbol_errors")
+    if isinstance(symbol_errors, list):
+        for item in symbol_errors:
+            if isinstance(item, dict) and isinstance(item.get("error"), str):
+                return str(item["error"])
+    return "History backfill completed without a usable observation"
+
+
+def _history_batch_public(jobs: list[Job], *, batch_id: UUID) -> HistoryBatchPublic:
+    if not jobs:
+        raise RuntimeError("History batch has no durable jobs")
+    metadata: dict[str, Any] = {}
+    for job in jobs:
+        candidate = job.payload.get("history_batch")
+        if isinstance(candidate, dict):
+            metadata = candidate
+            break
+
+    children = [job for job in jobs if job.job_type == "sync_provider"]
+    queued = sum(job.status == "queued" for job in children)
+    running = sum(job.status == "running" for job in children)
+    failures: list[HistoryBatchFailure] = []
+    succeeded = 0
+    failed = 0
+    for job in children:
+        error = _history_job_error(job)
+        if job.status == "succeeded" and error is None:
+            succeeded += 1
+        elif job.status == "failed" or error is not None:
+            failed += 1
+            source_id = _history_source_id(job)
+            if source_id is not None:
+                failures.append(
+                    HistoryBatchFailure(
+                        job_id=job.id,
+                        source_series_id=source_id,
+                        error=error or "History backfill failed",
+                    )
+                )
+
+    status: Literal[
+        "queued", "running", "succeeded", "partial_failure", "failed", "empty"
+    ]
+    if not children:
+        status = "empty"
+    elif queued or running:
+        status = "running" if running or succeeded or failed else "queued"
+    elif failed and succeeded:
+        status = "partial_failure"
+    elif failed:
+        status = "failed"
+    else:
+        status = "succeeded"
+
+    def metadata_count(key: str) -> int:
+        value = metadata.get(key, 0)
+        return value if isinstance(value, int) and not isinstance(value, bool) else 0
+
+    return HistoryBatchPublic(
+        batch_id=batch_id,
+        status=status,
+        total=metadata_count("total"),
+        candidate_count=metadata_count("candidate_count"),
+        skipped_completed=metadata_count("skipped_completed"),
+        queued=queued,
+        running=running,
+        succeeded=succeeded,
+        failed=failed,
+        inserted=sum(_history_result_count(job, "inserted") for job in children),
+        revised=sum(_history_result_count(job, "revised") for job in children),
+        unchanged=sum(_history_result_count(job, "unchanged") for job in children),
+        staged_observation_count=sum(
+            _history_result_count(job, "staged_observation_count") for job in children
+        ),
+        failures=failures,
+    )
+
+
+async def _load_history_batch(session: SessionDep, batch_id: UUID) -> list[Job]:
+    return list(
+        (
+            await session.scalars(
+                select(Job)
+                .where(_history_json_text("history_batch_id") == str(batch_id))
+                .order_by(Job.created_at, Job.id)
+            )
+        ).all()
+    )
+
+
+def _require_tradingview_history(provider_code: str) -> str:
+    normalized_code = provider_code.upper()
+    if normalized_code != "TRADINGVIEW_WEB":
+        raise AppError(
+            400,
+            "不支持的历史同步",
+            "当前只允许手动同步 TradingView 历史数据。",
+            "provider_history_not_supported",
+        )
+    return normalized_code
 
 
 @router.get("/users", response_model=list[AdminUserPublic])
@@ -191,6 +339,184 @@ async def sync_provider_manually(
         max_attempts=3,
     )
     return JobPublic.model_validate(job)
+
+
+@router.post(
+    "/providers/{provider_code}/history",
+    response_model=HistoryBatchPublic,
+    status_code=202,
+)
+async def create_provider_history_batch(
+    provider_code: str,
+    payload: HistoryBatchCreate,
+    session: SessionDep,
+    _admin: AdminUser,
+) -> HistoryBatchPublic:
+    normalized_code = _require_tradingview_history(provider_code)
+    provider = await session.scalar(
+        select(Provider).where(Provider.code == normalized_code, Provider.active.is_(True))
+    )
+    if provider is None:
+        raise AppError(
+            404,
+            "数据提供方不存在",
+            "TradingView Provider 尚未启用。",
+            "provider_not_found",
+        )
+
+    lock_key = (_HISTORY_BATCH_LOCK_NAMESPACE << 32) | provider.id
+    await session.execute(select(func.pg_advisory_xact_lock(lock_key)))
+    request_digest = hashlib.sha256(payload.idempotency_key.encode("utf-8")).hexdigest()
+
+    replay = await session.scalar(
+        select(Job)
+        .where(
+            _history_json_text("provider_code") == normalized_code,
+            _history_json_text("history_request_key_sha256") == request_digest,
+        )
+        .order_by(Job.created_at.desc())
+        .limit(1)
+    )
+    if replay is not None:
+        batch_id = _history_batch_id(replay)
+        jobs = await _load_history_batch(session, batch_id)
+        return _history_batch_public(jobs, batch_id=batch_id)
+
+    active = await session.scalar(
+        select(Job)
+        .where(
+            Job.job_type == "sync_provider",
+            Job.status.in_(["queued", "running"]),
+            _history_json_text("provider_code") == normalized_code,
+            _history_json_text("mode") == "backfill",
+            _history_json_text("history_batch_id").is_not(None),
+        )
+        .order_by(Job.created_at.desc())
+        .limit(1)
+    )
+    if active is not None:
+        batch_id = _history_batch_id(active)
+        jobs = await _load_history_batch(session, batch_id)
+        return _history_batch_public(jobs, batch_id=batch_id)
+
+    completed_jobs = list(
+        (
+            await session.scalars(
+                select(Job).where(
+                    Job.job_type == "sync_provider",
+                    Job.status == "succeeded",
+                    _history_json_text("provider_code") == normalized_code,
+                    _history_json_text("mode") == "backfill",
+                )
+            )
+        ).all()
+    )
+    completed_source_ids = {
+        source_id
+        for job in completed_jobs
+        if (source_id := _history_source_id(job)) is not None
+    }
+
+    frequency_rank = case(
+        *[
+            (Series.frequency == frequency, rank)
+            for frequency, rank in _HISTORY_FREQUENCY_RANK.items()
+        ],
+        else_=len(_HISTORY_FREQUENCY_RANK),
+    )
+    eligible_rows = (
+        await session.execute(
+            select(SourceSeries.id, Series.frequency)
+            .join(Dataset, Dataset.id == SourceSeries.dataset_id)
+            .join(Series, Series.id == SourceSeries.series_id)
+            .where(
+                Dataset.provider_id == provider.id,
+                Dataset.active.is_(True),
+                SourceSeries.mapping_status == "verified",
+                SourceSeries.is_primary.is_(True),
+            )
+            .order_by(frequency_rank, SourceSeries.id)
+        )
+    ).all()
+    eligible = sorted(
+        [(int(row[0]), str(row[1])) for row in eligible_rows],
+        key=lambda row: (_HISTORY_FREQUENCY_RANK.get(row[1], 5), row[0]),
+    )
+    eligible_ids = [source_id for source_id, _frequency in eligible]
+    candidate_ids = [
+        source_id for source_id in eligible_ids if source_id not in completed_source_ids
+    ]
+    selected_ids = candidate_ids[: payload.limit]
+    skipped_completed = len(set(eligible_ids) & completed_source_ids)
+    batch_id = uuid4()
+    metadata: dict[str, Any] = {
+        "total": len(eligible_ids),
+        "candidate_count": len(candidate_ids),
+        "skipped_completed": skipped_completed,
+        "selected_count": len(selected_ids),
+        "limit": payload.limit,
+        "request_key_sha256": request_digest,
+    }
+
+    common_payload: dict[str, Any] = {
+        "provider_code": normalized_code,
+        "mode": "backfill",
+        "history_batch_id": str(batch_id),
+        "history_request_key_sha256": request_digest,
+        "history_batch": metadata,
+    }
+    if selected_ids:
+        jobs = await reserve_jobs(
+            session,
+            [
+                JobReservation(
+                    job_type="sync_provider",
+                    payload={**common_payload, "source_series_ids": [source_id]},
+                    idempotency_key=(
+                        f"manual-history-batch:{request_digest}:{source_id}"
+                    ),
+                    priority=5,
+                    max_attempts=1,
+                )
+                for source_id in selected_ids
+            ],
+        )
+    else:
+        marker, _created = await reserve_job(
+            session,
+            job_type="history_batch_marker",
+            payload=common_payload,
+            idempotency_key=f"manual-history-batch:{request_digest}:empty",
+            priority=5,
+            max_attempts=1,
+        )
+        marker.status = "succeeded"
+        marker.finished_at = datetime.now(UTC)
+        jobs = [marker]
+    await session.commit()
+    return _history_batch_public(jobs, batch_id=batch_id)
+
+
+@router.get(
+    "/providers/{provider_code}/history/{batch_id}",
+    response_model=HistoryBatchPublic,
+)
+async def get_provider_history_batch(
+    provider_code: str,
+    batch_id: UUID,
+    session: SessionDep,
+    _admin: AdminUser,
+) -> HistoryBatchPublic:
+    _require_tradingview_history(provider_code)
+    jobs = await _load_history_batch(session, batch_id)
+    if not jobs:
+        raise AppError(
+            404,
+            "历史回填批次不存在",
+            "没有找到该 TradingView 历史回填批次。",
+            "history_batch_not_found",
+        )
+    return _history_batch_public(jobs, batch_id=batch_id)
 
 
 @router.post(

@@ -170,10 +170,43 @@ def test_api_route_surface() -> None:
         "/api/v1/admin/documents/fetch",
         "/api/v1/admin/publication-batches/{batch_id}/rollback",
         "/api/v1/admin/providers/{provider_code}/sync",
+        "/api/v1/admin/providers/{provider_code}/history",
+        "/api/v1/admin/providers/{provider_code}/history/{batch_id}",
         "/api/v1/admin/providers/{provider_code}/series/{series_id}/history",
         "/api/v1/admin/jobs/{job_id}",
     }
     assert expected.issubset(paths)
+
+
+def test_history_batch_openapi_contract_is_typed() -> None:
+    schema = app.openapi()
+    paths = schema["paths"]
+    create = paths["/api/v1/admin/providers/{provider_code}/history"]["post"]
+    progress = paths["/api/v1/admin/providers/{provider_code}/history/{batch_id}"]["get"]
+
+    assert create["requestBody"]["content"]["application/json"]["schema"] == {
+        "$ref": "#/components/schemas/HistoryBatchCreate"
+    }
+    assert create["responses"]["202"]["content"]["application/json"]["schema"] == {
+        "$ref": "#/components/schemas/HistoryBatchPublic"
+    }
+    assert progress["responses"]["200"]["content"]["application/json"]["schema"] == {
+        "$ref": "#/components/schemas/HistoryBatchPublic"
+    }
+    create_schema = schema["components"]["schemas"]["HistoryBatchCreate"]
+    assert create_schema["properties"]["idempotency_key"] == {
+        "type": "string",
+        "maxLength": 200,
+        "minLength": 8,
+        "title": "Idempotency Key",
+    }
+    assert create_schema["properties"]["limit"] == {
+        "type": "integer",
+        "maximum": 500.0,
+        "minimum": 1.0,
+        "title": "Limit",
+        "default": 500,
+    }
 
 
 def test_verified_provider_registry_pins_known_history_boundaries_and_routes() -> None:

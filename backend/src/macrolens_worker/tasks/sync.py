@@ -63,6 +63,7 @@ ADAPTERS: dict[str, type[ProviderAdapter]] = {
 KNOWN_TRADINGVIEW_HISTORY_GAPS: dict[str, frozenset[date]] = {
     "ECONOMICS:USUR": frozenset({date(2025, 10, 1)}),
 }
+TRADINGVIEW_BACKFILL_LOCK_NAMESPACE = int.from_bytes(b"MLTV", "big")
 
 
 async def _raw_object(
@@ -368,6 +369,9 @@ async def sync_provider(
     adapter_type = ADAPTERS.get(provider_code)
     if adapter_type is None:
         raise RuntimeError(f"No production adapter registered for {provider_code}")
+    if provider_code == TradingViewAdapter.code and mode == "backfill":
+        lock_key = (TRADINGVIEW_BACKFILL_LOCK_NAMESPACE << 32) | provider.id
+        await session.execute(select(func.pg_advisory_xact_lock(lock_key)))
     mapping_statement = (
         select(SourceSeries, Dataset)
         .join(Dataset, Dataset.id == SourceSeries.dataset_id)

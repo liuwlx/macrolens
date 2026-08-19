@@ -707,6 +707,41 @@ class JobPublic(ORMModel):
     finished_at: datetime | None
 
 
+class HistoryBatchCreate(BaseModel):
+    idempotency_key: str = Field(min_length=8, max_length=200)
+    limit: int = Field(default=500, ge=1, le=500)
+
+
+class HistoryBatchFailure(BaseModel):
+    job_id: UUID
+    source_series_id: int
+    error: str
+
+
+class HistoryBatchPublic(BaseModel):
+    batch_id: UUID
+    status: Literal[
+        "queued",
+        "running",
+        "succeeded",
+        "partial_failure",
+        "failed",
+        "empty",
+    ]
+    total: int
+    candidate_count: int
+    skipped_completed: int
+    queued: int
+    running: int
+    succeeded: int
+    failed: int
+    inserted: int
+    revised: int
+    unchanged: int
+    staged_observation_count: int
+    failures: list[HistoryBatchFailure] = Field(default_factory=list)
+
+
 class ProjectItemPublic(ORMModel):
     id: UUID
     project_id: UUID

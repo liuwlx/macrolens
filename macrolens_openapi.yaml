@@ -3077,6 +3077,87 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/admin/providers/{provider_code}/history:
+    post:
+      tags:
+      - Admin
+      summary: Create Provider History Batch
+      operationId: create_provider_history_batch_api_v1_admin_providers__provider_code__history_post
+      parameters:
+      - name: provider_code
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Provider Code
+      - name: macrolens_access
+        in: cookie
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Macrolens Access
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HistoryBatchCreate'
+      responses:
+        '202':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HistoryBatchPublic'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/admin/providers/{provider_code}/history/{batch_id}:
+    get:
+      tags:
+      - Admin
+      summary: Get Provider History Batch
+      operationId: get_provider_history_batch_api_v1_admin_providers__provider_code__history__batch_id__get
+      parameters:
+      - name: provider_code
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Provider Code
+      - name: batch_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Batch Id
+      - name: macrolens_access
+        in: cookie
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Macrolens Access
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HistoryBatchPublic'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /api/v1/admin/providers/{provider_code}/series/{series_id}/history:
     post:
       tags:
@@ -5204,6 +5285,111 @@ components:
       - time
       - version
       title: HealthResponse
+    HistoryBatchCreate:
+      properties:
+        idempotency_key:
+          type: string
+          maxLength: 200
+          minLength: 8
+          title: Idempotency Key
+        limit:
+          type: integer
+          maximum: 500.0
+          minimum: 1.0
+          title: Limit
+          default: 500
+      type: object
+      required:
+      - idempotency_key
+      title: HistoryBatchCreate
+    HistoryBatchFailure:
+      properties:
+        job_id:
+          type: string
+          format: uuid
+          title: Job Id
+        source_series_id:
+          type: integer
+          title: Source Series Id
+        error:
+          type: string
+          title: Error
+      type: object
+      required:
+      - job_id
+      - source_series_id
+      - error
+      title: HistoryBatchFailure
+    HistoryBatchPublic:
+      properties:
+        batch_id:
+          type: string
+          format: uuid
+          title: Batch Id
+        status:
+          type: string
+          enum:
+          - queued
+          - running
+          - succeeded
+          - partial_failure
+          - failed
+          - empty
+          title: Status
+        total:
+          type: integer
+          title: Total
+        candidate_count:
+          type: integer
+          title: Candidate Count
+        skipped_completed:
+          type: integer
+          title: Skipped Completed
+        queued:
+          type: integer
+          title: Queued
+        running:
+          type: integer
+          title: Running
+        succeeded:
+          type: integer
+          title: Succeeded
+        failed:
+          type: integer
+          title: Failed
+        inserted:
+          type: integer
+          title: Inserted
+        revised:
+          type: integer
+          title: Revised
+        unchanged:
+          type: integer
+          title: Unchanged
+        staged_observation_count:
+          type: integer
+          title: Staged Observation Count
+        failures:
+          items:
+            $ref: '#/components/schemas/HistoryBatchFailure'
+          type: array
+          title: Failures
+      type: object
+      required:
+      - batch_id
+      - status
+      - total
+      - candidate_count
+      - skipped_completed
+      - queued
+      - running
+      - succeeded
+      - failed
+      - inserted
+      - revised
+      - unchanged
+      - staged_observation_count
+      title: HistoryBatchPublic
     JobCreate:
       properties:
         job_type:
