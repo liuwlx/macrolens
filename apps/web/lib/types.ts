@@ -20,6 +20,31 @@ export type JobPublic = {
   finished_at?: string | null;
 };
 
+export type HistoryBatchStatus =
+  | "queued"
+  | "running"
+  | "succeeded"
+  | "partial_failure"
+  | "failed"
+  | "empty";
+
+export type HistoryBatchPublic = {
+  batch_id: string;
+  status: HistoryBatchStatus;
+  total: number;
+  candidate_count: number;
+  skipped_completed: number;
+  queued: number;
+  running: number;
+  succeeded: number;
+  failed: number;
+  inserted: number;
+  revised: number;
+  unchanged: number;
+  staged_observation_count: number;
+  failures: unknown[];
+};
+
 export type ProviderInfo = {
   code: string;
   name: string;

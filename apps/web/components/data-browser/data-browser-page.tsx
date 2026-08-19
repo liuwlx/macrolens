@@ -3,12 +3,12 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Database, RefreshCw, Star } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { useAuth } from "@/components/auth-provider";
 import { apiDownload, apiFetch, ApiError, queryString } from "@/lib/api";
 import { formatTradingViewHistoryError } from "@/lib/sync-errors";
-import type { AICapabilitiesResponse, Favorite, JobPublic, SeriesAnalyticsResponse, SeriesBrowserItem, SeriesBrowserResponse, SeriesDetail, TaxonomyBrowserSeries } from "@/lib/types";
+import type { AICapabilitiesResponse, Favorite, HistoryBatchPublic, JobPublic, SeriesAnalyticsResponse, SeriesBrowserItem, SeriesBrowserResponse, SeriesDetail, TaxonomyBrowserSeries } from "@/lib/types";
 import { formatTradingViewSyncError } from "@/lib/sync-errors";
 
 import { AnalysisPanel } from "./analysis-panel";
@@ -22,6 +22,22 @@ import { SeriesDetailPanel } from "./series-detail-panel";
 
 type Drawer = "tree" | "filters" | "detail" | null;
 type SyncState = "idle" | "running" | "success" | "error";
+
+function historyBatchIsActive(batch: HistoryBatchPublic) {
+  return batch.status === "queued" || batch.status === "running";
+}
+
+function formatHistoryBatchProgress(batch: HistoryBatchPublic) {
+  const labels: Record<HistoryBatchPublic["status"], string> = {
+    queued: "批量历史同步已排队",
+    running: "批量历史同步进行中",
+    succeeded: "批量历史同步完成",
+    partial_failure: "批量历史同步部分失败",
+    failed: "批量历史同步失败",
+    empty: "批量历史同步无需处理",
+  };
+  return `${labels[batch.status]}：总数 ${batch.total}，排队 ${batch.queued}，运行 ${batch.running}，成功 ${batch.succeeded}，失败 ${batch.failed}，历史点 ${batch.staged_observation_count}`;
+}
 
 function shouldRetry(count: number, error: Error) {
   if (error instanceof ApiError && error.status < 500) return false;
@@ -52,8 +68,22 @@ export function DataBrowserPage() {
   const [syncMessage, setSyncMessage] = useState("");
   const [historySyncState, setHistorySyncState] = useState<SyncState>("idle");
   const [historySyncMessage, setHistorySyncMessage] = useState("");
+  const [historyBatch, setHistoryBatch] = useState<HistoryBatchPublic | null>(null);
+  const [historyBatchPending, setHistoryBatchPending] = useState(false);
+  const [historyBatchError, setHistoryBatchError] = useState("");
+  const [historyBatchIdempotencyKey] = useState(() => `data-browser-history-${crypto.randomUUID()}`);
+  const historyBatchMounted = useRef(true);
+  const historyBatchPollCancel = useRef<(() => void) | null>(null);
   const state = useMemo(() => parseBrowserState(searchParams), [searchParams]);
   const permissionKey = user ? `${user.id}:${user.role}` : "anonymous";
+
+  useEffect(() => {
+    historyBatchMounted.current = true;
+    return () => {
+      historyBatchMounted.current = false;
+      historyBatchPollCancel.current?.();
+    };
+  }, []);
 
   const updateState = useCallback((patch: Partial<BrowserState>, mode: "replace" | "push" = "replace") => {
     const next = patchBrowserState(state, patch);
@@ -86,6 +116,10 @@ export function DataBrowserPage() {
   }, [browserQuery.data, browserQuery.isPlaceholderData, state.series, state.data_as_of, updateState]);
 
   const selectedItem = browserQuery.data?.items.find((item) => item.series.id === state.series);
+  const canSyncHistoryBatch = canSync && (
+    state.provider === "TRADINGVIEW_WEB"
+    || selectedItem?.series.provider?.code === "TRADINGVIEW_WEB"
+  );
   const canSyncHistory = canSync && selectedItem?.availability === "available" && selectedItem.series.provider?.code === "TRADINGVIEW_WEB";
   const capabilityState = browserDataCapabilityState(
     selectedItem,
@@ -184,6 +218,49 @@ export function DataBrowserPage() {
       setHistorySyncMessage(formatTradingViewHistoryError(error));
     }
   }
+
+  async function syncTradingViewHistoryBatch() {
+    if (!canSyncHistoryBatch || historyBatchPending) return;
+    setHistoryBatchPending(true);
+    setHistoryBatch(null);
+    setHistoryBatchError("");
+    try {
+      let batch = await apiFetch<HistoryBatchPublic>("/admin/providers/TRADINGVIEW_WEB/history", {
+        method: "POST",
+        body: JSON.stringify({ idempotency_key: historyBatchIdempotencyKey, limit: 500 }),
+      });
+      if (!historyBatchMounted.current) return;
+      setHistoryBatch(batch);
+      while (historyBatchIsActive(batch)) {
+        const continuePolling = await new Promise<boolean>((resolve) => {
+          const timeoutId = window.setTimeout(() => {
+            historyBatchPollCancel.current = null;
+            resolve(true);
+          }, 2000);
+          historyBatchPollCancel.current = () => {
+            window.clearTimeout(timeoutId);
+            historyBatchPollCancel.current = null;
+            resolve(false);
+          };
+        });
+        if (!continuePolling || !historyBatchMounted.current) return;
+        batch = await apiFetch<HistoryBatchPublic>(`/admin/providers/TRADINGVIEW_WEB/history/${batch.batch_id}`);
+        if (!historyBatchMounted.current) return;
+        setHistoryBatch(batch);
+      }
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["series-browser"] }),
+        queryClient.invalidateQueries({ queryKey: ["data-browser-detail"] }),
+        queryClient.invalidateQueries({ queryKey: ["data-browser-observations"] }),
+        queryClient.invalidateQueries({ queryKey: ["data-browser-analytics"] }),
+        queryClient.invalidateQueries({ queryKey: ["taxonomy-children"] }),
+      ]);
+    } catch (error) {
+      if (historyBatchMounted.current) setHistoryBatchError(formatTradingViewHistoryError(error));
+    } finally {
+      if (historyBatchMounted.current) setHistoryBatchPending(false);
+    }
+  }
   const closeDrawer = useCallback(() => setDrawer(null), []);
 
   const filterProps = { state, facets: browserQuery.data?.facets, onChange: updateState, onReset: () => updateState(resetBrowserFilters(state)), onOpenFilters: () => setDrawer("filters"), onOpenTree: () => setDrawer("tree"), onOpenDetail: () => setDrawer("detail") };
@@ -191,7 +268,8 @@ export function DataBrowserPage() {
 
   return <div className="data-browser-page">
     {isDemo && <div className="data-browser-demo-banner" role="note"><strong>DEMO 演示数据</strong><span>当前页面使用固定演示快照；趋势、历史、修订、统计、只读比较和 CSV 导出可用，收藏、工作台与 AI 写入已禁用。</span></div>}
-    <header className="data-browser-page-header"><div><div className="data-browser-title"><Database size={22} /><h1>数据浏览器 / 指标树与明细表</h1></div><p>浏览、筛选并分析宏观经济指标，支持多层级指标分类与历史修订查看。</p></div><div className="data-browser-header-actions"><span>当前位置：宏观经济数据 / {selectedItem?.series.theme ?? "全部主题"} / {selectedItem?.series.name_zh ?? "请选择指标"}</span>{canSync && <button className="btn btn-primary" type="button" onClick={() => void syncTradingView()} disabled={syncState === "running"}><RefreshCw size={15} className={syncState === "running" ? "animate-spin" : ""} />{syncState === "running" ? "同步中…" : "数据同步"}</button>}<button className={`btn ${selectedFavorite ? "btn-primary" : ""}`} type="button" onClick={() => { if (!isDemo) favoriteMutation.mutate(); }} disabled={!state.series || favoriteMutation.isPending || isDemo} title={demoReadOnlyReason}><Star size={15} fill={selectedFavorite ? "currentColor" : "none"} />{selectedFavorite ? "已收藏" : "收藏该指标"}</button></div></header>
+    <header className="data-browser-page-header"><div><div className="data-browser-title"><Database size={22} /><h1>数据浏览器 / 指标树与明细表</h1></div><p>浏览、筛选并分析宏观经济指标，支持多层级指标分类与历史修订查看。</p></div><div className="data-browser-header-actions"><span>当前位置：宏观经济数据 / {selectedItem?.series.theme ?? "全部主题"} / {selectedItem?.series.name_zh ?? "请选择指标"}</span>{canSync && <button className="btn" type="button" onClick={() => void syncTradingViewHistoryBatch()} disabled={!canSyncHistoryBatch || historyBatchPending} title={canSyncHistoryBatch ? "同步 TradingView 指标的历史数据" : "请筛选 TradingView 或选择 TradingView 指标"}><RefreshCw size={15} className={historyBatchPending ? "animate-spin" : ""} />{historyBatchPending ? "批量同步中…" : "批量同步历史"}</button>}{canSync && <button className="btn btn-primary" type="button" onClick={() => void syncTradingView()} disabled={syncState === "running"}><RefreshCw size={15} className={syncState === "running" ? "animate-spin" : ""} />{syncState === "running" ? "同步中…" : "数据同步"}</button>}<button className={`btn ${selectedFavorite ? "btn-primary" : ""}`} type="button" onClick={() => { if (!isDemo) favoriteMutation.mutate(); }} disabled={!state.series || favoriteMutation.isPending || isDemo} title={demoReadOnlyReason}><Star size={15} fill={selectedFavorite ? "currentColor" : "none"} />{selectedFavorite ? "已收藏" : "收藏该指标"}</button></div></header>
+    {(historyBatch || historyBatchError) && <div className={`data-browser-sync-status ${historyBatchError || historyBatch?.status === "failed" || historyBatch?.status === "partial_failure" ? "is-error" : ""}`} role="status">{historyBatchError ? `批量${historyBatchError}` : historyBatch ? formatHistoryBatchProgress(historyBatch) : null}</div>}
     {syncMessage && <div className={`data-browser-sync-status ${syncState === "error" ? "is-error" : ""}`} role="status">{syncMessage}</div>}
     <BrowserFilterBar {...filterProps} />
     <div className="data-browser-workspace">
