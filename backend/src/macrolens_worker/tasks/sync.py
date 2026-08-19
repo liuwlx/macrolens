@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import hashlib
 from dataclasses import dataclass
-from datetime import UTC, date, datetime
+from datetime import UTC, datetime
 from pathlib import PurePosixPath
 from typing import Any, Literal, cast
 from uuid import UUID
@@ -60,9 +60,9 @@ ADAPTERS: dict[str, type[ProviderAdapter]] = {
     TradingViewAdapter.code: TradingViewAdapter,
 }
 
-KNOWN_TRADINGVIEW_HISTORY_GAPS: dict[str, frozenset[date]] = {
-    "ECONOMICS:USUR": frozenset({date(2025, 10, 1)}),
-}
+TRADINGVIEW_NONCONTIGUOUS_BACKFILL_FREQUENCIES = frozenset(
+    {"weekly", "monthly", "quarterly", "annual"}
+)
 TRADINGVIEW_BACKFILL_LOCK_NAMESPACE = int.from_bytes(b"MLTV", "big")
 
 
@@ -337,10 +337,7 @@ def ingestion_issue_severity(
     if (
         mode == "backfill"
         and issue.code == "history_gap"
-        and issue.missing_period_count == 1
-        and issue.provider_series_id is not None
-        and issue.period_start
-        in KNOWN_TRADINGVIEW_HISTORY_GAPS.get(issue.provider_series_id, frozenset())
+        and issue.source_frequency in TRADINGVIEW_NONCONTIGUOUS_BACKFILL_FREQUENCIES
     ):
         return "warning"
     if issue.source_series_id in missing_source_ids and issue.code in {
