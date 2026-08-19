@@ -296,6 +296,7 @@ class TradingViewAdapter(ProviderAdapter):
         *,
         mode: str,
     ) -> list[ProviderFetchResult]:
+        self.symbol_errors = {}
         if mode not in {"latest", "incremental", "backfill"}:
             raise ProviderDataError(f"TradingView V1 does not support sync mode {mode!r}")
         if not mappings:
@@ -304,7 +305,6 @@ class TradingViewAdapter(ProviderAdapter):
         if mode == "backfill":
             return await self._fetch_history(provider, mappings)
 
-        self.symbol_errors = {}
         settings = get_settings()
         symbol_to_mapping = {
             _symbol_from_source(source): (source, dataset) for source, dataset in mappings
