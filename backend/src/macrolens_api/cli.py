@@ -201,8 +201,10 @@ UNIT_MAP = {
 
 
 def _theme(code: str) -> str:
+    if "MORTGAGE" in code:
+        return "住房与家庭部门"
     if any(token in code for token in ["PCE", "CPI", "PPI", "BREAKEVEN", "MICHIGAN"]):
-        return "通胀"
+        return "通胀与通胀预期"
     if any(
         token in code
         for token in [
@@ -215,9 +217,9 @@ def _theme(code: str) -> str:
             "ECI",
         ]
     ):
-        return "就业"
+        return "劳动力市场"
     if any(token in code for token in ["GDP", "RETAIL", "DURABLE", "INDUSTRIAL", "CONSUMPTION"]):
-        return "增长"
+        return "实体经济与增长"
     if any(
         token in code
         for token in [
@@ -231,10 +233,10 @@ def _theme(code: str) -> str:
             "FED.MBS",
         ]
     ):
-        return "利率与政策"
+        return "货币政策与利率"
     if any(token in code for token in ["BANK", "CREDIT", "DELINQUENCY", "SLOOS"]):
-        return "信贷与银行"
-    return "金融市场"
+        return "信贷与银行体系"
+    return "金融条件与金融市场"
 
 
 def _load_tradingview_registry() -> dict[str, Any]:
@@ -250,13 +252,20 @@ def _load_tradingview_registry() -> dict[str, Any]:
     raise RuntimeError("Cannot locate TradingView registry")
 
 
+def obsolete_tradingview_node_codes(
+    existing_codes: set[str],
+    desired_codes: set[str],
+) -> set[str]:
+    return {code for code in existing_codes if code.startswith("tv-")} - desired_codes
+
+
 async def _seed_tradingview_registry(
     session: Any,
     *,
     provider: Provider,
     dataset_cache: dict[tuple[str, str], Dataset],
     series_by_code: dict[str, Series],
-    root_node: TaxonomyNode,
+    nodes_by_code: dict[str, TaxonomyNode],
 ) -> None:
     registry = _load_tradingview_registry()
     now = datetime.now(UTC)
@@ -289,9 +298,7 @@ async def _seed_tradingview_registry(
         frequency = FREQUENCY_MAP[str(item["frequency"])]
         unit = str(item["unit"])
         unit_code, unit_label = UNIT_MAP.get(unit, (unit.lower(), unit))
-        series = await session.scalar(
-            select(Series).where(Series.canonical_code == canonical_code)
-        )
+        series = await session.scalar(select(Series).where(Series.canonical_code == canonical_code))
         if series is None:
             series = Series(
                 canonical_code=canonical_code,
@@ -339,6 +346,9 @@ async def _seed_tradingview_registry(
             "allow_missing_observations": False,
             "route": item.get("route"),
             "categories": item.get("categories") or [],
+            "source_categories": item.get("source_categories") or [],
+            "primary_topic": item.get("primary_topic"),
+            "cross_tags": item.get("cross_tags") or [],
             "availability_evidence": item.get("availability_evidence"),
         }
         source_series.mapping_type = "direct"
@@ -363,58 +373,101 @@ async def _seed_tradingview_registry(
         source_series.verification_fingerprint = None
         await session.flush()
 
-    nodes = registry["nodes"]
-    nodes_by_code: dict[str, TaxonomyNode] = {"root": root_node}
-    ordered_nodes = sorted(nodes, key=lambda item: 0 if item["parent_code"] == "root" else 1)
-    for node_spec in ordered_nodes:
-        code = str(node_spec["code"])
-        node = await session.scalar(
-            select(TaxonomyNode).where(
-                TaxonomyNode.tree_code == str(registry["tree_code"]),
-                TaxonomyNode.code == code,
+    nodes = list(registry["nodes"])
+    tradingview_series_ids = {
+        series_by_code[str(item["canonical_code"])].id for item in registry["indicators"]
+    }
+    desired_node_codes = {str(item["code"]) for item in nodes}
+    existing_extension_nodes = list(
+        (
+            await session.scalars(
+                select(TaxonomyNode).where(
+                    TaxonomyNode.tree_code == str(registry["tree_code"]),
+                    TaxonomyNode.code.like("tv-%"),
+                )
             )
-        )
-        if node is None:
-            node = TaxonomyNode(tree_code=str(registry["tree_code"]), code=code)
-            session.add(node)
-        parent_code = str(node_spec["parent_code"])
-        parent = nodes_by_code.get(parent_code)
-        if parent is None:
-            raise RuntimeError(f"Unknown TradingView taxonomy parent: {parent_code}")
-        node.parent_id = parent.id
-        node.node_type = str(node_spec["node_type"])
-        node.name_zh = str(node_spec["name_zh"])
-        node.name_en = str(node_spec["name_en"])
-        node.sort_order = int(node_spec["sort_order"])
-        node.visible = True
-        node.status = "active"
-        await session.flush()
-        nodes_by_code[code] = node
-
-        current = list(
+        ).all()
+    )
+    obsolete_codes = obsolete_tradingview_node_codes(
+        {node.code for node in existing_extension_nodes},
+        desired_node_codes,
+    )
+    for node in existing_extension_nodes:
+        if node.code not in obsolete_codes:
+            continue
+        node.visible = False
+        node.status = "retired"
+        legacy_mappings = list(
             (
                 await session.scalars(
                     select(TaxonomySeries).where(TaxonomySeries.node_id == node.id)
                 )
             ).all()
         )
-        for mapping in current:
+        for mapping in legacy_mappings:
             mapping.is_primary = False
             mapping.display_role = "detail"
-        for display_order, canonical_code in enumerate(node_spec["series_codes"]):
-            series = series_by_code[str(canonical_code)]
-            mapping = await session.scalar(
-                select(TaxonomySeries).where(
-                    TaxonomySeries.node_id == node.id,
-                    TaxonomySeries.series_id == series.id,
+
+    pending_nodes = nodes
+    while pending_nodes:
+        remaining: list[dict[str, Any]] = []
+        progressed = False
+        for node_spec in pending_nodes:
+            parent_code = str(node_spec["parent_code"])
+            parent = nodes_by_code.get(parent_code)
+            if parent is None:
+                remaining.append(node_spec)
+                continue
+            progressed = True
+            code = str(node_spec["code"])
+            node = await session.scalar(
+                select(TaxonomyNode).where(
+                    TaxonomyNode.tree_code == str(registry["tree_code"]),
+                    TaxonomyNode.code == code,
                 )
             )
-            if mapping is None:
-                mapping = TaxonomySeries(node_id=node.id, series_id=series.id)
-                session.add(mapping)
-            mapping.display_role = "primary"
-            mapping.display_order = display_order
-            mapping.is_primary = True
+            if node is None:
+                node = TaxonomyNode(tree_code=str(registry["tree_code"]), code=code)
+                session.add(node)
+            node.parent_id = parent.id
+            node.node_type = str(node_spec["node_type"])
+            node.name_zh = str(node_spec["name_zh"])
+            node.name_en = str(node_spec["name_en"])
+            node.sort_order = int(node_spec["sort_order"])
+            node.visible = True
+            node.status = "active"
+            await session.flush()
+            nodes_by_code[code] = node
+
+            current = list(
+                (
+                    await session.scalars(
+                        select(TaxonomySeries).where(TaxonomySeries.node_id == node.id)
+                    )
+                ).all()
+            )
+            for mapping in current:
+                if mapping.series_id in tradingview_series_ids:
+                    mapping.is_primary = False
+                    mapping.display_role = "detail"
+            for display_order, canonical_code in enumerate(node_spec["series_codes"]):
+                series = series_by_code[str(canonical_code)]
+                mapping = await session.scalar(
+                    select(TaxonomySeries).where(
+                        TaxonomySeries.node_id == node.id,
+                        TaxonomySeries.series_id == series.id,
+                    )
+                )
+                if mapping is None:
+                    mapping = TaxonomySeries(node_id=node.id, series_id=series.id)
+                    session.add(mapping)
+                mapping.display_role = "primary"
+                mapping.display_order = display_order
+                mapping.is_primary = True
+        if not progressed:
+            unresolved = sorted(str(item["code"]) for item in remaining)
+            raise RuntimeError(f"Unknown TradingView taxonomy parents for: {unresolved}")
+        pending_nodes = remaining
 
 
 async def seed_all() -> None:
@@ -674,7 +727,7 @@ async def seed_all() -> None:
             provider=provider_by_code["TRADINGVIEW_WEB"],
             dataset_cache=dataset_cache,
             series_by_code=series_by_code,
-            root_node=nodes_by_code["root"],
+            nodes_by_code=nodes_by_code,
         )
 
         for code, name in [

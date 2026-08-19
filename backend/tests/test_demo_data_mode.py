@@ -43,16 +43,11 @@ def test_demo_taxonomy_registry_owns_all_61_series_once_and_is_deep() -> None:
     assert len(owners) == 61
     assert all(len(node_codes) == 1 for node_codes in owners.values())
     assert set(owners) == {series.canonical_code for series in registry.series}
-    assert registry.max_depth >= 5
+    assert registry.max_depth == 2
     assert registry.path_for("US.PCE.HOSPITAL") == (
         "root",
         "inflation",
-        "pce",
-        "pce-core",
-        "pce-core-services",
-        "pce-core-services-nonhousing",
-        "pce-medical",
-        "pce-medical-hospital",
+        "tv-fed-inflation-pce",
     )
     assert len(registry.leaf_series_codes("employment")) == 7
 
@@ -63,8 +58,8 @@ def test_demo_taxonomy_registry_preserves_utf8_chinese_names() -> None:
     assert "\ufffd" not in raw
     payload = json.loads(raw)
     names = {node["code"]: node["name_zh"] for node in payload["nodes"]}
-    assert names["root"] == "美国宏观"
-    assert names["pce-medical"] == "医疗服务"
+    assert names["root"] == "美国宏观与金融体系"
+    assert names["tv-fed-inflation-pce"] == "PCE 通胀"
 
 
 def test_demo_catalog_reads_skip_data_session_but_browser_uses_real_auth_session() -> None:
@@ -272,12 +267,7 @@ async def main():
         expected_path = (
             "root",
             "inflation",
-            "pce",
-            "pce-core",
-            "pce-core-services",
-            "pce-core-services-nonhousing",
-            "pce-medical",
-            "pce-medical-hospital",
+            "tv-fed-inflation-pce",
         )
         for expected_code in expected_path:
             params = {"scope": "all", "q": "医院服务"}
@@ -291,7 +281,7 @@ async def main():
             assert [node["code"] for node in body["nodes"]] == [expected_code]
             node = body["nodes"][0]
             assert node["direct_series_count"] == (
-                1 if expected_code == "pce-medical-hospital" else 0
+                1 if expected_code == "tv-fed-inflation-pce" else 0
             )
             assert node["descendant_series_count"] == 1
             assert body["series"] == []
@@ -323,7 +313,9 @@ async def main():
         )
         assert filtered.status_code == 200, filtered.text
         filtered_body = filtered.json()
-        assert [node["code"] for node in filtered_body["nodes"]] == ["employment-claims"]
+        assert [node["code"] for node in filtered_body["nodes"]] == [
+            "tv-fed-labor-separations"
+        ]
         assert filtered_body["nodes"][0]["direct_series_count"] == 1
         assert filtered_body["nodes"][0]["descendant_series_count"] == 1
 

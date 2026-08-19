@@ -90,6 +90,32 @@ test("all researcher pages render their production data states", async ({ page }
 });
 
 test("data, release, FOMC and document read paths return linked runtime fixtures", async ({ page }) => {
+  const rootTree = await api<{
+    nodes: Array<{ id: string; name_zh: string; descendant_series_count: number }>;
+  }>(
+    page,
+    "/taxonomies/macro-default/children?provider=TRADINGVIEW_WEB",
+  );
+  expect(rootTree.nodes).toHaveLength(1);
+  expect(rootTree.nodes[0].name_zh).toBe("美国宏观与金融体系");
+  expect(rootTree.nodes[0].descendant_series_count).toBe(535);
+  const fedTree = await api<{ nodes: Array<{ name_zh: string; descendant_series_count: number }> }>(
+    page,
+    `/taxonomies/macro-default/children?provider=TRADINGVIEW_WEB&parent_id=${rootTree.nodes[0].id}`,
+  );
+  expect(fedTree.nodes.map((node) => node.name_zh)).toEqual([
+    "货币政策与利率",
+    "通胀与通胀预期",
+    "实体经济与增长",
+    "劳动力市场",
+    "信贷与银行体系",
+    "金融条件与金融市场",
+    "住房与家庭部门",
+  ]);
+  expect(
+    fedTree.nodes.reduce((total, node) => total + node.descendant_series_count, 0),
+  ).toBe(535);
+
   const series = await api<{ items: any[]; total: number }>(page, "/series?limit=200");
   expect(series.total).toBeGreaterThanOrEqual(3);
   const fixtureSeries = series.items.filter(

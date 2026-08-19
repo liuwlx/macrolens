@@ -1,9 +1,11 @@
 import json
 from pathlib import Path
 
+import pytest
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.schema import CreateTable
 
+from macrolens_api.cli import _theme, obsolete_tradingview_node_codes
 from macrolens_api.main import app
 from macrolens_api.models import Base, ObservationVintage, PublicationBatch, SavedView
 
@@ -33,10 +35,94 @@ def test_tradingview_registry_contains_v1_symbols() -> None:
     unavailable = [item for item in indicators if item["mapping_status"] == "UNAVAILABLE_US"]
     assert len(unavailable) == 195
     assert all(
-        item.get("availability_evidence")
-        == {"code": "no_such_symbol", "geography": "US"}
+        item.get("availability_evidence") == {"code": "no_such_symbol", "geography": "US"}
         for item in unavailable
     )
+    domains = {
+        "rates-policy",
+        "inflation",
+        "growth",
+        "employment",
+        "credit-banking",
+        "financial-markets",
+        "housing-household",
+    }
+    nodes = payload["nodes"]
+    base_taxonomy = json.loads(
+        (ROOT / "database/seed/taxonomy_registry.json").read_text(encoding="utf-8")
+    )
+    base_node_codes = {node["code"] for node in base_taxonomy["nodes"]}
+    owners = {
+        canonical_code: node["code"] for node in nodes for canonical_code in node["series_codes"]
+    }
+    assert {node["parent_code"] for node in nodes} == domains
+    assert all(node["code"].startswith("tv-fed-") for node in nodes)
+    assert {node["code"] for node in nodes}.issubset(base_node_codes)
+    assert "tv-root" not in {node["code"] for node in nodes}
+    assert len(owners) == 535
+    assert set(owners) == {item["canonical_code"] for item in indicators}
+    assert all(owners[item["canonical_code"]] == item["primary_topic"] for item in indicators)
+    assert all(isinstance(item["cross_tags"], list) for item in indicators)
+    topic_domains = {node["code"]: node["parent_code"] for node in nodes}
+    assert all(
+        len(item["cross_tags"]) == len(set(item["cross_tags"]))
+        and set(item["cross_tags"]).issubset(domains)
+        and topic_domains[item["primary_topic"]] not in item["cross_tags"]
+        for item in indicators
+    )
+    assert {item["theme"] for item in indicators} == {
+        "货币政策与利率",
+        "通胀与通胀预期",
+        "实体经济与增长",
+        "劳动力市场",
+        "信贷与银行体系",
+        "金融条件与金融市场",
+        "住房与家庭部门",
+    }
+
+
+def test_tradingview_seed_retires_only_obsolete_extension_nodes() -> None:
+    payload = json.loads(
+        (ROOT / "database/seed/tradingview_registry.json").read_text(encoding="utf-8")
+    )
+    desired = {node["code"] for node in payload["nodes"]}
+    legacy = {
+        "tv-root",
+        "tv-growth",
+        "tv-labor",
+        "tv-inflation",
+        "tv-health",
+        "tv-policy",
+        "tv-trade",
+        "tv-government",
+        "tv-business",
+        "tv-consumer",
+        "tv-housing",
+        "tv-taxes",
+        "tv-energy",
+        "tv-climate",
+    }
+
+    assert obsolete_tradingview_node_codes(desired | legacy, desired) == legacy
+
+
+@pytest.mark.parametrize(
+    ("canonical_code", "theme"),
+    [
+        ("US.FED.FUNDS", "货币政策与利率"),
+        ("US.CPI.HEADLINE", "通胀与通胀预期"),
+        ("US.REAL.GDP", "实体经济与增长"),
+        ("US.PAYROLLS", "劳动力市场"),
+        ("US.BANK.CREDIT", "信贷与银行体系"),
+        ("US.FINANCIAL.CONDITIONS", "金融条件与金融市场"),
+        ("US.MORTGAGE.30Y", "住房与家庭部门"),
+    ],
+)
+def test_official_series_theme_uses_the_same_seven_research_domains(
+    canonical_code: str,
+    theme: str,
+) -> None:
+    assert _theme(canonical_code) == theme
 
 
 def test_all_tables_compile_for_postgresql() -> None:

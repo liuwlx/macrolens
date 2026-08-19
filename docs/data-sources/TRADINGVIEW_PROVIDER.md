@@ -6,6 +6,20 @@ V1通过页面“数据同步”按钮手动触发 TradingView 最新值同步�
 
 目录注册 535 个全球指标 route 与美国国家前缀组合。其中 340 项已有美国 Symbol 和有效最新值；其余 195 项经过长等待和 `quote_fast_symbols` 复核后均返回 `no_such_symbol`，标记为 `UNAVAILABLE_US`，不再误称为待映射。完整清单和状态见 `database/seed/tradingview_registry.json`。
 
+## 研究框架分类
+
+TradingView 的 13 个原始栏目只保留为 `source_categories` 来源标签。MacroLens 使用七个研究域作为主导航：
+
+- 货币政策与利率；
+- 通胀与通胀预期；
+- 实体经济与增长；
+- 劳动力市场；
+- 信贷与银行体系；
+- 金融条件与金融市场；
+- 住房与家庭部门。
+
+每个指标在 `primary_topic` 中只有一个主归属，`cross_tags` 只表达跨域研究关系，不创建重复叶节点。分类由版本化的确定性规则生成并固化进 Registry；运行时不调用 AI 做模糊生产映射。
+
 ## 连接协议
 
 ```text

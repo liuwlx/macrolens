@@ -19,24 +19,34 @@ def test_catalog_registry_reconciles_all_61_series_with_deep_taxonomy() -> None:
     assert set(registry.owner_by_series_code) == {
         indicator.canonical_code for indicator in registry.indicators
     }
-    assert registry.max_depth >= 5
+    assert registry.max_depth == 2
     assert registry.path_for("US.PCE.HOSPITAL") == (
         "root",
         "inflation",
-        "pce",
-        "pce-core",
-        "pce-core-services",
-        "pce-core-services-nonhousing",
-        "pce-medical",
-        "pce-medical-hospital",
+        "tv-fed-inflation-pce",
     )
+    assert registry.nodes_by_code["root"].name_zh == "美国宏观与金融体系"
+    assert {node.name_zh for node in registry.nodes if node.parent_code == "root"} == {
+        "货币政策与利率",
+        "通胀与通胀预期",
+        "实体经济与增长",
+        "劳动力市场",
+        "信贷与银行体系",
+        "金融条件与金融市场",
+        "住房与家庭部门",
+    }
+    assert registry.nodes_by_code["tv-fed-mortgage-market"].parent_code == "housing-household"
 
 
 def test_catalog_registry_exposes_exact_direct_and_descendant_membership() -> None:
     registry = get_catalog_registry()
 
-    assert registry.nodes_by_code["pce-medical"].series_codes == ("US.PCE.MEDICAL",)
-    assert set(registry.descendant_series_codes("pce-medical")) == {
+    assert set(registry.nodes_by_code["tv-fed-inflation-pce"].series_codes) == {
+        "US.PCE.HEADLINE",
+        "US.PCE.CORE",
+        "US.PCE.CORE.GOODS",
+        "US.PCE.CORE.SERVICES",
+        "US.PCE.NONHOUSING",
         "US.PCE.MEDICAL",
         "US.PCE.HOSPITAL",
         "US.PCE.PHYSICIAN",
@@ -46,7 +56,17 @@ def test_catalog_registry_exposes_exact_direct_and_descendant_membership() -> No
         "US.PCE.PRESCRIPTION",
         "US.PCE.HEALTH.INSURANCE",
         "US.PCE.LONGTERM.CARE",
+        "US.PCE.TRANSPORT",
+        "US.PCE.RECREATION",
+        "US.PCE.FOOD.SERVICES",
+        "US.PCE.FINANCE",
+        "US.PCE.OTHER.SERVICES",
+        "US.PCE.DURABLES",
+        "US.PCE.NONDURABLES",
     }
+    assert set(registry.descendant_series_codes("tv-fed-inflation-pce")) == set(
+        registry.nodes_by_code["tv-fed-inflation-pce"].series_codes
+    )
 
 
 class ResultRows:
@@ -147,7 +167,7 @@ async def test_live_catalog_loader_fails_closed_on_taxonomy_ownership_drift() ->
 async def test_live_catalog_loader_fails_closed_on_intermediate_taxonomy_reparenting() -> None:
     nodes = _catalog_nodes()
     by_code = {node.code: node for node in nodes}
-    by_code["pce"].parent_id = by_code["root"].id
+    by_code["tv-fed-inflation-pce"].parent_id = by_code["root"].id
 
     with pytest.raises(AppError) as captured:
         await _load_candidates(FakeSession(_catalog_rows(), nodes))  # type: ignore[arg-type]

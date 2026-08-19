@@ -1,0 +1,197 @@
+from __future__ import annotations
+
+import pytest
+
+from macrolens_worker.providers.tradingview_taxonomy import (
+    classify_tradingview_indicator,
+)
+
+
+@pytest.mark.parametrize(
+    ("ticker", "name", "route", "category", "topic", "cross_tags"),
+    [
+        (
+            "EFFR",
+            "Effective Federal Funds Rate",
+            "effective-federal-funds-rate",
+            "mny",
+            "tv-fed-policy-rates",
+            (),
+        ),
+        (
+            "14RRR",
+            "14 Day Reverse Repo Rate",
+            "14-day-reverse-repo-rate",
+            "mny",
+            "tv-fed-policy-operations",
+            (),
+        ),
+        (
+            "CPCEPIAC",
+            "Core Pce Price Index Annual Change",
+            "core-pce-price-index-annual-change",
+            "prce",
+            "tv-fed-inflation-pce",
+            (),
+        ),
+        (
+            "CPIHU",
+            "Cpi Housing Utilities",
+            "cpi-housing-utilities",
+            "prce",
+            "tv-fed-inflation-housing",
+            ("housing-household",),
+        ),
+        ("JO", "United States Job Offers", "job-offers", "lbr", "tv-fed-labor-demand", ()),
+        (
+            "IJC",
+            "United States Initial Jobless Claims",
+            "initial-jobless-claims",
+            "lbr",
+            "tv-fed-labor-separations",
+            (),
+        ),
+        (
+            "BBS",
+            "Banks Balance Sheet",
+            "banks-balance-sheet",
+            "mny",
+            "tv-fed-bank-balance-sheet",
+            (),
+        ),
+        (
+            "CCR",
+            "Consumer Credit",
+            "consumer-credit",
+            "cnsm",
+            "tv-fed-consumer-credit",
+            ("housing-household",),
+        ),
+        ("CF", "Capital Flows", "capital-flows", "trd", "tv-fed-capital-flows", ("growth",)),
+        (
+            "30YMR",
+            "30 Year Mortgage Rate",
+            "30-year-mortgage-rate",
+            "hse",
+            "tv-fed-mortgage-market",
+            ("financial-markets",),
+        ),
+        ("CO2E", "Co2 Emissions", "co2-emissions", "clmt", "tv-fed-energy-climate", ()),
+        (
+            "CBBS",
+            "Central Bank Balance Sheet",
+            "central-bank-balance-sheet",
+            "mny",
+            "tv-fed-central-bank-balance-sheet",
+            (),
+        ),
+        (
+            "DBALM",
+            "Debt Balance Mortgages",
+            "debt-balance-mortgages",
+            "lbr",
+            "tv-fed-housing-credit",
+            ("housing-household",),
+        ),
+        (
+            "DBALCC",
+            "Debt Balance Credit Cards",
+            "debt-balance-credit-cards",
+            "lbr",
+            "tv-fed-consumer-credit",
+            ("housing-household",),
+        ),
+        (
+            "BLR",
+            "Bank Lending Rate",
+            "bank-lending-rate",
+            "cnsm",
+            "tv-fed-credit-pricing-standards",
+            ("financial-markets",),
+        ),
+        (
+            "HC",
+            "Housing Credit",
+            "housing-credit",
+            "cnsm",
+            "tv-fed-housing-credit",
+            ("housing-household",),
+        ),
+        (
+            "CLDPMM",
+            "Corelogic Dwelling Prices Mom",
+            "corelogic-dwelling-prices-mom",
+            "prce",
+            "tv-fed-housing-prices",
+            ("inflation",),
+        ),
+        (
+            "FAI",
+            "Fixed Asset Investment",
+            "fixed-asset-investment",
+            "mny",
+            "tv-fed-business-investment",
+            (),
+        ),
+        ("EP", "Energy Prices", "energy-prices", "mny", "tv-fed-inflation-pipeline", ("growth",)),
+        ("RJR", "RJR", "registered-jobless-rate", "lbr", "tv-fed-labor-unemployment", ()),
+        (
+            "JAR",
+            "Jobs To Applications Ratio",
+            "jobs-to-applications-ratio",
+            "lbr",
+            "tv-fed-labor-demand",
+            (),
+        ),
+        (
+            "CBLR",
+            "Central Bank Lending Rate",
+            "central-bank-lending-rate",
+            "mny",
+            "tv-fed-policy-rates",
+            (),
+        ),
+        (
+            "IROM",
+            "Interest Rate On New Mortgages",
+            "interest-rate-on-new-mortgages",
+            "mny",
+            "tv-fed-mortgage-market",
+            ("financial-markets",),
+        ),
+        ("CRR", "Cash Reserve Ratio", "cash-reserve-ratio", "mny", "tv-fed-policy-operations", ()),
+        (
+            "LTRO",
+            "Longer Term Refinancing Operations",
+            "longer-term-refinancing-operations",
+            "mny",
+            "tv-fed-policy-operations",
+            (),
+        ),
+        (
+            "PGB",
+            "Purchases Of Government Bonds",
+            "purchases-of-government-bonds",
+            "mny",
+            "tv-fed-policy-operations",
+            ("financial-markets",),
+        ),
+    ],
+)
+def test_tradingview_indicator_has_one_fed_topic_and_explicit_cross_tags(
+    ticker: str,
+    name: str,
+    route: str,
+    category: str,
+    topic: str,
+    cross_tags: tuple[str, ...],
+) -> None:
+    assignment = classify_tradingview_indicator(
+        ticker=ticker,
+        name=name,
+        route=route,
+        source_categories=(category,),
+    )
+
+    assert assignment.primary_topic == topic
+    assert assignment.cross_tags == cross_tags
