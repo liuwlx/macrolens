@@ -90,12 +90,15 @@ test("all researcher pages render their production data states", async ({ page }
 });
 
 test("data, release, FOMC and document read paths return linked runtime fixtures", async ({ page }) => {
-  const series = await api<{ items: any[]; total: number }>(page, "/series?limit=20");
+  const series = await api<{ items: any[]; total: number }>(page, "/series?limit=200");
   expect(series.total).toBeGreaterThanOrEqual(3);
-  expect(series.items.length).toBeGreaterThanOrEqual(3);
+  const fixtureSeries = series.items.filter(
+    (item: any) => item.latest_value !== null && item.latest_period !== null,
+  );
+  expect(fixtureSeries.length).toBeGreaterThanOrEqual(3);
 
-  const first = series.items[0];
-  const second = series.items[1];
+  const first = fixtureSeries[0];
+  const second = fixtureSeries[1];
   const detail = await api<any>(page, `/series/${first.id}`);
   expect(detail.canonical_code).toBe(first.canonical_code);
   const observations = await api<any>(page, `/series/${first.id}/observations?transform=level`);
