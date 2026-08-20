@@ -6,7 +6,10 @@
 - 基线：`origin/master` / `fd500fc379d7088471f1849faf3adb58c14a8264`。
 - 输入候选：`3f3272f188433c8ea4071a226705bad460a831b3`。
 - 发布分支：`codex/ML-20260820-053-data-snapshot-discovery`。
-- PR：[liuwlx/macrolens#32](https://github.com/liuwlx/macrolens/pull/32)。
+- PR：[liuwlx/macrolens#32](https://github.com/liuwlx/macrolens/pull/32)，状态 `MERGED`。
+- 最终 CI：[run 32362431008](https://github.com/liuwlx/macrolens/actions/runs/32362431008)，`backend`、`frontend`、`containers`、`acceptance` 四项全部 `SUCCESS`。
+- 合并提交：`9a10cef21308da5b3f7cdd2f6fe8b99a59847d8a`。
+- 版本标签：`v2026.08.20-data-snapshot-discovery`，annotated tag peeled target 为上述合并提交。
 - 场景要求：provider latest、single history、bulk history 三条成功路径在 invalidations 之后用不含 `data_as_of` 的请求发现最新快照；只显示现有 banner，不自动切换研究上下文；失败或 partial result 不提示；并发去重且卸载安全；无 backend/API/schema 改动。
 
 ## 2. 分析过程与发现
@@ -28,7 +31,8 @@
 4. 页面卸载时清除 queued 标记，并在请求结果更新 UI 前检查 mounted 状态。
 5. 补充 provider/single/bulk 成功与 partial/failed 负向测试、并发 trailing 去重测试、卸载丢弃 trailing 测试；最终 DataBrowser 定向测试为 16/16。
 6. 使用 Python 3.12.9、Node 22.14.0 执行完整本地门禁。首次后端测试命令因未设置 `PYTHONPATH` 只产生模块收集错误、没有执行测试；按 CI 明确设置 `PYTHONPATH=backend/src` 后 346/346 通过。首次定向 Web 测试的子进程误取 Node 20，修正命令 PATH 后通过；两者均为命令环境问题，不是产品失败。
-7. 提交修复 `afe6e62`，推送发布分支并创建 PR #32；报告作为独立文档提交到同一 PR。PR 四项 CI 全绿后合并，并在合并提交上创建 `v2026.08.20-data-snapshot-discovery`。不执行部署。
+7. 提交修复 `afe6e62`，推送发布分支并创建 PR #32；报告作为独立文档提交到同一 PR。最终 head `7012332` 的四项 CI 全绿后，以 merge commit 方式合并到 `master`，合并 SHA 为 `9a10cef`。
+8. 在合并 SHA 上创建并推送 annotated tag `v2026.08.20-data-snapshot-discovery`；本地 `rev-list` 与远端 peeled ref 均核实为 `9a10cef`。随后以 report-only fast-forward 提交回填本节最终证据，标签保持不变。不执行部署。
 
 ## 4. Agents、skills、tools 与文档
 
@@ -82,6 +86,19 @@
 - `PYTHONPATH=backend/src python scripts/generate_openapi.py --check`：`OpenAPI is current: 75 paths`。
 - `git diff --check`：通过。
 - 最终差异边界：Web 组件、Web 测试及结论报告；无 backend、API、OpenAPI、database schema、migration 或 seed 变更。
+
+### PR、CI、合并与标签
+
+- PR：[#32](https://github.com/liuwlx/macrolens/pull/32)，base `master`，validated head `70123323e81446a4f7f9b115a950bf394bdf2943`，合并时间 `2026-08-20T11:30:39Z`。
+- CI run：[32362431008](https://github.com/liuwlx/macrolens/actions/runs/32362431008)，结论 `success`。
+  - `backend`：SUCCESS，包含后端测试、迁移往返、seed、OpenAPI current 和 repository validation。
+  - `frontend`：SUCCESS，包含 lint、Web/SDK typecheck、test、SDK build 和 Web build。
+  - `containers`：SUCCESS，API/Web 镜像构建通过但未推送、未部署。
+  - `acceptance`：SUCCESS，GitHub Actions 临时 Compose 验收和 Chromium E2E 通过；这不是服务器部署。
+- merge SHA：`9a10cef21308da5b3f7cdd2f6fe8b99a59847d8a`，父提交为基线 `fd500fc` 与 PR head `7012332`。
+- tag：`v2026.08.20-data-snapshot-discovery`；远端 tag object `a88c7b0a5bfb3c776f6b6c722de72a50848fa964`，peeled commit `9a10cef21308da5b3f7cdd2f6fe8b99a59847d8a`。
+- 数据库影响：无 migration、无 schema 变更、无生产 seed。
+- 部署影响：未登录服务器、未部署、未改变服务器运行状态。
 
 ### 经验与模式
 
