@@ -98,4 +98,3 @@
 ## 7. 更优的一次解决方案提示词
 
 > 作为 MacroLens 集成发布负责人，先读取项目/组织规则、CONTEXT 和 01/02 宪法，在独立 worktree 将候选 `3f3272f` 与基线 `fd500fc` 做 Standards/Spec 双轴审查。把“完整成功”定义为：Job 顶层 succeeded 且 result.failed_count 为 0，result.status 不属于 partial_success、partial_failure、failed；bulk 仅 status=succeeded。实现一个 trailing-edge coalescing 的 latest discovery drain：任意时刻最多一个请求，运行期间的新触发合并成一次后续请求，后续请求必须发生在各成功路径 invalidations 完成之后；所有 latest 请求省略 data_as_of，结果只显示现有 banner，用户点击后才更新 URL。卸载时清空 pending、停止轮询/取消可取消请求并禁止 state write。为 provider/single/bulk 完整成功、各类 partial/failed、同步前已有 in-flight、多个并发成功仅一次 trailing、卸载丢弃 trailing 建立回归测试。确认 git diff 不含 backend/API/OpenAPI/schema/migration/seed，使用 Python 3.12+、Node 22 和 CI 同样的 PYTHONPATH 跑完整门禁。若发现问题先修复再复核；全绿后按 `codex/ML-20260820-053-data-snapshot-discovery` → PR → 四项 CI → merge master → `v2026.08.20-data-snapshot-discovery` 收口，全程不部署，并生成 `docs/conclusions` 报告。
-
