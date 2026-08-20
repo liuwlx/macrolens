@@ -2,16 +2,20 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import type { HistoryBatchPublic, SeriesBrowserResponse, TaxonomyChildrenResponse } from "@/lib/types";
+import type { AICapabilitiesResponse, HistoryBatchPublic, JobPublic, ObservationResponse, SeriesAnalyticsResponse, SeriesBrowserResponse, SeriesDetail, TaxonomyChildrenResponse } from "@/lib/types";
 
 import { DataBrowserPage } from "./data-browser-page";
 
 const apiFetch = vi.fn();
 const searchParams = new URLSearchParams("provider=TRADINGVIEW_WEB");
 const authState = vi.hoisted(() => ({ role: "admin" }));
+const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn() }));
+
+const currentSnapshot = "2026-08-20T00:00:00Z";
+const latestSnapshot = "2026-08-20T01:00:00Z";
 
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
+  useRouter: () => router,
   useSearchParams: () => searchParams,
 }));
 
@@ -31,7 +35,78 @@ const browserResponse: SeriesBrowserResponse = {
   items: [],
   facets: { provider: [], theme: [], frequency: [], unit: [], seasonal_adjustment: [] },
   pagination: { total: 0, limit: 20, offset: 0 },
-  data_as_of: "2026-08-20T00:00:00Z",
+  data_as_of: currentSnapshot,
+};
+
+const selectedBrowserResponse: SeriesBrowserResponse = {
+  ...browserResponse,
+  items: [{
+    availability: "available",
+    series: {
+      id: "tv-series-1",
+      canonical_code: "US.TV.CPI",
+      name_zh: "美国消费者价格指数",
+      theme: "通胀",
+      frequency: "monthly",
+      unit_code: "index",
+      unit_label_zh: "指数",
+      default_transform: "level",
+      provider: { code: "TRADINGVIEW_WEB", name: "TradingView", license_class: "internal" },
+    },
+    current: { period_start: "2026-07-01", value: 123.4 },
+    previous: { period_start: "2026-06-01", value: 122.8 },
+    change: { value: 0.6, status: "available" },
+    period_change: { value: 0.49, status: "available" },
+    yoy: { value: 2.7, status: "available" },
+    display_denied: false,
+  }],
+  pagination: { total: 1, limit: 20, offset: 0 },
+};
+
+const selectedDetailResponse: SeriesDetail = {
+  ...selectedBrowserResponse.items[0].series,
+  description: null,
+  seasonal_adjustment: "seasonally_adjusted",
+  geography_code: "US",
+  decimal_places: 1,
+  status: "active",
+  aliases: [],
+};
+
+const selectedAnalyticsResponse: SeriesAnalyticsResponse = {
+  data_mode: "live",
+  statistics: { count: 0, mean: null, median: null, min: null, max: null, stddev: null, current_percentile: null },
+  next_release: null,
+  contributions: { available: false, periods: [], components: [] },
+  capabilities: {
+    display: { allowed: true },
+    download: { allowed: false },
+    ai: { allowed: false },
+    trend: { allowed: true },
+    history: { allowed: true },
+    revisions: { allowed: true },
+    documents: { allowed: true },
+    contributions: { allowed: false },
+  },
+  data_as_of: currentSnapshot,
+};
+
+const selectedObservationsResponse: ObservationResponse = {
+  series: selectedBrowserResponse.items[0].series,
+  data: [],
+  meta: {
+    data_mode: "live",
+    data_as_of: currentSnapshot,
+    vintage: currentSnapshot,
+    transform: "level",
+    frequency: "monthly",
+    unit: "index",
+  },
+};
+
+const aiCapabilitiesResponse: AICapabilitiesResponse = {
+  configured: false,
+  allowed: false,
 };
 
 const taxonomyResponse: TaxonomyChildrenResponse = {
@@ -69,16 +144,140 @@ function renderPage() {
   return { client, ...rendered };
 }
 
+function succeededJob(result: Record<string, unknown>): JobPublic {
+  return {
+    id: "job-1",
+    job_type: "sync",
+    status: "succeeded",
+    priority: 0,
+    payload: {},
+    attempts: 1,
+    max_attempts: 1,
+    result,
+    created_at: currentSnapshot,
+    started_at: currentSnapshot,
+    finished_at: latestSnapshot,
+  };
+}
+
+function latestCheckCalls() {
+  return apiFetch.mock.calls.filter(([path]) => {
+    const request = new URL(String(path), "https://macrolens.test");
+    return request.pathname === "/series/browser" && !request.searchParams.has("data_as_of");
+  });
+}
+
+async function expectLatestSnapshotOffer() {
+  expect(await screen.findByText("检测到新数据快照，不会自动替换当前研究上下文。")).toBeInTheDocument();
+  expect(latestCheckCalls()).toHaveLength(1);
+  expect(router.replace).not.toHaveBeenCalledWith(
+    expect.stringContaining(`data_as_of=${encodeURIComponent(latestSnapshot)}`),
+    { scroll: false },
+  );
+
+  fireEvent.click(screen.getByRole("button", { name: "切换到新数据" }));
+  expect(router.replace).toHaveBeenCalledWith(
+    expect.stringContaining(`data_as_of=${encodeURIComponent(latestSnapshot)}`),
+    { scroll: false },
+  );
+}
+
 afterEach(() => {
   cleanup();
   vi.useRealTimers();
   apiFetch.mockReset();
   authState.role = "admin";
+  router.push.mockReset();
+  router.replace.mockReset();
   searchParams.delete("series");
+  searchParams.delete("data_as_of");
   searchParams.set("provider", "TRADINGVIEW_WEB");
 });
 
 describe("DataBrowserPage bulk TradingView history sync", () => {
+  it("offers the latest snapshot after a successful batch without changing research context", async () => {
+    searchParams.set("data_as_of", currentSnapshot);
+    const succeededBatch: HistoryBatchPublic = {
+      ...emptyBatch,
+      status: "succeeded",
+      candidate_count: 1,
+      skipped_completed: 338,
+      succeeded: 1,
+      inserted: 1,
+      staged_observation_count: 120,
+    };
+    apiFetch.mockImplementation((path: string, init?: RequestInit) => {
+      if (path.startsWith("/series/browser")) {
+        const request = new URL(path, "https://macrolens.test");
+        return Promise.resolve(request.searchParams.has("data_as_of")
+          ? browserResponse
+          : { ...browserResponse, data_as_of: latestSnapshot });
+      }
+      if (path.startsWith("/taxonomies/")) return Promise.resolve(taxonomyResponse);
+      if (path === "/me/favorites") return Promise.resolve([]);
+      if (path === "/admin/providers/TRADINGVIEW_WEB/history" && init?.method === "POST") {
+        return Promise.resolve(succeededBatch);
+      }
+      throw new Error(`Unexpected API path: ${path}`);
+    });
+    renderPage();
+
+    fireEvent.click(await screen.findByRole("button", { name: "批量同步历史" }));
+
+    await expectLatestSnapshotOffer();
+  });
+
+  it("offers the latest snapshot after a successful single-series history sync", async () => {
+    searchParams.set("series", "tv-series-1");
+    searchParams.set("data_as_of", currentSnapshot);
+    apiFetch.mockImplementation((path: string, init?: RequestInit) => {
+      if (path.startsWith("/series/browser")) {
+        const request = new URL(path, "https://macrolens.test");
+        return Promise.resolve(request.searchParams.has("data_as_of")
+          ? selectedBrowserResponse
+          : { ...selectedBrowserResponse, data_as_of: latestSnapshot });
+      }
+      if (path.startsWith("/taxonomies/")) return Promise.resolve(taxonomyResponse);
+      if (path === "/me/favorites") return Promise.resolve([]);
+      if (path === "/admin/providers/TRADINGVIEW_WEB/series/tv-series-1/history" && init?.method === "POST") {
+        return Promise.resolve(succeededJob({ inserted: 1, revised: 0, staged_observation_count: 120 }));
+      }
+      if (path.startsWith("/series/tv-series-1/analytics")) return Promise.resolve(selectedAnalyticsResponse);
+      if (path.startsWith("/series/tv-series-1/observations")) return Promise.resolve(selectedObservationsResponse);
+      if (path === "/series/tv-series-1") return Promise.resolve(selectedDetailResponse);
+      if (path.startsWith("/ai/capabilities")) return Promise.resolve(aiCapabilitiesResponse);
+      throw new Error(`Unexpected API path: ${path}`);
+    });
+    renderPage();
+
+    fireEvent.click(await screen.findByRole("button", { name: "同步历史数据" }));
+
+    await expectLatestSnapshotOffer();
+  });
+
+  it("offers the latest snapshot after a successful provider latest sync", async () => {
+    searchParams.set("data_as_of", currentSnapshot);
+    apiFetch.mockImplementation((path: string, init?: RequestInit) => {
+      if (path.startsWith("/series/browser")) {
+        const request = new URL(path, "https://macrolens.test");
+        return Promise.resolve(request.searchParams.has("data_as_of")
+          ? browserResponse
+          : { ...browserResponse, data_as_of: latestSnapshot });
+      }
+      if (path.startsWith("/taxonomies/")) return Promise.resolve(taxonomyResponse);
+      if (path === "/me/favorites") return Promise.resolve([]);
+      if (path === "/admin/providers/TRADINGVIEW_WEB/sync" && init?.method === "POST") {
+        return Promise.resolve(succeededJob({ succeeded_count: 1, failed_count: 0 }));
+      }
+      throw new Error(`Unexpected API path: ${path}`);
+    });
+    renderPage();
+
+    fireEvent.click(await screen.findByRole("button", { name: "数据同步" }));
+
+    await expectLatestSnapshotOffer();
+  });
+
   it("starts one provider history batch per click and reuses its idempotency key", async () => {
     apiFetch.mockImplementation((path: string) => {
       if (path.startsWith("/series/browser")) return Promise.resolve(browserResponse);
@@ -113,6 +312,7 @@ describe("DataBrowserPage bulk TradingView history sync", () => {
   });
 
   it("polls batch progress every two seconds and stops on a failed terminal response", async () => {
+    searchParams.set("data_as_of", currentSnapshot);
     const queuedBatch: HistoryBatchPublic = {
       ...emptyBatch,
       status: "queued",
@@ -183,6 +383,8 @@ describe("DataBrowserPage bulk TradingView history sync", () => {
     ]) {
       expect(invalidate).toHaveBeenCalledWith({ queryKey: [queryKey] });
     }
+    expect(latestCheckCalls()).toHaveLength(0);
+    expect(screen.queryByText("检测到新数据快照，不会自动替换当前研究上下文。")).not.toBeInTheDocument();
   });
 
   it.each([

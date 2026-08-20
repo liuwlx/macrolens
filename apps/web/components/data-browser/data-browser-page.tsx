@@ -72,20 +72,26 @@ export function DataBrowserPage() {
   const [historyBatchPending, setHistoryBatchPending] = useState(false);
   const [historyBatchError, setHistoryBatchError] = useState("");
   const [historyBatchIdempotencyKey] = useState(() => `data-browser-history-${crypto.randomUUID()}`);
-  const historyBatchMounted = useRef(true);
+  const pageMounted = useRef(true);
   const historyBatchPollCancel = useRef<(() => void) | null>(null);
   const historyBatchAbortController = useRef<AbortController | null>(null);
   const state = useMemo(() => parseBrowserState(searchParams), [searchParams]);
+  const latestBrowserState = useRef(state);
+  const latestSnapshotCheck = useRef<Promise<void> | null>(null);
   const permissionKey = user ? `${user.id}:${user.role}` : "anonymous";
 
   useEffect(() => {
-    historyBatchMounted.current = true;
+    pageMounted.current = true;
     return () => {
-      historyBatchMounted.current = false;
+      pageMounted.current = false;
       historyBatchPollCancel.current?.();
       historyBatchAbortController.current?.abort();
     };
   }, []);
+
+  useEffect(() => {
+    latestBrowserState.current = state;
+  }, [state]);
 
   const updateState = useCallback((patch: Partial<BrowserState>, mode: "replace" | "push" = "replace") => {
     const next = patchBrowserState(state, patch);
@@ -145,14 +151,23 @@ export function DataBrowserPage() {
   function exportBrowser() { exportPath(`/series/browser/export${queryString({ q: state.q, node_id: state.node, provider: state.provider, theme: state.theme, frequency: state.frequency, unit: state.unit, seasonal_adjustment: state.seasonal_adjustment, published_from: state.published_from, published_to: state.published_to, sort: state.sort, order: state.order, data_as_of: state.data_as_of })}`, "macrolens-data-browser.csv"); }
   function exportSelected() { if (state.series) exportPath(`/series/${state.series}/export${queryString({ transform: state.transform, start: state.start, end: state.end, data_as_of: state.data_as_of })}`, `${detailQuery.data?.canonical_code ?? "macrolens-series"}.csv`); }
   function showHistory() { updateState({ tab: "history" }); requestAnimationFrame(() => document.getElementById("data-browser-analysis")?.scrollIntoView({ behavior: "smooth", block: "start" })); }
-  async function refreshAll() {
-    const latest = await queryClient.fetchQuery({
-      queryKey: ["series-browser-latest-check", permissionKey, state.q, state.node, state.provider, state.theme, state.frequency, state.unit, state.seasonal_adjustment, state.published_from, state.published_to, state.page, state.sort, state.order],
-      queryFn: ({ signal }) => apiFetch<SeriesBrowserResponse>(`/series/browser${queryString({ q: state.q, node_id: state.node, provider: state.provider, theme: state.theme, frequency: state.frequency, unit: state.unit, seasonal_adjustment: state.seasonal_adjustment, published_from: state.published_from, published_to: state.published_to, sort: state.sort, order: state.order, limit: 20, offset: (state.page - 1) * 20 })}`, { signal }),
+  const refreshAll = useCallback(() => {
+    if (latestSnapshotCheck.current) return latestSnapshotCheck.current;
+    const requestState = latestBrowserState.current;
+    const request = queryClient.fetchQuery({
+      queryKey: ["series-browser-latest-check", permissionKey, requestState.q, requestState.node, requestState.provider, requestState.theme, requestState.frequency, requestState.unit, requestState.seasonal_adjustment, requestState.published_from, requestState.published_to, requestState.page, requestState.sort, requestState.order],
+      queryFn: ({ signal }) => apiFetch<SeriesBrowserResponse>(`/series/browser${queryString({ q: requestState.q, node_id: requestState.node, provider: requestState.provider, theme: requestState.theme, frequency: requestState.frequency, unit: requestState.unit, seasonal_adjustment: requestState.seasonal_adjustment, published_from: requestState.published_from, published_to: requestState.published_to, sort: requestState.sort, order: requestState.order, limit: 20, offset: (requestState.page - 1) * 20 })}`, { signal }),
       staleTime: 0,
+    }).then((latest) => {
+      if (pageMounted.current && latest.data_as_of !== latestBrowserState.current.data_as_of) {
+        setAvailableSnapshot(latest.data_as_of);
+      }
+    }).finally(() => {
+      if (latestSnapshotCheck.current === request) latestSnapshotCheck.current = null;
     });
-    if (latest.data_as_of !== state.data_as_of) setAvailableSnapshot(latest.data_as_of);
-  }
+    latestSnapshotCheck.current = request;
+    return request;
+  }, [permissionKey, queryClient]);
 
   async function syncTradingView() {
     if (!canSync || syncState === "running") return;
@@ -175,6 +190,7 @@ export function DataBrowserPage() {
       const result = job.result;
       const succeeded = Number(result.succeeded_count ?? result.inserted_count ?? 0);
       const failed = Number(result.failed_count ?? 0);
+      if (!pageMounted.current) return;
       setSyncState(failed ? "error" : "success");
       setSyncMessage(`同步完成：成功 ${succeeded} 项，失败 ${failed} 项`);
       await Promise.all([
@@ -183,9 +199,12 @@ export function DataBrowserPage() {
         queryClient.invalidateQueries({ queryKey: ["data-browser-detail"] }),
         queryClient.invalidateQueries({ queryKey: ["data-browser-analytics"] }),
       ]);
+      if (!failed && pageMounted.current) await refreshAll();
     } catch (error) {
-      setSyncState("error");
-      setSyncMessage(formatTradingViewSyncError(error));
+      if (pageMounted.current) {
+        setSyncState("error");
+        setSyncMessage(formatTradingViewSyncError(error));
+      }
     }
   }
 
@@ -207,6 +226,7 @@ export function DataBrowserPage() {
         throw new Error(job.last_error || "未完成历史同步");
       }
       const result = job.result;
+      if (!pageMounted.current) return;
       setHistorySyncState("success");
       setHistorySyncMessage(`历史同步完成：新增 ${Number(result.inserted ?? 0)} 项，修订 ${Number(result.revised ?? 0)} 项，历史点 ${Number(result.staged_observation_count ?? result.observation_count ?? 0)} 项`);
       await Promise.all([
@@ -215,9 +235,12 @@ export function DataBrowserPage() {
         queryClient.invalidateQueries({ queryKey: ["data-browser-observations"] }),
         queryClient.invalidateQueries({ queryKey: ["data-browser-analytics"] }),
       ]);
+      if (pageMounted.current) await refreshAll();
     } catch (error) {
-      setHistorySyncState("error");
-      setHistorySyncMessage(formatTradingViewHistoryError(error));
+      if (pageMounted.current) {
+        setHistorySyncState("error");
+        setHistorySyncMessage(formatTradingViewHistoryError(error));
+      }
     }
   }
 
@@ -235,7 +258,7 @@ export function DataBrowserPage() {
         body: JSON.stringify({ idempotency_key: historyBatchIdempotencyKey, limit: 500 }),
         signal: abortController.signal,
       });
-      if (!historyBatchMounted.current) return;
+      if (!pageMounted.current) return;
       setHistoryBatch(batch);
       while (historyBatchIsActive(batch)) {
         const continuePolling = await new Promise<boolean>((resolve) => {
@@ -249,11 +272,11 @@ export function DataBrowserPage() {
             resolve(false);
           };
         });
-        if (!continuePolling || !historyBatchMounted.current) return;
+        if (!continuePolling || !pageMounted.current) return;
         batch = await apiFetch<HistoryBatchPublic>(`/admin/providers/${providerCode}/history/${batch.batch_id}`, {
           signal: abortController.signal,
         });
-        if (!historyBatchMounted.current) return;
+        if (!pageMounted.current) return;
         setHistoryBatch(batch);
       }
       await Promise.all([
@@ -263,13 +286,14 @@ export function DataBrowserPage() {
         queryClient.invalidateQueries({ queryKey: ["data-browser-analytics"] }),
         queryClient.invalidateQueries({ queryKey: ["taxonomy-children"] }),
       ]);
+      if (batch.status === "succeeded" && pageMounted.current) await refreshAll();
     } catch (error) {
-      if (historyBatchMounted.current) setHistoryBatchError(formatTradingViewHistoryError(error));
+      if (pageMounted.current) setHistoryBatchError(formatTradingViewHistoryError(error));
     } finally {
       if (historyBatchAbortController.current === abortController) {
         historyBatchAbortController.current = null;
       }
-      if (historyBatchMounted.current) setHistoryBatchPending(false);
+      if (pageMounted.current) setHistoryBatchPending(false);
     }
   }
   const closeDrawer = useCallback(() => setDrawer(null), []);
