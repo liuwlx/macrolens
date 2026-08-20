@@ -44,6 +44,13 @@ function shouldRetry(count: number, error: Error) {
   return count < 1;
 }
 
+function syncResultHasFailures(result: Record<string, unknown>) {
+  return Number(result.failed_count ?? 0) > 0
+    || result.status === "partial_success"
+    || result.status === "partial_failure"
+    || result.status === "failed";
+}
+
 function saveBlob(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
@@ -78,12 +85,14 @@ export function DataBrowserPage() {
   const state = useMemo(() => parseBrowserState(searchParams), [searchParams]);
   const latestBrowserState = useRef(state);
   const latestSnapshotCheck = useRef<Promise<void> | null>(null);
+  const latestSnapshotCheckQueued = useRef(false);
   const permissionKey = user ? `${user.id}:${user.role}` : "anonymous";
 
   useEffect(() => {
     pageMounted.current = true;
     return () => {
       pageMounted.current = false;
+      latestSnapshotCheckQueued.current = false;
       historyBatchPollCancel.current?.();
       historyBatchAbortController.current?.abort();
     };
@@ -151,22 +160,29 @@ export function DataBrowserPage() {
   function exportBrowser() { exportPath(`/series/browser/export${queryString({ q: state.q, node_id: state.node, provider: state.provider, theme: state.theme, frequency: state.frequency, unit: state.unit, seasonal_adjustment: state.seasonal_adjustment, published_from: state.published_from, published_to: state.published_to, sort: state.sort, order: state.order, data_as_of: state.data_as_of })}`, "macrolens-data-browser.csv"); }
   function exportSelected() { if (state.series) exportPath(`/series/${state.series}/export${queryString({ transform: state.transform, start: state.start, end: state.end, data_as_of: state.data_as_of })}`, `${detailQuery.data?.canonical_code ?? "macrolens-series"}.csv`); }
   function showHistory() { updateState({ tab: "history" }); requestAnimationFrame(() => document.getElementById("data-browser-analysis")?.scrollIntoView({ behavior: "smooth", block: "start" })); }
-  const refreshAll = useCallback(() => {
+  const discoverLatestSnapshot = useCallback(() => {
+    latestSnapshotCheckQueued.current = true;
     if (latestSnapshotCheck.current) return latestSnapshotCheck.current;
-    const requestState = latestBrowserState.current;
-    const request = queryClient.fetchQuery({
-      queryKey: ["series-browser-latest-check", permissionKey, requestState.q, requestState.node, requestState.provider, requestState.theme, requestState.frequency, requestState.unit, requestState.seasonal_adjustment, requestState.published_from, requestState.published_to, requestState.page, requestState.sort, requestState.order],
-      queryFn: ({ signal }) => apiFetch<SeriesBrowserResponse>(`/series/browser${queryString({ q: requestState.q, node_id: requestState.node, provider: requestState.provider, theme: requestState.theme, frequency: requestState.frequency, unit: requestState.unit, seasonal_adjustment: requestState.seasonal_adjustment, published_from: requestState.published_from, published_to: requestState.published_to, sort: requestState.sort, order: requestState.order, limit: 20, offset: (requestState.page - 1) * 20 })}`, { signal }),
-      staleTime: 0,
-    }).then((latest) => {
-      if (pageMounted.current && latest.data_as_of !== latestBrowserState.current.data_as_of) {
-        setAvailableSnapshot(latest.data_as_of);
+    const latestSnapshotRequest = Promise.resolve().then(async () => {
+      try {
+        while (pageMounted.current && latestSnapshotCheckQueued.current) {
+          latestSnapshotCheckQueued.current = false;
+          const requestState = latestBrowserState.current;
+          const latest = await queryClient.fetchQuery({
+            queryKey: ["series-browser-latest-check", permissionKey, requestState.q, requestState.node, requestState.provider, requestState.theme, requestState.frequency, requestState.unit, requestState.seasonal_adjustment, requestState.published_from, requestState.published_to, requestState.page, requestState.sort, requestState.order],
+            queryFn: ({ signal }) => apiFetch<SeriesBrowserResponse>(`/series/browser${queryString({ q: requestState.q, node_id: requestState.node, provider: requestState.provider, theme: requestState.theme, frequency: requestState.frequency, unit: requestState.unit, seasonal_adjustment: requestState.seasonal_adjustment, published_from: requestState.published_from, published_to: requestState.published_to, sort: requestState.sort, order: requestState.order, limit: 20, offset: (requestState.page - 1) * 20 })}`, { signal }),
+            staleTime: 0,
+          });
+          if (pageMounted.current && latest.data_as_of !== latestBrowserState.current.data_as_of) {
+            setAvailableSnapshot(latest.data_as_of);
+          }
+        }
+      } finally {
+        if (latestSnapshotCheck.current === latestSnapshotRequest) latestSnapshotCheck.current = null;
       }
-    }).finally(() => {
-      if (latestSnapshotCheck.current === request) latestSnapshotCheck.current = null;
     });
-    latestSnapshotCheck.current = request;
-    return request;
+    latestSnapshotCheck.current = latestSnapshotRequest;
+    return latestSnapshotRequest;
   }, [permissionKey, queryClient]);
 
   async function syncTradingView() {
@@ -190,8 +206,9 @@ export function DataBrowserPage() {
       const result = job.result;
       const succeeded = Number(result.succeeded_count ?? result.inserted_count ?? 0);
       const failed = Number(result.failed_count ?? 0);
+      const hasFailures = syncResultHasFailures(result);
       if (!pageMounted.current) return;
-      setSyncState(failed ? "error" : "success");
+      setSyncState(hasFailures ? "error" : "success");
       setSyncMessage(`同步完成：成功 ${succeeded} 项，失败 ${failed} 项`);
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["series-browser"] }),
@@ -199,7 +216,7 @@ export function DataBrowserPage() {
         queryClient.invalidateQueries({ queryKey: ["data-browser-detail"] }),
         queryClient.invalidateQueries({ queryKey: ["data-browser-analytics"] }),
       ]);
-      if (!failed && pageMounted.current) await refreshAll();
+      if (!hasFailures && pageMounted.current) await discoverLatestSnapshot();
     } catch (error) {
       if (pageMounted.current) {
         setSyncState("error");
@@ -226,8 +243,9 @@ export function DataBrowserPage() {
         throw new Error(job.last_error || "未完成历史同步");
       }
       const result = job.result;
+      const hasFailures = syncResultHasFailures(result);
       if (!pageMounted.current) return;
-      setHistorySyncState("success");
+      setHistorySyncState(hasFailures ? "error" : "success");
       setHistorySyncMessage(`历史同步完成：新增 ${Number(result.inserted ?? 0)} 项，修订 ${Number(result.revised ?? 0)} 项，历史点 ${Number(result.staged_observation_count ?? result.observation_count ?? 0)} 项`);
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["series-browser"] }),
@@ -235,7 +253,7 @@ export function DataBrowserPage() {
         queryClient.invalidateQueries({ queryKey: ["data-browser-observations"] }),
         queryClient.invalidateQueries({ queryKey: ["data-browser-analytics"] }),
       ]);
-      if (pageMounted.current) await refreshAll();
+      if (!hasFailures && pageMounted.current) await discoverLatestSnapshot();
     } catch (error) {
       if (pageMounted.current) {
         setHistorySyncState("error");
@@ -286,7 +304,7 @@ export function DataBrowserPage() {
         queryClient.invalidateQueries({ queryKey: ["data-browser-analytics"] }),
         queryClient.invalidateQueries({ queryKey: ["taxonomy-children"] }),
       ]);
-      if (batch.status === "succeeded" && pageMounted.current) await refreshAll();
+      if (batch.status === "succeeded" && pageMounted.current) await discoverLatestSnapshot();
     } catch (error) {
       if (pageMounted.current) setHistoryBatchError(formatTradingViewHistoryError(error));
     } finally {
@@ -309,7 +327,7 @@ export function DataBrowserPage() {
     <BrowserFilterBar {...filterProps} />
     <div className="data-browser-workspace">
       <MetricTree state={state} onNode={(node) => updateState(selectTaxonomyNode(state, node))} onSeries={selectSeries} />
-      <BrowserTable state={state} data={browserQuery.data} isLoading={browserQuery.isLoading} isFetching={browserQuery.isFetching} error={browserQuery.error as Error | null} onRetry={() => void browserQuery.refetch()} onRefresh={refreshAll} onExport={exportBrowser} onSelect={selectItem} onSort={sort} onPage={(page) => updateState({ page })} />
+      <BrowserTable state={state} data={browserQuery.data} isLoading={browserQuery.isLoading} isFetching={browserQuery.isFetching} error={browserQuery.error as Error | null} onRetry={() => void browserQuery.refetch()} onRefresh={discoverLatestSnapshot} onExport={exportBrowser} onSelect={selectItem} onSort={sort} onPage={(page) => updateState({ page })} />
       <SeriesDetailPanel {...detailProps} />
       <AnalysisPanel state={state} item={selectedItem} capabilityState={capabilityState} analytics={analyticsQuery.data} analyticsLoading={analyticsQuery.isLoading} analyticsError={analyticsQuery.error as Error | null} onChange={updateState} onRetryAnalytics={() => void analyticsQuery.refetch()} />
     </div>

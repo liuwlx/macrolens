@@ -167,6 +167,14 @@ function latestCheckCalls() {
   });
 }
 
+function deferred<T>() {
+  let resolve!: (value: T) => void;
+  const promise = new Promise<T>((complete) => {
+    resolve = complete;
+  });
+  return { promise, resolve };
+}
+
 async function expectLatestSnapshotOffer() {
   expect(await screen.findByText("检测到新数据快照，不会自动替换当前研究上下文。")).toBeInTheDocument();
   expect(latestCheckCalls()).toHaveLength(1);
@@ -276,6 +284,162 @@ describe("DataBrowserPage bulk TradingView history sync", () => {
     fireEvent.click(await screen.findByRole("button", { name: "数据同步" }));
 
     await expectLatestSnapshotOffer();
+  });
+
+  it("does not offer the latest snapshot after a partially failed provider sync", async () => {
+    searchParams.set("data_as_of", currentSnapshot);
+    apiFetch.mockImplementation((path: string, init?: RequestInit) => {
+      if (path.startsWith("/series/browser")) return Promise.resolve(browserResponse);
+      if (path.startsWith("/taxonomies/")) return Promise.resolve(taxonomyResponse);
+      if (path === "/me/favorites") return Promise.resolve([]);
+      if (path === "/admin/providers/TRADINGVIEW_WEB/sync" && init?.method === "POST") {
+        return Promise.resolve(succeededJob({ succeeded_count: 1, failed_count: 1, status: "partial_success" }));
+      }
+      throw new Error(`Unexpected API path: ${path}`);
+    });
+    renderPage();
+
+    fireEvent.click(await screen.findByRole("button", { name: "数据同步" }));
+
+    const status = await screen.findByText("同步完成：成功 1 项，失败 1 项");
+    expect(status).toHaveClass("is-error");
+    await act(async () => {});
+    expect(latestCheckCalls()).toHaveLength(0);
+    expect(screen.queryByText("检测到新数据快照，不会自动替换当前研究上下文。")).not.toBeInTheDocument();
+  });
+
+  it("does not offer the latest snapshot after a partially failed single-series history sync", async () => {
+    searchParams.set("series", "tv-series-1");
+    searchParams.set("data_as_of", currentSnapshot);
+    apiFetch.mockImplementation((path: string, init?: RequestInit) => {
+      if (path.startsWith("/series/browser")) return Promise.resolve(selectedBrowserResponse);
+      if (path.startsWith("/taxonomies/")) return Promise.resolve(taxonomyResponse);
+      if (path === "/me/favorites") return Promise.resolve([]);
+      if (path === "/admin/providers/TRADINGVIEW_WEB/series/tv-series-1/history" && init?.method === "POST") {
+        return Promise.resolve(succeededJob({ inserted: 1, failed_count: 1, status: "partial_success" }));
+      }
+      if (path.startsWith("/series/tv-series-1/analytics")) return Promise.resolve(selectedAnalyticsResponse);
+      if (path.startsWith("/series/tv-series-1/observations")) return Promise.resolve(selectedObservationsResponse);
+      if (path === "/series/tv-series-1") return Promise.resolve(selectedDetailResponse);
+      if (path.startsWith("/ai/capabilities")) return Promise.resolve(aiCapabilitiesResponse);
+      throw new Error(`Unexpected API path: ${path}`);
+    });
+    renderPage();
+
+    fireEvent.click(await screen.findByRole("button", { name: "同步历史数据" }));
+
+    await screen.findByText(/历史同步完成：新增 1 项/);
+    await act(async () => {});
+    expect(latestCheckCalls()).toHaveLength(0);
+    expect(screen.queryByText("检测到新数据快照，不会自动替换当前研究上下文。")).not.toBeInTheDocument();
+  });
+
+  it("does not offer the latest snapshot after a partial_failure history batch", async () => {
+    searchParams.set("data_as_of", currentSnapshot);
+    const partialBatch: HistoryBatchPublic = {
+      ...emptyBatch,
+      status: "partial_failure",
+      candidate_count: 2,
+      skipped_completed: 337,
+      succeeded: 1,
+      failed: 1,
+      inserted: 1,
+      staged_observation_count: 120,
+    };
+    apiFetch.mockImplementation((path: string, init?: RequestInit) => {
+      if (path.startsWith("/series/browser")) return Promise.resolve(browserResponse);
+      if (path.startsWith("/taxonomies/")) return Promise.resolve(taxonomyResponse);
+      if (path === "/me/favorites") return Promise.resolve([]);
+      if (path === "/admin/providers/TRADINGVIEW_WEB/history" && init?.method === "POST") {
+        return Promise.resolve(partialBatch);
+      }
+      throw new Error(`Unexpected API path: ${path}`);
+    });
+    renderPage();
+
+    fireEvent.click(await screen.findByRole("button", { name: "批量同步历史" }));
+
+    const status = await screen.findByText(/批量历史同步部分失败/);
+    expect(status).toHaveClass("is-error");
+    await act(async () => {});
+    expect(latestCheckCalls()).toHaveLength(0);
+    expect(screen.queryByText("检测到新数据快照，不会自动替换当前研究上下文。")).not.toBeInTheDocument();
+  });
+
+  it("coalesces concurrent discovery and runs one trailing check after successful sync invalidations", async () => {
+    searchParams.set("data_as_of", currentSnapshot);
+    const firstLatest = deferred<SeriesBrowserResponse>();
+    const succeededBatch: HistoryBatchPublic = {
+      ...emptyBatch,
+      status: "succeeded",
+      candidate_count: 1,
+      skipped_completed: 338,
+      succeeded: 1,
+      inserted: 1,
+      staged_observation_count: 120,
+    };
+    apiFetch.mockImplementation((path: string, init?: RequestInit) => {
+      if (path.startsWith("/series/browser")) {
+        const request = new URL(path, "https://macrolens.test");
+        if (request.searchParams.has("data_as_of")) return Promise.resolve(browserResponse);
+        return latestCheckCalls().length === 1
+          ? firstLatest.promise
+          : Promise.resolve({ ...browserResponse, data_as_of: latestSnapshot });
+      }
+      if (path.startsWith("/taxonomies/")) return Promise.resolve(taxonomyResponse);
+      if (path === "/me/favorites") return Promise.resolve([]);
+      if (path === "/admin/providers/TRADINGVIEW_WEB/sync" && init?.method === "POST") {
+        return Promise.resolve(succeededJob({ succeeded_count: 1, failed_count: 0 }));
+      }
+      if (path === "/admin/providers/TRADINGVIEW_WEB/history" && init?.method === "POST") {
+        return Promise.resolve(succeededBatch);
+      }
+      throw new Error(`Unexpected API path: ${path}`);
+    });
+    renderPage();
+
+    fireEvent.click(await screen.findByRole("button", { name: "刷新明细表" }));
+    await waitFor(() => expect(latestCheckCalls()).toHaveLength(1));
+    fireEvent.click(screen.getByRole("button", { name: "数据同步" }));
+    fireEvent.click(screen.getByRole("button", { name: "批量同步历史" }));
+    await screen.findByText("同步完成：成功 1 项，失败 0 项");
+    await screen.findByText(/批量历史同步完成/);
+    await act(async () => {});
+    expect(latestCheckCalls()).toHaveLength(1);
+
+    firstLatest.resolve(browserResponse);
+
+    expect(await screen.findByText("检测到新数据快照，不会自动替换当前研究上下文。")).toBeInTheDocument();
+    expect(latestCheckCalls()).toHaveLength(2);
+  });
+
+  it("drops a queued trailing discovery check when the page unmounts", async () => {
+    searchParams.set("data_as_of", currentSnapshot);
+    const firstLatest = deferred<SeriesBrowserResponse>();
+    apiFetch.mockImplementation((path: string, init?: RequestInit) => {
+      if (path.startsWith("/series/browser")) {
+        const request = new URL(path, "https://macrolens.test");
+        return request.searchParams.has("data_as_of") ? Promise.resolve(browserResponse) : firstLatest.promise;
+      }
+      if (path.startsWith("/taxonomies/")) return Promise.resolve(taxonomyResponse);
+      if (path === "/me/favorites") return Promise.resolve([]);
+      if (path === "/admin/providers/TRADINGVIEW_WEB/sync" && init?.method === "POST") {
+        return Promise.resolve(succeededJob({ succeeded_count: 1, failed_count: 0 }));
+      }
+      throw new Error(`Unexpected API path: ${path}`);
+    });
+    const { unmount } = renderPage();
+
+    fireEvent.click(await screen.findByRole("button", { name: "刷新明细表" }));
+    await waitFor(() => expect(latestCheckCalls()).toHaveLength(1));
+    fireEvent.click(screen.getByRole("button", { name: "数据同步" }));
+    await screen.findByText("同步完成：成功 1 项，失败 0 项");
+    await act(async () => {});
+    unmount();
+    firstLatest.resolve({ ...browserResponse, data_as_of: latestSnapshot });
+    await act(async () => {});
+
+    expect(latestCheckCalls()).toHaveLength(1);
   });
 
   it("starts one provider history batch per click and reuses its idempotency key", async () => {
